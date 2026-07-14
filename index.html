@@ -3,12 +3,724 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Snack Station | Cloud Kitchen Dashboard</title>
+    <title>The Snack Station | Cloud Kitchen</title>
     <!-- Google Fonts & Lucide Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Link to external CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ==========================================
+           1. THEME CONTROL PANEL (Customizable Variables)
+           ========================================== */
+        :root {
+            /* Brand Colors */
+            --bg-dark: #090a0f;
+            --bg-card: #12141c;
+            --bg-input: #1a1d29;
+            --accent: #ff5e3a;
+            --accent-glow: rgba(255, 94, 58, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #8b949e;
+            --border-color: #242936;
+            
+            /* UI Feedback Colors */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+
+            /* Typography & Scale */
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-size-base: 16px;
+
+            /* Structural Roundness */
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-card: 16px; /* Custom modular hook for cards */
+            --radius-btn: 12px;  /* Custom modular hook for buttons */
+
+            /* Animation Curves */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Modular Spacing Scale */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+        }
+
+        /* ==========================================
+           2. BASE STYLING (Reset & Setup)
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            font-size: var(--font-size-base);
+        }
+
+        /* ==========================================
+           3. MODULAR LAYOUT SYSTEM (Layout Engines)
+           ========================================== */
+        main {
+            margin-left: 280px;
+            flex-grow: 1;
+            padding: var(--space-xl);
+            min-height: 100vh;
+            background-color: var(--bg-dark);
+        }
+
+        /* Reusable Flex & Grid Classes for Custom Layouts */
+        .layout-grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        /* Custom Column Structures you can swap out in your HTML */
+        .cols-1 { grid-template-columns: 1fr; }
+        .cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .cols-2-1 { grid-template-columns: 2fr 1fr; } /* Sidebar setup */
+
+        /* Auto-fit container for dynamic grids (e.g. Menu Items) */
+        .grid-autofit {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .cols-2-1 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .cols-3, .cols-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; }
+        }
+
+        /* ==========================================
+           4. MODULAR COMPONENTS (The Building Blocks)
+           ========================================== */
+        
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        /* Unified Card Styling */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            transition: var(--transition);
+            padding: var(--space-lg);
+        }
+
+        /* Card spanning helper utilities */
+        .span-2 { grid-column: span 2; }
+        .span-all { grid-column: 1 / -1; }
+
+        /* ==========================================
+           5. SPECIFIC CORE VIEWS (Unchanged Structural Targets)
+           ========================================== */
+
+        /* Sidebar Navigation */
+        aside {
+            width: 280px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent), #ff8a3d);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #ffae9b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-btn:hover {
+            color: var(--text-main);
+            background-color: var(--bg-input);
+        }
+
+        .nav-btn.active {
+            color: #fff;
+            background-color: var(--accent);
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .panel-header p {
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Auth Top Bar */
+        .auth-bar {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-welcome-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Menu Card Specific Styling */
+        .menu-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .menu-img {
+            height: 160px;
+            width: 100%;
+            object-fit: cover;
+            background-color: var(--bg-input);
+        }
+
+        .menu-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .menu-info {
+            padding: 1.25rem;
+        }
+
+        .menu-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .menu-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            line-height: 1.4;
+            height: 38px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .menu-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-price {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .btn-add-cart {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-add-cart:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Cart Sidebar Area */
+        .cart-pane {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            position: sticky;
+            top: 2.5rem;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cart-items {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-input);
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+        }
+
+        .cart-item-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .cart-item-info p {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .cart-qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cart-qty-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .cart-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .cart-summary {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .summary-row.total {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 12px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 12px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        /* MODAL Setup */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            position: relative;
+            animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalScale {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .modal-toggle-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 1.5rem;
+        }
+
+        .modal-toggle-text span {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Custom Table Design */
+        .table-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-input);
+            padding: 16px 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 18px 24px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-status.pending { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-status.preparing { background-color: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .badge-status.delivery { background-color: rgba(255, 94, 58, 0.1); color: var(--accent); }
+        .badge-status.completed { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+        .action-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-select:focus {
+            border-color: var(--accent);
+        }
+
+        /* User Directory Search & Styles */
+        .user-header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 8px 16px;
+            gap: 8px;
+            min-width: 300px;
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            outline: none;
+            width: 100%;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--accent);
+            border: 1px solid var(--border-color);
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Notifications Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--bg-card);
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
 
@@ -20,7 +732,7 @@
             </div>
             <div class="logo-text">
                 <h1>The Snack Station</h1>
-                <p>Your Favorite Cloud Kitchen</p>
+                <p>Cloud Kitchen</p>
             </div>
         </div>
 
@@ -54,11 +766,13 @@
                 <!-- Dynamic Content via JS -->
             </div>
 
-            <div class="portal-layout">
-                <!-- Food Menu Grid -->
+            <!-- MODULAR PORTAL LAYOUT GRID -->
+            <div class="layout-grid cols-2-1">
+                
+                <!-- Food Menu Column -->
                 <div>
-                    <h3 class="section-title">Curated Snack Menu</h3>
-                    <div class="menu-grid" id="menu-container">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
+                    <div class="grid-autofit" id="menu-container">
                         <!-- Menu items loaded here -->
                     </div>
                 </div>
@@ -66,8 +780,8 @@
                 <!-- Shopping Cart Sidebar -->
                 <div class="cart-pane">
                     <div class="cart-header">
-                        <h3>Cart Basket</h3>
-                        <i data-lucide="shopping-bag" class="cart-brand-icon"></i>
+                        <h3 style="font-weight: 700;">Cart Basket</h3>
+                        <i data-lucide="shopping-bag" style="color: var(--accent)"></i>
                     </div>
                     <div class="cart-items" id="cart-container">
                         <!-- Items injected dynamically -->
@@ -86,7 +800,7 @@
                             <span id="total-val">$0.00</span>
                         </div>
                         <button class="btn-primary btn-checkout" onclick="placeOrder()">
-                            Place Order <i data-lucide="arrow-right" class="arrow-icon"></i>
+                            Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
                         </button>
                     </div>
                 </div>
@@ -102,27 +816,27 @@
                 </div>
             </div>
 
-            <!-- Kitchen Performance Cards -->
-            <div class="admin-stats">
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="dollar-sign"></i></div>
+            <!-- Kitchen Performance Cards (Modular Layout Grid) -->
+            <div class="layout-grid cols-3" style="margin-bottom: 2.5rem;">
+                <div class="card" style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="dollar-sign"></i></div>
                     <div class="stat-info">
-                        <p>Total Revenue</p>
-                        <h3 id="stat-revenue">$0.00</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Revenue</p>
+                        <h3 id="stat-revenue" style="font-size: 1.5rem; font-weight: 800; margin-top: 4px;">$0.00</h3>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
+                <div class="card" style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="shopping-cart"></i></div>
                     <div class="stat-info">
-                        <p>Completed Tickets</p>
-                        <h3 id="stat-completed-count">0</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Completed Tickets</p>
+                        <h3 id="stat-completed-count" style="font-size: 1.5rem; font-weight: 800; margin-top: 4px;">0</h3>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="hourglass"></i></div>
+                <div class="card" style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="hourglass"></i></div>
                     <div class="stat-info">
-                        <p>In Queue</p>
-                        <h3 id="stat-active-count">0</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">In Queue</p>
+                        <h3 id="stat-active-count" style="font-size: 1.5rem; font-weight: 800; margin-top: 4px;">0</h3>
                     </div>
                 </div>
             </div>
@@ -156,7 +870,7 @@
                 </div>
                 <div class="user-header-actions">
                     <div class="search-bar">
-                        <i data-lucide="search" class="search-icon"></i>
+                        <i data-lucide="search" style="color: var(--text-muted); width: 18px;"></i>
                         <input type="text" id="user-search-input" placeholder="Search profiles by name..." oninput="renderUsersTable()">
                     </div>
                 </div>
@@ -202,7 +916,7 @@
                     <label for="reg-password">Security Password</label>
                     <input type="password" id="reg-password" placeholder="••••••••" required>
                 </div>
-                <button type="submit" class="btn-primary auth-submit-btn">
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:1.5rem;">
                     Continue
                 </button>
             </form>
@@ -214,11 +928,355 @@
 
     <!-- Notification Toast System -->
     <div class="toast" id="toast-box">
-        <i data-lucide="check-circle" id="toast-icon"></i>
+        <i data-lucide="check-circle" id="toast-icon" style="color: var(--accent)"></i>
         <span id="toast-message">Success message text!</span>
     </div>
 
-    <!-- Link to external JS -->
-    <script src="js/app.js"></script>
+    <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE) -->
+    <script>
+        // --- DATA STATE ---
+        const menuData = [
+            { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 6.99, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Cripsy premium seasoned potato strips with warm cheese sauce & jalapeños." },
+            { id: 2, name: "The Station Double Smashed Burger", price: 9.49, category: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Two smashed angus beef patties, cheddar cheese, secret relish on potato bun." },
+            { id: 3, name: "Creamy Truffle Loaded Potato Skins", price: 8.25, category: "Snacks", img: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crisped potato boats filled with parmesan, white truffle oil & green onion curls." },
+            { id: 4, name: "Sriracha Buffalo Chicken Wings", price: 10.99, category: "Chicken", img: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade." },
+            { id: 5, name: "Double Fudge Hot Brownie Cookie", price: 4.50, category: "Desserts", img: "https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Warm, gooey core brownie cookie topped with premium dark chocolate drizzle." }
+        ];
+
+        let state = {
+            currentUser: null, // Guest mode or Registered Obj
+            users: [
+                { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
+                { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
+            ],
+            cart: [],
+            orders: [
+                { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 22.98, status: "completed", date: "2026-07-13" },
+                { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 16.48, status: "preparing", date: "2026-07-14" }
+            ],
+            isLoginMode: false // Switch between Sign-up/Sign-in in Modal
+        };
+
+        // --- INIT & UTILS ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderMenu();
+            renderCart();
+            renderAuthBar();
+            renderOrdersTable();
+            renderUsersTable();
+            lucide.createIcons();
+        });
+
+        function switchPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`${panelId}-panel`).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function triggerToast(message, type = "success") {
+            const toast = document.getElementById('toast-box');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- AUTH & ACCOUNTS ---
+        function toggleAuthModal(show) {
+            const modal = document.getElementById('auth-modal');
+            if(show) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function toggleAuthMode(toLogin) {
+            state.isLoginMode = toLogin;
+            const title = document.getElementById('modal-title-text');
+            const toggleDesc = document.getElementById('modal-toggle-desc');
+            const nameGrp = document.getElementById('username-group');
+
+            if(toLogin) {
+                title.innerText = "Welcome back to The Station";
+                nameGrp.style.display = "none";
+                document.getElementById('reg-username').required = false;
+                toggleDesc.innerHTML = `Need an account? <span onclick="toggleAuthMode(false)">Sign Up</span>`;
+            } else {
+                title.innerText = "Create Your Station Profile";
+                nameGrp.style.display = "block";
+                document.getElementById('reg-username').required = true;
+                toggleDesc.innerHTML = `Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>`;
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('reg-username').value;
+            const emailInput = document.getElementById('reg-email').value;
+            
+            if(state.isLoginMode) {
+                // Mock Sign In
+                const matchedUser = state.users.find(u => u.email.toLowerCase() === emailInput.toLowerCase());
+                state.currentUser = matchedUser ? matchedUser : { name: emailInput.split('@')[0], email: emailInput };
+                triggerToast(`Signed in as ${state.currentUser.name}`);
+            } else {
+                // Register profile
+                const newUser = {
+                    id: `U-${Math.floor(1000 + Math.random() * 9000)}`,
+                    name: nameInput || "Anonymous Snacker",
+                    email: emailInput,
+                    joined: new Date().toISOString().slice(0, 10),
+                    orderCount: 0
+                };
+                state.users.push(newUser);
+                state.currentUser = newUser;
+                renderUsersTable();
+                triggerToast("Account registered successfully!");
+            }
+            toggleAuthModal(false);
+            renderAuthBar();
+            document.getElementById('auth-form').reset();
+        }
+
+        function logOut() {
+            state.currentUser = null;
+            renderAuthBar();
+            triggerToast("Signed out of session.");
+        }
+
+        function renderAuthBar() {
+            const container = document.getElementById('auth-bar-container');
+            if (state.currentUser) {
+                container.innerHTML = `
+                    <div class="user-welcome-info">
+                        <div class="user-avatar">${state.currentUser.name[0].toUpperCase()}</div>
+                        <div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">Logged in profile</p>
+                            <h4 style="font-weight: 700;">${state.currentUser.name}</h4>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" onclick="logOut()">Sign Out</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div>
+                        <h4 style="font-weight: 700;">Exclusive Snacking Deals</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top:2px;">Register an account to log loyalty and customize trackable orders.</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn-secondary" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
+                        <button class="btn-primary" onclick="toggleAuthModal(true); toggleAuthMode(false);">Create Account</button>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // --- FOOD PORTAL & CART ENGINE ---
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = menuData.map(item => `
+                <div class="menu-card">
+                    <img class="menu-img" src="${item.img}" alt="${item.name}">
+                    <span class="menu-badge">${item.category}</span>
+                    <div class="menu-info">
+                        <h4 class="menu-title">${item.name}</h4>
+                        <p class="menu-desc">${item.desc}</p>
+                        <div class="menu-footer">
+                            <span class="menu-price">$${item.price.toFixed(2)}</span>
+                            <button class="btn-add-cart" onclick="addToCart(${item.id})">
+                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addToCart(itemId) {
+            const foundItem = menuData.find(i => i.id === itemId);
+            const cartItemIndex = state.cart.findIndex(c => c.id === itemId);
+
+            if(cartItemIndex > -1) {
+                state.cart[cartItemIndex].qty += 1;
+            } else {
+                state.cart.push({ ...foundItem, qty: 1 });
+            }
+            triggerToast(`${foundItem.name} added to cart`);
+            renderCart();
+        }
+
+        function alterQty(itemId, delta) {
+            const cartIndex = state.cart.findIndex(c => c.id === itemId);
+            if (cartIndex > -1) {
+                state.cart[cartIndex].qty += delta;
+                if(state.cart[cartIndex].qty <= 0) {
+                    state.cart.splice(cartIndex, 1);
+                }
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-container');
+            const subtotalText = document.getElementById('subtotal-val');
+            const totalText = document.getElementById('total-val');
+
+            if(state.cart.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty">
+                        <i data-lucide="shopping-basket" style="width: 48px; height: 48px; stroke-width: 1.5; color: var(--text-muted)"></i>
+                        <p>No snacks chosen yet.</p>
+                    </div>
+                `;
+                subtotalText.innerText = "$0.00";
+                totalText.innerText = "$0.00";
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = state.cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <p>$${(item.price * item.qty).toFixed(2)}</p>
+                    </div>
+                    <div class="cart-qty-controls">
+                        <button class="cart-qty-btn" onclick="alterQty(${item.id}, -1)">-</button>
+                        <span style="font-weight:600; font-size:0.9rem;">${item.qty}</span>
+                        <button class="cart-qty-btn" onclick="alterQty(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            let subtotal = state.cart.reduce((sum, current) => sum + (current.price * current.qty), 0);
+            let finalTotal = subtotal + 2.50;
+
+            subtotalText.innerText = `$${subtotal.toFixed(2)}`;
+            totalText.innerText = `$${finalTotal.toFixed(2)}`;
+            lucide.createIcons();
+        }
+
+        // --- MOCK CHECKOUT ENGINE ---
+        function placeOrder() {
+            if(state.cart.length === 0) {
+                triggerToast("Select food to checkout!", "warning");
+                return;
+            }
+
+            const customerName = state.currentUser ? state.currentUser.name : "Walk-in Guest";
+            const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+            const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 2.50;
+
+            // Log Order Record
+            const newOrder = {
+                id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+                user: customerName,
+                items: itemsSummary,
+                total: parseFloat(finalBill.toFixed(2)),
+                status: "pending",
+                date: new Date().toISOString().slice(0, 10)
+            };
+
+            state.orders.push(newOrder);
+
+            // Increment count on registered profile metric
+            if(state.currentUser) {
+                const userObj = state.users.find(u => u.email === state.currentUser.email);
+                if(userObj) userObj.orderCount += 1;
+            }
+
+            state.cart = []; // clear cart
+            renderCart();
+            renderOrdersTable();
+            renderUsersTable();
+            triggerToast("Order transmitted to kitchen!");
+        }
+
+        // --- ADMIN ORDERS LIFE-CYCLE ---
+        function renderOrdersTable() {
+            const tableBody = document.getElementById('orders-table-body');
+            
+            // Recalculate metrics card stats
+            let revSum = state.orders.reduce((sum, o) => o.status === 'completed' ? sum + o.total : sum, 0);
+            let activeLen = state.orders.filter(o => o.status !== 'completed').length;
+            let compLen = state.orders.filter(o => o.status === 'completed').length;
+
+            document.getElementById('stat-revenue').innerText = `$${revSum.toFixed(2)}`;
+            document.getElementById('stat-completed-count').innerText = compLen;
+            document.getElementById('stat-active-count').innerText = activeLen;
+
+            if (state.orders.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active kitchen tickets.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = state.orders.map(o => `
+                <tr>
+                    <td style="font-weight: 700; color: var(--accent);">${o.id}</td>
+                    <td>${o.user}</td>
+                    <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items}</td>
+                    <td style="font-weight: 700;">$${o.total.toFixed(2)}</td>
+                    <td>
+                        <span class="badge-status ${o.status}">${o.status}</span>
+                    </td>
+                    <td>
+                        <select class="action-select" onchange="updateOrderStatus('${o.id}', this.value)">
+                            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                            <option value="delivery" ${o.status === 'delivery' ? 'selected' : ''}>Out for Delivery</option>
+                            <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateOrderStatus(orderId, nextStatus) {
+            const targetOrder = state.orders.find(o => o.id === orderId);
+            if(targetOrder) {
+                targetOrder.status = nextStatus;
+                renderOrdersTable();
+                triggerToast(`Order ${orderId} marked as ${nextStatus}`);
+            }
+        }
+
+        // --- USER DIRECTORY VIEW ---
+        function renderUsersTable() {
+            const tableBody = document.getElementById('users-table-body');
+            const searchKeyword = document.getElementById('user-search-input').value.toLowerCase();
+
+            const filteredUsers = state.users.filter(user => 
+                user.name.toLowerCase().includes(searchKeyword) || 
+                user.email.toLowerCase().includes(searchKeyword)
+            );
+
+            if(filteredUsers.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No matching user accounts.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = filteredUsers.map(user => `
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar">${user.name[0].toUpperCase()}</div>
+                            <div>
+                                <h4 style="font-weight: 700;">${user.name}</h4>
+                                <span style="font-size:0.75rem; color: var(--accent); font-weight:600;">ID: ${user.id}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.email}</td>
+                    <td>${user.joined}</td>
+                    <td style="font-weight: 700; text-align: center;">${user.orderCount} Orders</td>
+                </tr>
+            `).join('');
+        }
+    </script>
 </body>
 </html>
