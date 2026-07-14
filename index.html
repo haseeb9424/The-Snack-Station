@@ -12,7 +12,7 @@
            1. THEME CONTROL PANEL (Customizable Variables)
            ========================================== */
         :root {
-            /* Brand Colors */
+            /* Brand Colors (Default Dark Mode) */
             --bg-dark: #090a0f;
             --bg-card: #12141c;
             --bg-input: #1a1d29;
@@ -34,8 +34,8 @@
             /* Structural Roundness */
             --radius-lg: 16px;
             --radius-md: 12px;
-            --radius-card: 16px; /* Custom modular hook for cards */
-            --radius-btn: 12px;  /* Custom modular hook for buttons */
+            --radius-card: 16px;
+            --radius-btn: 12px;
 
             /* Animation Curves */
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -46,6 +46,17 @@
             --space-md: 16px;
             --space-lg: 24px;
             --space-xl: 32px;
+        }
+
+        /* Light Theme Color Mapping */
+        [data-theme="light"] {
+            --bg-dark: #f5f6fa;
+            --bg-card: #ffffff;
+            --bg-input: #f0f2f5;
+            --text-main: #1e2229;
+            --text-muted: #626d7f;
+            --border-color: #e2e8f0;
+            --accent-glow: rgba(255, 94, 58, 0.25);
         }
 
         /* ==========================================
@@ -64,19 +75,24 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             overflow-x: hidden;
             font-size: var(--font-size-base);
+            transition: background-color var(--transition), color var(--transition);
         }
 
         /* ==========================================
            3. MODULAR LAYOUT SYSTEM (Layout Engines)
            ========================================== */
         main {
-            margin-left: 280px;
             flex-grow: 1;
             padding: var(--space-xl);
-            min-height: 100vh;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            min-height: calc(100vh - 120px);
             background-color: var(--bg-dark);
+            transition: background-color var(--transition);
         }
 
         /* Reusable Flex & Grid Classes for Custom Layouts */
@@ -85,25 +101,21 @@
             gap: var(--space-lg);
         }
 
-        /* Custom Column Structures you can swap out in your HTML */
+        /* Column Structures */
         .cols-1 { grid-template-columns: 1fr; }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
         .cols-3 { grid-template-columns: repeat(3, 1fr); }
         .cols-4 { grid-template-columns: repeat(4, 1fr); }
-        .cols-2-1 { grid-template-columns: 2fr 1fr; } /* Sidebar setup */
 
         /* Auto-fit container for dynamic grids (e.g. Menu Items) */
         .grid-autofit {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: var(--space-lg);
         }
 
         /* Responsive Breakpoints */
         @media (max-width: 1024px) {
-            .cols-2-1 { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 768px) {
             .cols-3, .cols-4 { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 480px) {
@@ -159,93 +171,37 @@
             padding: var(--space-lg);
         }
 
-        /* Card spanning helper utilities */
-        .span-2 { grid-column: span 2; }
-        .span-all { grid-column: 1 / -1; }
-
-        /* ==========================================
-           5. SPECIFIC CORE VIEWS (Unchanged Structural Targets)
-           ========================================== */
-
-        /* Sidebar Navigation */
-        aside {
-            width: 280px;
-            background-color: var(--bg-card);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100vh;
-            z-index: 10;
-        }
-
-        .logo-area {
+        /* Header Navigation Menu */
+        .top-nav-links {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 3rem;
-        }
-
-        .logo-icon {
-            background: linear-gradient(135deg, var(--accent), #ff8a3d);
-            padding: 10px;
-            border-radius: var(--radius-md);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px var(--accent-glow);
-        }
-
-        .logo-text h1 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #fff, #ffae9b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .logo-text p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        nav {
-            display: flex;
-            flex-direction: column;
             gap: 8px;
-            flex-grow: 1;
         }
 
-        .nav-btn {
+        .top-nav-btn {
             background: none;
             border: none;
             color: var(--text-muted);
-            padding: 14px 16px;
+            padding: 10px 16px;
             border-radius: var(--radius-md);
             cursor: pointer;
-            text-align: left;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 0.95rem;
-            font-weight: 500;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
             transition: var(--transition);
         }
 
-        .nav-btn:hover {
+        .top-nav-btn:hover {
             color: var(--text-main);
             background-color: var(--bg-input);
         }
 
-        .nav-btn.active {
+        .top-nav-btn.active {
             color: #fff;
             background-color: var(--accent);
-            box-shadow: 0 8px 20px var(--accent-glow);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
 
         .panel {
@@ -280,23 +236,290 @@
             margin-top: 4px;
         }
 
-        /* Auth Top Bar */
-        .auth-bar {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 2rem;
+        /* ==========================================
+           5. UNIFIED HEADER SYSTEM
+           ========================================== */
+        .header-wrapper {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-xl) var(--space-xl) 0 var(--space-xl);
+        }
+
+        .global-top-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: background-color var(--transition), border-color var(--transition);
+        }
+
+        /* Clickable Brand Logo Styles */
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logo-area:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent), #ff8a3d);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, var(--text-main), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        [data-theme="dark"] .logo-text h1 {
+            background: linear-gradient(to right, #fff, #ffae9b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Actions Container (Auth + Theme + Cart Side-by-Side) */
+        .top-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Auth Top Bar Widget */
+        .auth-bar {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            height: 48px;
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         .user-welcome-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
+
+        /* Round Toggle Triggers */
+        .btn-theme-toggle,
+        .btn-cart-toggle-compact {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .btn-theme-toggle:hover,
+        .btn-cart-toggle-compact:hover {
+            border-color: var(--accent);
+            background-color: var(--border-color);
+            transform: scale(1.05);
+        }
+
+        .btn-cart-toggle-compact .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid var(--bg-card);
+        }
+
+        /* Cart Dropdown wrapper setup */
+        .cart-dropdown-wrapper {
+            position: relative;
+        }
+
+        /* Cart Pane Container (Styled as Dropdown) */
+        .cart-pane {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            width: 360px;
+            max-height: 480px;
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition), border-color var(--transition);
+            transform-origin: top right;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .cart-pane.hidden {
+            opacity: 0;
+            transform: scale(0.9) translateY(-10px);
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           6. RESPONSIVE HEADER MEDIA QUERIES
+           ========================================== */
+        @media (min-width: 1025px) {
+            .global-top-header {
+                flex-wrap: nowrap;
+            }
+            .top-nav-links {
+                flex: 1;
+                justify-content: center;
+                margin: 0 1.5rem;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .global-top-header {
+                padding: 1rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .logo-area {
+                order: 1;
+            }
+
+            .top-header-actions {
+                order: 2;
+            }
+
+            /* Push Nav Links to a secondary clean row when viewport shrinks */
+            .top-nav-links {
+                order: 3;
+                width: 100%;
+                justify-content: space-between;
+                border-top: 1px solid var(--border-color);
+                padding-top: 1rem;
+                margin-top: 0.25rem;
+            }
+
+            .top-nav-btn {
+                flex: 1;
+                justify-content: center;
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1.5rem;
+            }
+            
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .user-header-actions {
+                width: 100%;
+            }
+            
+            .search-bar {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-wrapper {
+                padding: var(--space-md) var(--space-md) 0 var(--space-md);
+            }
+
+            .global-top-header {
+                gap: 0.75rem;
+                padding: 0.85rem;
+            }
+
+            .logo-text {
+                display: none; /* Keep just the icon on small mobiles */
+            }
+
+            /* Adjust auth block sizing to save space */
+            .auth-bar {
+                padding: 0.5rem;
+                gap: 0.5rem;
+                height: 40px;
+            }
+
+            /* Hide welcome text inside auth widget */
+            .user-welcome-text {
+                display: none;
+            }
+
+            .btn-theme-toggle,
+            .btn-cart-toggle-compact {
+                width: 40px;
+                height: 40px;
+            }
+
+            /* Hide labels on mobile button navigation to fit tiny viewports cleanly */
+            .top-nav-btn span {
+                display: none;
+            }
+
+            .top-nav-btn {
+                padding: 12px;
+                min-width: 44px;
+            }
+            
+            .cart-pane {
+                width: 290px;
+                right: -50px;
+            }
+        }
+
+        /* ==========================================
+           7. SECTOR SPECIFICS
+           ========================================== */
 
         /* Menu Card Specific Styling */
         .menu-card {
@@ -387,70 +610,6 @@
             transform: scale(1.1);
         }
 
-        /* Cart Column Layout & Toggle Classes */
-        .cart-sidebar-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-md);
-        }
-
-        .btn-cart-toggle {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: var(--space-md);
-            border-radius: var(--radius-card);
-            cursor: pointer;
-            font-weight: 700;
-            transition: var(--transition);
-        }
-
-        .btn-cart-toggle:hover {
-            border-color: var(--accent);
-            background-color: var(--bg-input);
-        }
-
-        .btn-cart-toggle .badge {
-            background-color: var(--accent);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-        }
-
-        /* Cart Pane & Toggle Actions */
-        .cart-pane {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 240px);
-            position: sticky;
-            top: 2.5rem;
-            transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease;
-            transform-origin: top;
-            opacity: 1;
-            transform: scaleY(1);
-            max-height: 1000px;
-            overflow: visible;
-        }
-
-        .cart-pane.hidden {
-            opacity: 0;
-            transform: scaleY(0);
-            max-height: 0;
-            padding: 0;
-            overflow: hidden;
-            border: none;
-            pointer-events: none;
-        }
-
         .cart-header {
             display: flex;
             justify-content: space-between;
@@ -467,6 +626,7 @@
             flex-direction: column;
             gap: 1rem;
             margin-bottom: 1rem;
+            max-height: 200px;
         }
 
         .cart-item {
@@ -476,6 +636,7 @@
             background-color: var(--bg-input);
             padding: 10px 12px;
             border-radius: var(--radius-md);
+            transition: background-color var(--transition);
         }
 
         .cart-item-info h4 {
@@ -508,6 +669,7 @@
             align-items: center;
             justify-content: center;
             font-size: 0.8rem;
+            transition: background-color var(--transition);
         }
 
         .cart-empty {
@@ -516,6 +678,7 @@
             align-items: center;
             justify-content: center;
             height: 100%;
+            padding: 2rem 0;
             color: var(--text-muted);
             text-align: center;
             gap: 12px;
@@ -577,6 +740,7 @@
             padding: 2.5rem;
             position: relative;
             animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         @keyframes modalScale {
@@ -646,13 +810,15 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            overflow: hidden;
+            overflow-x: auto;
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            min-width: 600px;
         }
 
         th {
@@ -662,12 +828,14 @@
             font-weight: 600;
             color: var(--text-muted);
             border-bottom: 1px solid var(--border-color);
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         td {
             padding: 18px 24px;
             font-size: 0.9rem;
             border-bottom: 1px solid var(--border-color);
+            transition: border-color var(--transition);
         }
 
         tr:last-child td {
@@ -721,6 +889,7 @@
             padding: 8px 16px;
             gap: 8px;
             min-width: 300px;
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         .search-bar input {
@@ -742,6 +911,7 @@
             font-weight: 700;
             color: var(--accent);
             border: 1px solid var(--border-color);
+            transition: background-color var(--transition), border-color var(--transition);
         }
 
         .user-cell {
@@ -764,7 +934,7 @@
             align-items: center;
             gap: 12px;
             transform: translateY(150%);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color var(--transition);
             z-index: 1000;
         }
 
@@ -775,72 +945,54 @@
 </head>
 <body>
 
-    <!-- SIDEBAR NAVIGATION -->
-    <aside>
-        <div class="logo-area">
-            <div class="logo-icon">
-                <i data-lucide="chef-hat"></i>
-            </div>
-            <div class="logo-text">
-                <h1>The Snack Station</h1>
-                <p>Cloud Kitchen</p>
-            </div>
-        </div>
-
-        <nav>
-            <button class="nav-btn active" onclick="switchPanel('portal')">
-                <i data-lucide="utensils-crossed"></i> Customer Portal
-            </button>
-            <button class="nav-btn" onclick="switchPanel('orders')">
-                <i data-lucide="receipt"></i> Active Orders
-            </button>
-            <button class="nav-btn" onclick="switchPanel('users')">
-                <i data-lucide="users"></i> User Management
-            </button>
-        </nav>
-    </aside>
-
-    <!-- MAIN DASHBOARD -->
-    <main>
-
-        <!-- PANEL 1: CUSTOMER PORTAL -->
-        <section id="portal-panel" class="panel active">
-            <div class="panel-header">
-                <div>
-                    <h2>Tasty Deliveries</h2>
-                    <p>Craving satisfied in a tap.</p>
+    <!-- TOP HEADER & NAVBAR SYSTEM -->
+    <div class="header-wrapper">
+        <header class="global-top-header">
+            <!-- Top Left: Clickable Logo -->
+            <a href="#" class="logo-area" onclick="switchPanel('portal')">
+                <div class="logo-icon">
+                    <i data-lucide="chef-hat"></i>
                 </div>
-            </div>
+                <div class="logo-text">
+                    <h1>The Snack Station</h1>
+                    <p>Cloud Kitchen</p>
+                </div>
+            </a>
 
-            <!-- Account Management TopBar -->
-            <div class="auth-bar" id="auth-bar-container">
-                <!-- Dynamic Content via JS -->
-            </div>
+            <!-- Top Center: Embedded Navigation Links -->
+            <nav class="top-nav-links">
+                <button class="top-nav-btn active" id="btn-portal" onclick="switchPanel('portal')">
+                    <i data-lucide="utensils-crossed"></i> <span>Customer Portal</span>
+                </button>
+                <button class="top-nav-btn" id="btn-orders" onclick="switchPanel('orders')">
+                    <i data-lucide="receipt"></i> <span>Active Orders</span>
+                </button>
+                <button class="top-nav-btn" id="btn-users" onclick="switchPanel('users')">
+                    <i data-lucide="users"></i> <span>User Management</span>
+                </button>
+            </nav>
 
-            <!-- MODULAR PORTAL LAYOUT GRID -->
-            <div class="layout-grid cols-2-1">
+            <!-- Top Right Actions -->
+            <div class="top-header-actions">
+                <!-- Authentication Widget -->
+                <div class="auth-bar" id="auth-bar-container">
+                    <!-- Dynamic Content via JS -->
+                </div>
+
+                <!-- Light / Dark Theme Toggle Button -->
+                <button class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
+                    <i data-lucide="sun"></i>
+                </button>
                 
-                <!-- Food Menu Column -->
-                <div>
-                    <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
-                    <div class="grid-autofit" id="menu-container">
-                        <!-- Menu items loaded here -->
-                    </div>
-                </div>
-
-                <!-- Shopping Cart Toggle & Sidebar -->
-                <div class="cart-sidebar-wrapper">
-                    <!-- Dynamic Toggle Button -->
-                    <button class="btn-cart-toggle" onclick="toggleCartVisibility()">
-                        <span style="display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="shopping-basket" style="width: 20px; height: 20px;"></i>
-                            Show / Hide Cart Basket
-                        </span>
+                <!-- Compact Basket Dropdown trigger -->
+                <div class="cart-dropdown-wrapper">
+                    <button class="btn-cart-toggle-compact" onclick="toggleCartVisibility()">
+                        <i data-lucide="shopping-basket"></i>
                         <span class="badge" id="cart-toggle-badge">0</span>
                     </button>
 
-                    <!-- Cart Box (Can now be hidden) -->
-                    <div class="cart-pane" id="cart-pane-element">
+                    <!-- Cart Pane Container -->
+                    <div class="cart-pane hidden" id="cart-pane-element">
                         <div class="cart-header">
                             <h3 style="font-weight: 700;">Cart Basket</h3>
                             <i data-lucide="shopping-bag" style="color: var(--accent)"></i>
@@ -865,6 +1017,30 @@
                                 Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <main>
+
+        <!-- PANEL 1: CUSTOMER PORTAL -->
+        <section id="portal-panel" class="panel active">
+            <div class="panel-header">
+                <div>
+                    <h2>Tasty Deliveries</h2>
+                    <p>Craving satisfied in a tap.</p>
+                </div>
+            </div>
+
+            <!-- MODULAR PORTAL MENU GRID -->
+            <div class="layout-grid cols-1">
+                <div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
+                    <div class="grid-autofit" id="menu-container">
+                        <!-- Menu items loaded here -->
                     </div>
                 </div>
             </div>
@@ -1007,7 +1183,7 @@
         ];
 
         let state = {
-            currentUser: null, // Guest mode or Registered Obj
+            currentUser: null,
             users: [
                 { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
                 { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
@@ -1017,11 +1193,12 @@
                 { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 22.98, status: "completed", date: "2026-07-13" },
                 { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 16.48, status: "preparing", date: "2026-07-14" }
             ],
-            isLoginMode: false // Switch between Sign-up/Sign-in in Modal
+            isLoginMode: false
         };
 
         // --- INIT & UTILS ---
         window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             renderMenu();
             renderCart();
             renderAuthBar();
@@ -1030,12 +1207,38 @@
             lucide.createIcons();
         });
 
+        // --- THEME ENGINE ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggleButton(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeToggleButton(newTheme);
+        }
+
+        function updateThemeToggleButton(theme) {
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            if (theme === 'light') {
+                toggleBtn.innerHTML = `<i data-lucide="moon"></i>`;
+            } else {
+                toggleBtn.innerHTML = `<i data-lucide="sun"></i>`;
+            }
+            lucide.createIcons();
+        }
+
         function switchPanel(panelId) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
             
             document.getElementById(`${panelId}-panel`).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById(`btn-${panelId}`).classList.add('active');
         }
 
         function triggerToast(message, type = "success") {
@@ -1081,7 +1284,6 @@
             }
         }
 
-        // --- SUBMIT USER ---
         function handleAuthSubmit(e) {
             e.preventDefault();
             const nameInput = document.getElementById('reg-username').value;
@@ -1119,24 +1321,22 @@
             const container = document.getElementById('auth-bar-container');
             if (state.currentUser) {
                 container.innerHTML = `
-                    <div class="user-welcome-info">
-                        <div class="user-avatar">${state.currentUser.name[0].toUpperCase()}</div>
-                        <div>
-                            <p style="font-size: 0.8rem; color: var(--text-muted);">Logged in profile</p>
-                            <h4 style="font-weight: 700;">${state.currentUser.name}</h4>
+                    <div class="user-welcome-info" style="gap: 10px;">
+                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                            ${state.currentUser.name[0].toUpperCase()}
+                        </div>
+                        <div class="user-welcome-text">
+                            <p style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Welcome</p>
+                            <h4 style="font-weight: 700; font-size: 0.9rem;">${state.currentUser.name}</h4>
                         </div>
                     </div>
-                    <button class="btn-secondary" onclick="logOut()">Sign Out</button>
+                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="logOut()">Sign Out</button>
                 `;
             } else {
                 container.innerHTML = `
-                    <div>
-                        <h4 style="font-weight: 700;">Exclusive Snacking Deals</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top:2px;">Register an account to log loyalty and customize trackable orders.</p>
-                    </div>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn-secondary" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
-                        <button class="btn-primary" onclick="toggleAuthModal(true); toggleAuthMode(false);">Create Account</button>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
+                        <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(false);">Create Account</button>
                     </div>
                 `;
             }
@@ -1195,7 +1395,6 @@
             const totalText = document.getElementById('total-val');
             const badgeElement = document.getElementById('cart-toggle-badge');
 
-            // Count total item quantity
             let totalQty = state.cart.reduce((sum, current) => sum + current.qty, 0);
             badgeElement.innerText = totalQty;
 
@@ -1234,7 +1433,7 @@
             lucide.createIcons();
         }
 
-        // --- CHECKOUT ---
+        // Place Order Logic
         function placeOrder() {
             if(state.cart.length === 0) {
                 triggerToast("Select food to checkout!", "warning");
@@ -1245,7 +1444,6 @@
             const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
             const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 2.50;
 
-            // Log Order
             const newOrder = {
                 id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
                 user: customerName,
@@ -1262,7 +1460,7 @@
                 if(userObj) userObj.orderCount += 1;
             }
 
-            state.cart = []; // clear cart
+            state.cart = [];
             renderCart();
             renderOrdersTable();
             renderUsersTable();
