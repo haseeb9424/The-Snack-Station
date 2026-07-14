@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Snack Station | Cloud Kitchen Dashboard</title>
+    <!-- Google Fonts & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside>
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i data-lucide="chef-hat"></i>
+            </div>
+            <div class="logo-text">
+                <h1>The Snack Station</h1>
+                <p>Cloud Kitchen</p>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="switchPanel('portal')">
+                <i data-lucide="utensils-crossed"></i> Customer Portal
+            </button>
+            <button class="nav-btn" onclick="switchPanel('orders')">
+                <i data-lucide="receipt"></i> Active Orders
+            </button>
+            <button class="nav-btn" onclick="switchPanel('users')">
+                <i data-lucide="users"></i> User Management
+            </button>
+        </nav>
+    </aside>
+
+    <!-- MAIN DASHBOARD -->
+    <main>
+
+        <!-- PANEL 1: CUSTOMER PORTAL -->
+        <section id="portal-panel" class="panel active">
+            <div class="panel-header">
+                <div>
+                    <h2>Tasty Deliveries</h2>
+                    <p>Craving satisfied in a tap.</p>
+                </div>
+            </div>
+
+            <!-- Account Management TopBar -->
+            <div class="auth-bar" id="auth-bar-container">
+                <!-- Dynamic Content via JS -->
+            </div>
+
+            <div class="portal-layout">
+                <!-- Food Menu Grid -->
+                <div>
+                    <h3 class="section-title">Curated Snack Menu</h3>
+                    <div class="menu-grid" id="menu-container">
+                        <!-- Menu items loaded here -->
+                    </div>
+                </div>
+
+                <!-- Shopping Cart Sidebar -->
+                <div class="cart-pane">
+                    <div class="cart-header">
+                        <h3>Cart Basket</h3>
+                        <i data-lucide="shopping-bag" class="cart-brand-icon"></i>
+                    </div>
+                    <div class="cart-items" id="cart-container">
+                        <!-- Items injected dynamically -->
+                    </div>
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="subtotal-val">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery Fee</span>
+                            <span>$2.50</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Amount</span>
+                            <span id="total-val">$0.00</span>
+                        </div>
+                        <button class="btn-primary btn-checkout" onclick="placeOrder()">
+                            Place Order <i data-lucide="arrow-right" class="arrow-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL 2: ADMIN ORDERS MANAGER -->
+        <section id="orders-panel" class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Live Kitchen Station</h2>
+                    <p>Manage incoming customer tickets and statuses.</p>
+                </div>
+            </div>
+
+            <!-- Kitchen Performance Cards -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="dollar-sign"></i></div>
+                    <div class="stat-info">
+                        <p>Total Revenue</p>
+                        <h3 id="stat-revenue">$0.00</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
+                    <div class="stat-info">
+                        <p>Completed Tickets</p>
+                        <h3 id="stat-completed-count">0</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="hourglass"></i></div>
+                    <div class="stat-info">
+                        <p>In Queue</p>
+                        <h3 id="stat-active-count">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer Account</th>
+                            <th>Items Placed</th>
+                            <th>Bill</th>
+                            <th>Status Badge</th>
+                            <th>Update Lifecycle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <!-- Order records injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PANEL 3: USER MANAGEMENT -->
+        <section id="users-panel" class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Registered Accounts</h2>
+                    <p>Track user metrics and database profiles.</p>
+                </div>
+                <div class="user-header-actions">
+                    <div class="search-bar">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" id="user-search-input" placeholder="Search profiles by name..." oninput="renderUsersTable()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Database Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Profile Name</th>
+                            <th>Contact Email</th>
+                            <th>Registered Since</th>
+                            <th>Orders Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Users dynamic records -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- ACCOUNT AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="toggleAuthModal(false)">
+                <i data-lucide="x"></i>
+            </button>
+            <h3 class="modal-title" id="modal-title-text">Create Your Station Profile</h3>
+            
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="form-group" id="username-group">
+                    <label for="reg-username">Full Name</label>
+                    <input type="text" id="reg-username" placeholder="Muhammad Ali">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" placeholder="muhammad@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Security Password</label>
+                    <input type="password" id="reg-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary auth-submit-btn">
+                    Continue
+                </button>
+            </form>
+            <div class="modal-toggle-text" id="modal-toggle-desc">
+                Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast System -->
+    <div class="toast" id="toast-box">
+        <i data-lucide="check-circle" id="toast-icon"></i>
+        <span id="toast-message">Success message text!</span>
+    </div>
+
+    <!-- Link to external JS -->
+    <script src="js/app.js"></script>
+</body>
+</html>
