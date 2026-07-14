@@ -387,7 +387,42 @@
             transform: scale(1.1);
         }
 
-        /* Cart Sidebar Area */
+        /* Cart Column Layout & Toggle Classes */
+        .cart-sidebar-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .btn-cart-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: var(--space-md);
+            border-radius: var(--radius-card);
+            cursor: pointer;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .btn-cart-toggle:hover {
+            border-color: var(--accent);
+            background-color: var(--bg-input);
+        }
+
+        .btn-cart-toggle .badge {
+            background-color: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Cart Pane & Toggle Actions */
         .cart-pane {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -395,9 +430,25 @@
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 180px);
+            height: calc(100vh - 240px);
             position: sticky;
             top: 2.5rem;
+            transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease;
+            transform-origin: top;
+            opacity: 1;
+            transform: scaleY(1);
+            max-height: 1000px;
+            overflow: visible;
+        }
+
+        .cart-pane.hidden {
+            opacity: 0;
+            transform: scaleY(0);
+            max-height: 0;
+            padding: 0;
+            overflow: hidden;
+            border: none;
+            pointer-events: none;
         }
 
         .cart-header {
@@ -777,31 +828,43 @@
                     </div>
                 </div>
 
-                <!-- Shopping Cart Sidebar -->
-                <div class="cart-pane">
-                    <div class="cart-header">
-                        <h3 style="font-weight: 700;">Cart Basket</h3>
-                        <i data-lucide="shopping-bag" style="color: var(--accent)"></i>
-                    </div>
-                    <div class="cart-items" id="cart-container">
-                        <!-- Items injected dynamically -->
-                    </div>
-                    <div class="cart-summary">
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span id="subtotal-val">$0.00</span>
+                <!-- Shopping Cart Toggle & Sidebar -->
+                <div class="cart-sidebar-wrapper">
+                    <!-- Dynamic Toggle Button -->
+                    <button class="btn-cart-toggle" onclick="toggleCartVisibility()">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="shopping-basket" style="width: 20px; height: 20px;"></i>
+                            Show / Hide Cart Basket
+                        </span>
+                        <span class="badge" id="cart-toggle-badge">0</span>
+                    </button>
+
+                    <!-- Cart Box (Can now be hidden) -->
+                    <div class="cart-pane" id="cart-pane-element">
+                        <div class="cart-header">
+                            <h3 style="font-weight: 700;">Cart Basket</h3>
+                            <i data-lucide="shopping-bag" style="color: var(--accent)"></i>
                         </div>
-                        <div class="summary-row">
-                            <span>Delivery Fee</span>
-                            <span>$2.50</span>
+                        <div class="cart-items" id="cart-container">
+                            <!-- Items injected dynamically -->
                         </div>
-                        <div class="summary-row total">
-                            <span>Total Amount</span>
-                            <span id="total-val">$0.00</span>
+                        <div class="cart-summary">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span id="subtotal-val">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Delivery Fee</span>
+                                <span>$2.50</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total Amount</span>
+                                <span id="total-val">$0.00</span>
+                            </div>
+                            <button class="btn-primary btn-checkout" onclick="placeOrder()">
+                                Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
+                            </button>
                         </div>
-                        <button class="btn-primary btn-checkout" onclick="placeOrder()">
-                            Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -983,6 +1046,12 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        // --- CART VISIBILITY TOGGLE ---
+        function toggleCartVisibility() {
+            const cartPane = document.getElementById('cart-pane-element');
+            cartPane.classList.toggle('hidden');
+        }
+
         // --- AUTH & ACCOUNTS ---
         function toggleAuthModal(show) {
             const modal = document.getElementById('auth-modal');
@@ -1012,18 +1081,17 @@
             }
         }
 
+        // --- SUBMIT USER ---
         function handleAuthSubmit(e) {
             e.preventDefault();
             const nameInput = document.getElementById('reg-username').value;
             const emailInput = document.getElementById('reg-email').value;
             
             if(state.isLoginMode) {
-                // Mock Sign In
                 const matchedUser = state.users.find(u => u.email.toLowerCase() === emailInput.toLowerCase());
                 state.currentUser = matchedUser ? matchedUser : { name: emailInput.split('@')[0], email: emailInput };
                 triggerToast(`Signed in as ${state.currentUser.name}`);
             } else {
-                // Register profile
                 const newUser = {
                     id: `U-${Math.floor(1000 + Math.random() * 9000)}`,
                     name: nameInput || "Anonymous Snacker",
@@ -1125,6 +1193,11 @@
             const container = document.getElementById('cart-container');
             const subtotalText = document.getElementById('subtotal-val');
             const totalText = document.getElementById('total-val');
+            const badgeElement = document.getElementById('cart-toggle-badge');
+
+            // Count total item quantity
+            let totalQty = state.cart.reduce((sum, current) => sum + current.qty, 0);
+            badgeElement.innerText = totalQty;
 
             if(state.cart.length === 0) {
                 container.innerHTML = `
@@ -1161,7 +1234,7 @@
             lucide.createIcons();
         }
 
-        // --- MOCK CHECKOUT ENGINE ---
+        // --- CHECKOUT ---
         function placeOrder() {
             if(state.cart.length === 0) {
                 triggerToast("Select food to checkout!", "warning");
@@ -1172,7 +1245,7 @@
             const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
             const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 2.50;
 
-            // Log Order Record
+            // Log Order
             const newOrder = {
                 id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
                 user: customerName,
@@ -1184,7 +1257,6 @@
 
             state.orders.push(newOrder);
 
-            // Increment count on registered profile metric
             if(state.currentUser) {
                 const userObj = state.users.find(u => u.email === state.currentUser.email);
                 if(userObj) userObj.orderCount += 1;
@@ -1197,11 +1269,10 @@
             triggerToast("Order transmitted to kitchen!");
         }
 
-        // --- ADMIN ORDERS LIFE-CYCLE ---
+        // --- LIFE-CYCLE TICKETS ---
         function renderOrdersTable() {
             const tableBody = document.getElementById('orders-table-body');
             
-            // Recalculate metrics card stats
             let revSum = state.orders.reduce((sum, o) => o.status === 'completed' ? sum + o.total : sum, 0);
             let activeLen = state.orders.filter(o => o.status !== 'completed').length;
             let compLen = state.orders.filter(o => o.status === 'completed').length;
@@ -1245,7 +1316,7 @@
             }
         }
 
-        // --- USER DIRECTORY VIEW ---
+        // --- USERS DIRECTORY VIEW ---
         function renderUsersTable() {
             const tableBody = document.getElementById('users-table-body');
             const searchKeyword = document.getElementById('user-search-input').value.toLowerCase();
