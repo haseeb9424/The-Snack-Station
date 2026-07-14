@@ -26,6 +26,7 @@
             --success: #10b981;
             --warning: #f59e0b;
             --info: #3b82f6;
+            --danger: #ef4444;
 
             /* Typography & Scale */
             --font-main: 'Plus Jakarta Sans', sans-serif;
@@ -118,7 +119,7 @@
         @media (max-width: 1024px) {
             .cols-3, .cols-4 { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; }
         }
 
@@ -137,6 +138,7 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: var(--space-sm);
             transition: var(--transition);
         }
@@ -155,10 +157,33 @@
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
         }
 
         .btn-secondary:hover {
             background-color: var(--border-color);
+        }
+
+        .btn-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 8px 16px;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger);
+            color: white;
         }
 
         /* Unified Card Styling */
@@ -776,7 +801,9 @@
             margin-bottom: 6px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             background-color: var(--bg-input);
             border: 1px solid var(--border-color);
@@ -787,7 +814,14 @@
             transition: var(--transition);
         }
 
-        .form-group input:focus {
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 4px var(--accent-glow);
         }
@@ -941,6 +975,32 @@
         .toast.show {
             transform: translateY(0);
         }
+
+        /* Sorting Dropdown Elements */
+        .sorting-actions-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action-edit {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 8px 16px;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .btn-action-edit:hover {
+            background-color: var(--info);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -969,6 +1029,9 @@
                 </button>
                 <button class="top-nav-btn" id="btn-users" onclick="switchPanel('users')">
                     <i data-lucide="users"></i> <span>User Management</span>
+                </button>
+                <button class="top-nav-btn" id="btn-admin" onclick="switchPanel('admin')">
+                    <i data-lucide="sliders-horizontal"></i> <span>Admin Desk</span>
                 </button>
             </nav>
 
@@ -1003,15 +1066,15 @@
                         <div class="cart-summary">
                             <div class="summary-row">
                                 <span>Subtotal</span>
-                                <span id="subtotal-val">$0.00</span>
+                                <span id="subtotal-val">Rs. 0</span>
                             </div>
                             <div class="summary-row">
                                 <span>Delivery Fee</span>
-                                <span>$2.50</span>
+                                <span>Rs. 150</span>
                             </div>
                             <div class="summary-row total">
                                 <span>Total Amount</span>
-                                <span id="total-val">$0.00</span>
+                                <span id="total-val">Rs. 0</span>
                             </div>
                             <button class="btn-primary btn-checkout" onclick="placeOrder()">
                                 Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
@@ -1032,6 +1095,19 @@
                 <div>
                     <h2>Tasty Deliveries</h2>
                     <p>Craving satisfied in a tap.</p>
+                </div>
+                <!-- Interactive Ordering Dropdown -->
+                <div class="sorting-actions-wrapper">
+                    <label for="menu-sort-select" style="font-size: 0.85rem; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap: 4px;">
+                        <i data-lucide="arrow-up-down" style="width:14px; height:14px;"></i> Order By:
+                    </label>
+                    <select id="menu-sort-select" class="action-select" onchange="changeMenuSorting(this.value)">
+                        <option value="default">Default Chef order</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="alpha-asc">Alphabetical: A to Z</option>
+                        <option value="alpha-desc">Alphabetical: Z to A</option>
+                    </select>
                 </div>
             </div>
 
@@ -1058,10 +1134,10 @@
             <!-- Kitchen Performance Cards (Modular Layout Grid) -->
             <div class="layout-grid cols-3" style="margin-bottom: 2.5rem;">
                 <div class="card" style="display: flex; align-items: center; gap: 1rem;">
-                    <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="dollar-sign"></i></div>
+                    <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="wallet"></i></div>
                     <div class="stat-info">
                         <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Revenue</p>
-                        <h3 id="stat-revenue" style="font-size: 1.5rem; font-weight: 800; margin-top: 4px;">$0.00</h3>
+                        <h3 id="stat-revenue" style="font-size: 1.5rem; font-weight: 800; margin-top: 4px;">Rs. 0</h3>
                     </div>
                 </div>
                 <div class="card" style="display: flex; align-items: center; gap: 1rem;">
@@ -1132,6 +1208,87 @@
                 </table>
             </div>
         </section>
+
+        <!-- PANEL 4: ADMIN DESK (MENU WORKSPACE) -->
+        <section id="admin-panel" class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Admin Desk</h2>
+                    <p>Add new culinary options or remove items currently on rotation.</p>
+                </div>
+            </div>
+
+            <div class="layout-grid cols-3">
+                <!-- Add/Edit Menu Item Block (Spans 1 Column) -->
+                <div class="card" style="height: fit-content;">
+                    <h3 id="form-workspace-title" style="font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="plus-circle" style="color: var(--accent);"></i> Add New Item
+                    </h3>
+                    <form id="add-menu-form" onsubmit="handleFormSubmit(event)">
+                        <!-- Hidden tracking node for edit mode mapping -->
+                        <input type="hidden" id="menu-item-edit-id" value="">
+
+                        <div class="form-group">
+                            <label for="menu-item-name">Dish Name</label>
+                            <input type="text" id="menu-item-name" placeholder="e.g. Garlic Herb Fries" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="menu-item-price">Selling Price (Rs.)</label>
+                            <input type="number" step="1" id="menu-item-price" placeholder="450" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="menu-item-category">Food Category</label>
+                            <select id="menu-item-category" required>
+                                <option value="Burgers">Burgers</option>
+                                <option value="Fries">Fries</option>
+                                <option value="Snacks">Snacks</option>
+                                <option value="Chicken">Chicken</option>
+                                <option value="Desserts">Desserts</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="menu-item-img">Image Link URL</label>
+                            <input type="url" id="menu-item-img" placeholder="https://images.unsplash.com/..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="menu-item-desc">Brief Description</label>
+                            <textarea id="menu-item-desc" placeholder="Describe flavor profiles, main key ingredients..." required></textarea>
+                        </div>
+                        
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top: 0.5rem;">
+                            <button type="submit" id="btn-submit-action" class="btn-primary" style="width: 100%;">
+                                Add to Menu Live
+                            </button>
+                            <button type="button" id="btn-cancel-edit" class="btn-secondary" style="width: 100%; display:none;" onclick="resetFormState()">
+                                Cancel Edit Mode
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Menu List Table (Spans 2 Columns) -->
+                <div class="card" style="grid-column: span 2;">
+                    <h3 style="font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="menu" style="color: var(--accent);"></i> Current Kitchen Offerings
+                    </h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Details</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-menu-table-body">
+                                <!-- Menu control items loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- ACCOUNT AUTH MODAL -->
@@ -1171,39 +1328,68 @@
         <span id="toast-message">Success message text!</span>
     </div>
 
-    <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE) -->
+    <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE + LOCALSTORAGE PERSISTENCE) -->
     <script>
-        // --- DATA STATE ---
-        const menuData = [
-            { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 6.99, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Cripsy premium seasoned potato strips with warm cheese sauce & jalapeños." },
-            { id: 2, name: "The Station Double Smashed Burger", price: 9.49, category: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Two smashed angus beef patties, cheddar cheese, secret relish on potato bun." },
-            { id: 3, name: "Creamy Truffle Loaded Potato Skins", price: 8.25, category: "Snacks", img: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crisped potato boats filled with parmesan, white truffle oil & green onion curls." },
-            { id: 4, name: "Sriracha Buffalo Chicken Wings", price: 10.99, category: "Chicken", img: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade." },
-            { id: 5, name: "Double Fudge Hot Brownie Cookie", price: 4.50, category: "Desserts", img: "https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Warm, gooey core brownie cookie topped with premium dark chocolate drizzle." }
+        // --- DEFAULT SEED DATA ---
+        const defaultMenuData = [
+            { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 450, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crispy premium seasoned potato chips with warm cheese sauce & jalapeños." },
+            { id: 2, name: "The Station Double Smashed Burger", price: 950, category: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Two smashed angus beef patties, cheddar cheese, secret relish on potato bun." },
+            { id: 3, name: "Creamy Truffle Loaded Potato Skins", price: 650, category: "Snacks", img: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crisped potato boats filled with parmesan, white truffle oil & green onion curls." },
+            { id: 4, name: "Sriracha Buffalo Chicken Wings", price: 850, category: "Chicken", img: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade." },
+            { id: 5, name: "Double Fudge Hot Brownie Cookie", price: 350, category: "Desserts", img: "https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Warm, gooey core brownie cookie topped with premium dark chocolate drizzle." }
         ];
 
+        const defaultUsersData = [
+            { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
+            { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
+        ];
+
+        const defaultOrdersData = [
+            { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 1800, status: "completed", date: "2026-07-13" },
+            { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 900, status: "preparing", date: "2026-07-14" }
+        ];
+
+        // --- GLOBAL ARRAYS LOADED FROM LOCALSTORAGE OR SEEDED ---
+        let menuData = JSON.parse(localStorage.getItem('station_menu')) || defaultMenuData;
+        
         let state = {
-            currentUser: null,
-            users: [
-                { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
-                { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
-            ],
+            currentUser: JSON.parse(sessionStorage.getItem('station_current_user')) || null,
+            users: JSON.parse(localStorage.getItem('station_users')) || defaultUsersData,
+            orders: JSON.parse(localStorage.getItem('station_orders')) || defaultOrdersData,
             cart: [],
-            orders: [
-                { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 22.98, status: "completed", date: "2026-07-13" },
-                { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 16.48, status: "preparing", date: "2026-07-14" }
-            ],
-            isLoginMode: false
+            isLoginMode: false,
+            currentSort: 'default' // Tracking sorting preference
         };
+
+        // --- SYNCHRONIZATION HELPERS ---
+        function saveMenuToStorage() {
+            localStorage.setItem('station_menu', JSON.stringify(menuData));
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('station_users', JSON.stringify(state.users));
+            localStorage.setItem('station_orders', JSON.stringify(state.orders));
+            if (state.currentUser) {
+                sessionStorage.setItem('station_current_user', JSON.stringify(state.currentUser));
+            } else {
+                sessionStorage.removeItem('station_current_user');
+            }
+        }
 
         // --- INIT & UTILS ---
         window.addEventListener('DOMContentLoaded', () => {
             initTheme();
+            
+            // Seed localStorage initially if empty to avoid empty slates on first run
+            if(!localStorage.getItem('station_menu')) saveMenuToStorage();
+            if(!localStorage.getItem('station_users') || !localStorage.getItem('station_orders')) saveStateToStorage();
+
             renderMenu();
             renderCart();
             renderAuthBar();
             renderOrdersTable();
             renderUsersTable();
+            renderAdminMenuTable();
             lucide.createIcons();
         });
 
@@ -1303,16 +1489,19 @@
                 };
                 state.users.push(newUser);
                 state.currentUser = newUser;
+                saveStateToStorage();
                 renderUsersTable();
                 triggerToast("Account registered successfully!");
             }
             toggleAuthModal(false);
+            saveStateToStorage();
             renderAuthBar();
             document.getElementById('auth-form').reset();
         }
 
         function logOut() {
             state.currentUser = null;
+            saveStateToStorage();
             renderAuthBar();
             triggerToast("Signed out of session.");
         }
@@ -1343,10 +1532,40 @@
             lucide.createIcons();
         }
 
+        // --- CUSTOM FOOD SORTING ---
+        function changeMenuSorting(sortValue) {
+            state.currentSort = sortValue;
+            renderMenu();
+        }
+
         // --- FOOD PORTAL & CART ENGINE ---
         function renderMenu() {
             const container = document.getElementById('menu-container');
-            container.innerHTML = menuData.map(item => `
+            if (menuData.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i data-lucide="chef-hat" style="width: 48px; height: 48px; margin-bottom: 1rem; stroke-width: 1;"></i>
+                        <p>Our kitchen is currently preparing new snacks. Check back soon!</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // Create a temporary sorted array without mutating original menuData array order
+            let sortedMenu = [...menuData];
+            
+            if (state.currentSort === 'price-asc') {
+                sortedMenu.sort((a, b) => a.price - b.price);
+            } else if (state.currentSort === 'price-desc') {
+                sortedMenu.sort((a, b) => b.price - a.price);
+            } else if (state.currentSort === 'alpha-asc') {
+                sortedMenu.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (state.currentSort === 'alpha-desc') {
+                sortedMenu.sort((a, b) => b.name.localeCompare(a.name));
+            }
+
+            container.innerHTML = sortedMenu.map(item => `
                 <div class="menu-card">
                     <img class="menu-img" src="${item.img}" alt="${item.name}">
                     <span class="menu-badge">${item.category}</span>
@@ -1354,7 +1573,7 @@
                         <h4 class="menu-title">${item.name}</h4>
                         <p class="menu-desc">${item.desc}</p>
                         <div class="menu-footer">
-                            <span class="menu-price">$${item.price.toFixed(2)}</span>
+                            <span class="menu-price">Rs. ${item.price.toLocaleString()}</span>
                             <button class="btn-add-cart" onclick="addToCart(${item.id})">
                                 <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
                             </button>
@@ -1367,8 +1586,9 @@
 
         function addToCart(itemId) {
             const foundItem = menuData.find(i => i.id === itemId);
-            const cartItemIndex = state.cart.findIndex(c => c.id === itemId);
+            if (!foundItem) return;
 
+            const cartItemIndex = state.cart.findIndex(c => c.id === itemId);
             if(cartItemIndex > -1) {
                 state.cart[cartItemIndex].qty += 1;
             } else {
@@ -1405,8 +1625,8 @@
                         <p>No snacks chosen yet.</p>
                     </div>
                 `;
-                subtotalText.innerText = "$0.00";
-                totalText.innerText = "$0.00";
+                subtotalText.innerText = "Rs. 0";
+                totalText.innerText = "Rs. 0";
                 lucide.createIcons();
                 return;
             }
@@ -1415,7 +1635,7 @@
                 <div class="cart-item">
                     <div class="cart-item-info">
                         <h4>${item.name}</h4>
-                        <p>$${(item.price * item.qty).toFixed(2)}</p>
+                        <p>Rs. ${(item.price * item.qty).toLocaleString()}</p>
                     </div>
                     <div class="cart-qty-controls">
                         <button class="cart-qty-btn" onclick="alterQty(${item.id}, -1)">-</button>
@@ -1426,10 +1646,10 @@
             `).join('');
 
             let subtotal = state.cart.reduce((sum, current) => sum + (current.price * current.qty), 0);
-            let finalTotal = subtotal + 2.50;
+            let finalTotal = subtotal + 150; // Standard PKR Delivery Fee (Rs. 150)
 
-            subtotalText.innerText = `$${subtotal.toFixed(2)}`;
-            totalText.innerText = `$${finalTotal.toFixed(2)}`;
+            subtotalText.innerText = `Rs. ${subtotal.toLocaleString()}`;
+            totalText.innerText = `Rs. ${finalTotal.toLocaleString()}`;
             lucide.createIcons();
         }
 
@@ -1442,13 +1662,13 @@
 
             const customerName = state.currentUser ? state.currentUser.name : "Walk-in Guest";
             const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
-            const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 2.50;
+            const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 150;
 
             const newOrder = {
                 id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
                 user: customerName,
                 items: itemsSummary,
-                total: parseFloat(finalBill.toFixed(2)),
+                total: parseInt(finalBill),
                 status: "pending",
                 date: new Date().toISOString().slice(0, 10)
             };
@@ -1461,6 +1681,7 @@
             }
 
             state.cart = [];
+            saveStateToStorage();
             renderCart();
             renderOrdersTable();
             renderUsersTable();
@@ -1475,7 +1696,7 @@
             let activeLen = state.orders.filter(o => o.status !== 'completed').length;
             let compLen = state.orders.filter(o => o.status === 'completed').length;
 
-            document.getElementById('stat-revenue').innerText = `$${revSum.toFixed(2)}`;
+            document.getElementById('stat-revenue').innerText = `Rs. ${revSum.toLocaleString()}`;
             document.getElementById('stat-completed-count').innerText = compLen;
             document.getElementById('stat-active-count').innerText = activeLen;
 
@@ -1489,7 +1710,7 @@
                     <td style="font-weight: 700; color: var(--accent);">${o.id}</td>
                     <td>${o.user}</td>
                     <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items}</td>
-                    <td style="font-weight: 700;">$${o.total.toFixed(2)}</td>
+                    <td style="font-weight: 700;">Rs. ${o.total.toLocaleString()}</td>
                     <td>
                         <span class="badge-status ${o.status}">${o.status}</span>
                     </td>
@@ -1509,6 +1730,7 @@
             const targetOrder = state.orders.find(o => o.id === orderId);
             if(targetOrder) {
                 targetOrder.status = nextStatus;
+                saveStateToStorage();
                 renderOrdersTable();
                 triggerToast(`Order ${orderId} marked as ${nextStatus}`);
             }
@@ -1545,6 +1767,184 @@
                     <td style="font-weight: 700; text-align: center;">${user.orderCount} Orders</td>
                 </tr>
             `).join('');
+        }
+
+        // ==========================================
+        // --- NEW DESK ADMIN FUNCTIONS ---
+        // ==========================================
+        function renderAdminMenuTable() {
+            const tableBody = document.getElementById('admin-menu-table-body');
+            if (menuData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active offerings. Add custom items on the left side to begin!</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = menuData.map(item => `
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <img src="${item.img}" style="width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div>
+                                <h4 style="font-weight: 700;">${item.name}</h4>
+                                <span style="font-size:0.75rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 280px;">${item.desc}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge-status preparing" style="font-weight: 600; padding: 4px 10px;">${item.category}</span></td>
+                    <td style="font-weight: 800; color: var(--accent);">Rs. ${item.price.toLocaleString()}</td>
+                    <td>
+                        <div style="display: flex; justify-content: center; gap: 8px;">
+                            <button class="btn-action-edit" onclick="initiateEditMenuItem(${item.id})">
+                                <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Edit
+                            </button>
+                            <button class="btn-danger" onclick="removeMenuItem(${item.id})">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Remove
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Form Submit Router: Handles additions vs edits
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('menu-item-edit-id').value;
+            
+            if(editId) {
+                handleUpdateMenuItem(parseInt(editId));
+            } else {
+                handleAddMenuItem();
+            }
+        }
+
+        function handleAddMenuItem() {
+            const name = document.getElementById('menu-item-name').value;
+            const price = parseInt(document.getElementById('menu-item-price').value);
+            const category = document.getElementById('menu-item-category').value;
+            const img = document.getElementById('menu-item-img').value;
+            const desc = document.getElementById('menu-item-desc').value;
+
+            const newItem = {
+                id: Date.now(), // Unique Timestamp ID
+                name,
+                price,
+                category,
+                img,
+                desc
+            };
+
+            menuData.push(newItem);
+            saveMenuToStorage();
+            triggerToast(`"${name}" successfully added!`);
+            
+            // Clear inputs and refresh interfaces
+            resetFormState();
+            renderMenu();
+            renderAdminMenuTable();
+        }
+
+        // Prep form fields with item to edit
+        function initiateEditMenuItem(itemId) {
+            const item = menuData.find(i => i.id === itemId);
+            if(!item) return;
+
+            document.getElementById('menu-item-edit-id').value = item.id;
+            document.getElementById('menu-item-name').value = item.name;
+            document.getElementById('menu-item-price').value = item.price;
+            document.getElementById('menu-item-category').value = item.category;
+            document.getElementById('menu-item-img').value = item.img;
+            document.getElementById('menu-item-desc').value = item.desc;
+
+            // Change Workspace visual cues to edit state
+            document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="edit" style="color: var(--info);"></i> Edit Existing Item`;
+            document.getElementById('btn-submit-action').innerText = "Update Offering";
+            document.getElementById('btn-submit-action').classList.replace('btn-primary', 'btn-secondary');
+            document.getElementById('btn-cancel-edit').style.display = "block";
+            
+            // Scroll Admin Workspace form beautifully into view
+            document.getElementById('add-menu-form').scrollIntoView({ behavior: 'smooth' });
+            lucide.createIcons();
+        }
+
+        // Commit Edit Updates
+        function handleUpdateMenuItem(itemId) {
+            const index = menuData.findIndex(i => i.id === itemId);
+            if(index === -1) return;
+
+            const updatedName = document.getElementById('menu-item-name').value;
+            const updatedPrice = parseInt(document.getElementById('menu-item-price').value);
+            const updatedCategory = document.getElementById('menu-item-category').value;
+            const updatedImg = document.getElementById('menu-item-img').value;
+            const updatedDesc = document.getElementById('menu-item-desc').value;
+
+            // Update item details inside local state
+            menuData[index] = {
+                id: itemId,
+                name: updatedName,
+                price: updatedPrice,
+                category: updatedCategory,
+                img: updatedImg,
+                desc: updatedDesc
+            };
+
+            // Sync updated info to existing Cart items
+            const cartIndex = state.cart.findIndex(c => c.id === itemId);
+            if(cartIndex > -1) {
+                state.cart[cartIndex].name = updatedName;
+                state.cart[cartIndex].price = updatedPrice;
+                state.cart[cartIndex].category = updatedCategory;
+                state.cart[cartIndex].img = updatedImg;
+                state.cart[cartIndex].desc = updatedDesc;
+                renderCart();
+            }
+
+            saveMenuToStorage();
+            triggerToast(`Updated "${updatedName}" successfully!`);
+            
+            resetFormState();
+            renderMenu();
+            renderAdminMenuTable();
+        }
+
+        // Reset the form workspace completely
+        function resetFormState() {
+            document.getElementById('add-menu-form').reset();
+            document.getElementById('menu-item-edit-id').value = "";
+
+            // Restore elements to standard add mode style
+            document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="plus-circle" style="color: var(--accent);"></i> Add New Item`;
+            document.getElementById('btn-submit-action').innerText = "Add to Menu Live";
+            document.getElementById('btn-submit-action').classList.replace('btn-secondary', 'btn-primary');
+            document.getElementById('btn-cancel-edit').style.display = "none";
+            lucide.createIcons();
+        }
+
+        function removeMenuItem(itemId) {
+            const index = menuData.findIndex(item => item.id === itemId);
+            if (index > -1) {
+                const targetName = menuData[index].name;
+                menuData.splice(index, 1);
+                saveMenuToStorage();
+                
+                // Clear out of cart basket if currently selected
+                const cartIndex = state.cart.findIndex(c => c.id === itemId);
+                if (cartIndex > -1) {
+                    state.cart.splice(cartIndex, 1);
+                    renderCart();
+                }
+
+                // Clean form workspace if the active item under edit is deleted
+                const currentEditId = document.getElementById('menu-item-edit-id').value;
+                if(currentEditId == itemId) {
+                    resetFormState();
+                }
+
+                triggerToast(`"${targetName}" removed from menu.`);
+                renderMenu();
+                renderAdminMenuTable();
+            }
         }
     </script>
 </body>
