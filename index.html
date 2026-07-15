@@ -1328,124 +1328,141 @@
         <span id="toast-message">Success message text!</span>
     </div>
 
-    <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE + LOCALSTORAGE PERSISTENCE) -->
+    <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE + LOCALSTORAGE PERSISTENCE) --> 
     <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
+    // --- 1. FIREBASE SDK IMPORTS ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    import { 
+        getAuth, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        signOut, 
+        onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbEYx361Xg3KfHoghlHAYTC-b8g6Yy2I8",
-            authDomain: "thesnackstation-c6ff9.firebaseapp.com",
-            projectId: "thesnackstation-c6ff9",
-            storageBucket: "thesnackstation-c6ff9.firebasestorage.app",
-            messagingSenderId: "830977242508",
-            appId: "1:830977242508:web:cac072840fc4c9366c12a9"
-        };
+    // --- 2. FIREBASE INITIALIZATION ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDbEYx361Xg3KfHoghlHAYTC-b8g6Yy2I8",
+        authDomain: "thesnackstation-c6ff9.firebaseapp.com",
+        projectId: "thesnackstation-c6ff9",
+        storageBucket: "thesnackstation-c6ff9.firebasestorage.app",
+        messagingSenderId: "830977242508",
+        appId: "1:830977242508:web:cac072840fc4c9366c12a9"
+    };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-        // Add these imports to your existing list
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    // Connection Test
+    function testConnection() {
+        if (db && auth) {
+            console.log("Firebase, Firestore, and Auth connections successful!");
+        } else {
+            console.log("Connection failed.");
+        }
+    }
+    testConnection();
 
-// Add this line after your 'const app = initializeApp(firebaseConfig);' line
-const db = getFirestore(app);
+    // --- 3. DEFAULT SEED DATA ---
+    const defaultMenuData = [
+        { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 450, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crispy premium seasoned potato chips with warm cheese sauce & jalapeños." },
+        { id: 2, name: "The Station Double Smashed Burger", price: 950, category: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Two smashed angus beef patties, cheddar cheese, secret relish on potato bun." },
+        { id: 3, name: "Creamy Truffle Loaded Potato Skins", price: 650, category: "Snacks", img: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crisped potato boats filled with parmesan, white truffle oil & green onion curls." },
+        { id: 4, name: "Sriracha Buffalo Chicken Wings", price: 850, category: "Chicken", img: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade." },
+        { id: 5, name: "Double Fudge Hot Brownie Cookie", price: 350, category: "Desserts", img: "https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Warm, gooey core brownie cookie topped with premium dark chocolate drizzle." }
+    ];
 
-// Simple test function
-function testConnection() {
-  if (db) {
-    console.log("Firebase and Firestore connection successful!");
-  } else {
-    console.log("Connection failed.");
-  }
-}
+    const defaultUsersData = [
+        { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
+        { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
+    ];
 
-testConnection();
+    const defaultOrdersData = [
+        { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 1800, status: "completed", date: "2026-07-13" },
+        { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 900, status: "preparing", date: "2026-07-14" }
+    ];
 
-        // --- DEFAULT SEED DATA ---
-        const defaultMenuData = [
-            { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 450, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crispy premium seasoned potato chips with warm cheese sauce & jalapeños." },
-            { id: 2, name: "The Station Double Smashed Burger", price: 950, category: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Two smashed angus beef patties, cheddar cheese, secret relish on potato bun." },
-            { id: 3, name: "Creamy Truffle Loaded Potato Skins", price: 650, category: "Snacks", img: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crisped potato boats filled with parmesan, white truffle oil & green onion curls." },
-            { id: 4, name: "Sriracha Buffalo Chicken Wings", price: 850, category: "Chicken", img: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade." },
-            { id: 5, name: "Double Fudge Hot Brownie Cookie", price: 350, category: "Desserts", img: "https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Warm, gooey core brownie cookie topped with premium dark chocolate drizzle." }
-        ];
+    // --- 4. GLOBAL ARRAYS & STATE ---
+    let menuData = JSON.parse(localStorage.getItem('station_menu')) || defaultMenuData;
+    
+    let state = {
+        currentUser: null, // Populated securely via onAuthStateChanged
+        users: JSON.parse(localStorage.getItem('station_users')) || defaultUsersData,
+        orders: JSON.parse(localStorage.getItem('station_orders')) || defaultOrdersData,
+        cart: [],
+        isLoginMode: false,
+        currentSort: 'default'
+    };
 
-        const defaultUsersData = [
-            { id: "U-1001", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4 },
-            { id: "U-1002", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7 }
-        ];
+    // --- 5. SYNCHRONIZATION HELPERS ---
+    function saveMenuToStorage() {
+        localStorage.setItem('station_menu', JSON.stringify(menuData));
+    }
 
-        const defaultOrdersData = [
-            { id: "ORD-9421", user: "Sarah Khan", items: "1x Double Smashed Burger, 1x Buffalo Wings", total: 1800, status: "completed", date: "2026-07-13" },
-            { id: "ORD-9422", user: "Usman Ahmed", items: "2x Jalapeño Popper Fries", total: 900, status: "preparing", date: "2026-07-14" }
-        ];
+    function saveStateToStorage() {
+        localStorage.setItem('station_users', JSON.stringify(state.users));
+        localStorage.setItem('station_orders', JSON.stringify(state.orders));
+    }
 
-        // --- GLOBAL ARRAYS LOADED FROM LOCALSTORAGE OR SEEDED ---
-        let menuData = JSON.parse(localStorage.getItem('station_menu')) || defaultMenuData;
+    // --- 6. INIT & UTILS ---
+    window.addEventListener('DOMContentLoaded', () => {
+        initTheme();
         
-        let state = {
-            currentUser: JSON.parse(sessionStorage.getItem('station_current_user')) || null,
-            users: JSON.parse(localStorage.getItem('station_users')) || defaultUsersData,
-            orders: JSON.parse(localStorage.getItem('station_orders')) || defaultOrdersData,
-            cart: [],
-            isLoginMode: false,
-            currentSort: 'default' // Tracking sorting preference
-        };
+        if(!localStorage.getItem('station_menu')) saveMenuToStorage();
+        if(!localStorage.getItem('station_users') || !localStorage.getItem('station_orders')) saveStateToStorage();
 
-        // --- SYNCHRONIZATION HELPERS ---
-        function saveMenuToStorage() {
-            localStorage.setItem('station_menu', JSON.stringify(menuData));
+        renderMenu();
+        renderCart();
+        renderOrdersTable();
+        renderUsersTable();
+        renderAdminMenuTable();
+        lucide.createIcons();
+
+        // Bind core form handlers dynamically
+        const authForm = document.getElementById('auth-form');
+        if (authForm) {
+            authForm.addEventListener('submit', handleAuthSubmit);
         }
+    });
 
-        function saveStateToStorage() {
-            localStorage.setItem('station_users', JSON.stringify(state.users));
-            localStorage.setItem('station_orders', JSON.stringify(state.orders));
-            if (state.currentUser) {
-                sessionStorage.setItem('station_current_user', JSON.stringify(state.currentUser));
-            } else {
-                sessionStorage.removeItem('station_current_user');
-            }
-        }
-
-        // --- INIT & UTILS ---
-        window.addEventListener('DOMContentLoaded', () => {
-            initTheme();
+    // --- 7. FIREBASE AUTHENTICATION OBSERVER ---
+    onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+            // Find user in our directory, or fallback to Firebase display info
+            const localUser = state.users.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase());
             
-            // Seed localStorage initially if empty to avoid empty slates on first run
-            if(!localStorage.getItem('station_menu')) saveMenuToStorage();
-            if(!localStorage.getItem('station_users') || !localStorage.getItem('station_orders')) saveStateToStorage();
-
-            renderMenu();
-            renderCart();
-            renderAuthBar();
-            renderOrdersTable();
-            renderUsersTable();
-            renderAdminMenuTable();
-            lucide.createIcons();
-        });
-
-        // --- THEME ENGINE ---
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeToggleButton(savedTheme);
+            state.currentUser = {
+                uid: firebaseUser.uid,
+                name: localUser ? localUser.name : (firebaseUser.displayName || firebaseUser.email.split('@')[0]),
+                email: firebaseUser.email
+            };
+        } else {
+            state.currentUser = null;
         }
+        renderAuthBar();
+    });
 
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeToggleButton(newTheme);
-        }
+    // --- 8. THEME ENGINE ---
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeToggleButton(savedTheme);
+    }
 
-        function updateThemeToggleButton(theme) {
-            const toggleBtn = document.getElementById('theme-toggle-btn');
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeToggleButton(newTheme);
+    }
+
+    function updateThemeToggleButton(theme) {
+        const toggleBtn = document.getElementById('theme-toggle-btn');
+        if (toggleBtn) {
             if (theme === 'light') {
                 toggleBtn.innerHTML = `<i data-lucide="moon"></i>`;
             } else {
@@ -1453,68 +1470,76 @@ testConnection();
             }
             lucide.createIcons();
         }
+    }
 
-        function switchPanel(panelId) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
-            
-            document.getElementById(`${panelId}-panel`).classList.add('active');
-            document.getElementById(`btn-${panelId}`).classList.add('active');
+    function switchPanel(panelId) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(`${panelId}-panel`).classList.add('active');
+        document.getElementById(`btn-${panelId}`).classList.add('active');
+    }
+
+    function triggerToast(message, type = "success") {
+        const toast = document.getElementById('toast-box');
+        const toastMsg = document.getElementById('toast-message');
+        toastMsg.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // --- 9. CART VISIBILITY TOGGLE ---
+    function toggleCartVisibility() {
+        const cartPane = document.getElementById('cart-pane-element');
+        cartPane.classList.toggle('hidden');
+    }
+
+    // --- 10. AUTH MODAL INTERFACES ---
+    function toggleAuthModal(show) {
+        const modal = document.getElementById('auth-modal');
+        if(show) {
+            modal.classList.add('active');
+        } else {
+            modal.classList.remove('active');
         }
+    }
 
-        function triggerToast(message, type = "success") {
-            const toast = document.getElementById('toast-box');
-            const toastMsg = document.getElementById('toast-message');
-            toastMsg.innerText = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+    function toggleAuthMode(toLogin) {
+        state.isLoginMode = toLogin;
+        const title = document.getElementById('modal-title-text');
+        const toggleDesc = document.getElementById('modal-toggle-desc');
+        const nameGrp = document.getElementById('username-group');
+
+        if(toLogin) {
+            title.innerText = "Welcome back to The Station";
+            nameGrp.style.display = "none";
+            document.getElementById('reg-username').required = false;
+            toggleDesc.innerHTML = `Need an account? <span onclick="toggleAuthMode(false)">Sign Up</span>`;
+        } else {
+            title.innerText = "Create Your Station Profile";
+            nameGrp.style.display = "block";
+            document.getElementById('reg-username').required = true;
+            toggleDesc.innerHTML = `Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>`;
         }
+    }
 
-        // --- CART VISIBILITY TOGGLE ---
-        function toggleCartVisibility() {
-            const cartPane = document.getElementById('cart-pane-element');
-            cartPane.classList.toggle('hidden');
-        }
+    // --- 11. FIREBASE AUTH HANDLERS ---
+    async function handleAuthSubmit(e) {
+        e.preventDefault();
+        const nameInput = document.getElementById('reg-username').value;
+        const emailInput = document.getElementById('reg-email').value;
+        const passwordInput = document.getElementById('reg-password').value; // Ensure you have this input field in your HTML
 
-        // --- AUTH & ACCOUNTS ---
-        function toggleAuthModal(show) {
-            const modal = document.getElementById('auth-modal');
-            if(show) {
-                modal.classList.add('active');
+        try {
+            if (state.isLoginMode) {
+                // Firebase Sign In
+                await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+                triggerToast("Signed in successfully!");
             } else {
-                modal.classList.remove('active');
-            }
-        }
-
-        function toggleAuthMode(toLogin) {
-            state.isLoginMode = toLogin;
-            const title = document.getElementById('modal-title-text');
-            const toggleDesc = document.getElementById('modal-toggle-desc');
-            const nameGrp = document.getElementById('username-group');
-
-            if(toLogin) {
-                title.innerText = "Welcome back to The Station";
-                nameGrp.style.display = "none";
-                document.getElementById('reg-username').required = false;
-                toggleDesc.innerHTML = `Need an account? <span onclick="toggleAuthMode(false)">Sign Up</span>`;
-            } else {
-                title.innerText = "Create Your Station Profile";
-                nameGrp.style.display = "block";
-                document.getElementById('reg-username').required = true;
-                toggleDesc.innerHTML = `Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>`;
-            }
-        }
-
-        function handleAuthSubmit(e) {
-            e.preventDefault();
-            const nameInput = document.getElementById('reg-username').value;
-            const emailInput = document.getElementById('reg-email').value;
-            
-            if(state.isLoginMode) {
-                const matchedUser = state.users.find(u => u.email.toLowerCase() === emailInput.toLowerCase());
-                state.currentUser = matchedUser ? matchedUser : { name: emailInput.split('@')[0], email: emailInput };
-                triggerToast(`Signed in as ${state.currentUser.name}`);
-            } else {
+                // Firebase Sign Up
+                const userCredential = await createUserWithEmailAndPassword(auth, emailInput, passwordInput);
+                
+                // Add new user to local storage directory representation
                 const newUser = {
                     id: `U-${Math.floor(1000 + Math.random() * 9000)}`,
                     name: nameInput || "Anonymous Snacker",
@@ -1523,464 +1548,475 @@ testConnection();
                     orderCount: 0
                 };
                 state.users.push(newUser);
-                state.currentUser = newUser;
                 saveStateToStorage();
                 renderUsersTable();
+                
                 triggerToast("Account registered successfully!");
             }
             toggleAuthModal(false);
-            saveStateToStorage();
-            renderAuthBar();
             document.getElementById('auth-form').reset();
+        } catch (error) {
+            console.error("Auth Error: ", error);
+            triggerToast(error.message, "danger");
         }
+    }
 
-        function logOut() {
-            state.currentUser = null;
-            saveStateToStorage();
-            renderAuthBar();
+    async function logOut() {
+        try {
+            await signOut(auth);
             triggerToast("Signed out of session.");
+        } catch (error) {
+            console.error("Logout Error: ", error);
+            triggerToast("Failed to sign out.", "danger");
         }
+    }
 
-        function renderAuthBar() {
-            const container = document.getElementById('auth-bar-container');
-            if (state.currentUser) {
-                container.innerHTML = `
-                    <div class="user-welcome-info" style="gap: 10px;">
-                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">
-                            ${state.currentUser.name[0].toUpperCase()}
-                        </div>
-                        <div class="user-welcome-text">
-                            <p style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Welcome</p>
-                            <h4 style="font-weight: 700; font-size: 0.9rem;">${state.currentUser.name}</h4>
-                        </div>
+    function renderAuthBar() {
+        const container = document.getElementById('auth-bar-container');
+        if (!container) return;
+
+        if (state.currentUser) {
+            container.innerHTML = `
+                <div class="user-welcome-info" style="gap: 10px; display: flex; align-items: center;">
+                    <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: white; font-weight: bold;">
+                        ${state.currentUser.name[0].toUpperCase()}
                     </div>
-                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="logOut()">Sign Out</button>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div style="display: flex; gap: 0.75rem;">
-                        <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
-                        <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(false);">Create Account</button>
-                    </div>
-                `;
-            }
-            lucide.createIcons();
-        }
-
-        // --- CUSTOM FOOD SORTING ---
-        function changeMenuSorting(sortValue) {
-            state.currentSort = sortValue;
-            renderMenu();
-        }
-
-        // --- FOOD PORTAL & CART ENGINE ---
-        function renderMenu() {
-            const container = document.getElementById('menu-container');
-            if (menuData.length === 0) {
-                container.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
-                        <i data-lucide="chef-hat" style="width: 48px; height: 48px; margin-bottom: 1rem; stroke-width: 1;"></i>
-                        <p>Our kitchen is currently preparing new snacks. Check back soon!</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            // Create a temporary sorted array without mutating original menuData array order
-            let sortedMenu = [...menuData];
-            
-            if (state.currentSort === 'price-asc') {
-                sortedMenu.sort((a, b) => a.price - b.price);
-            } else if (state.currentSort === 'price-desc') {
-                sortedMenu.sort((a, b) => b.price - a.price);
-            } else if (state.currentSort === 'alpha-asc') {
-                sortedMenu.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (state.currentSort === 'alpha-desc') {
-                sortedMenu.sort((a, b) => b.name.localeCompare(a.name));
-            }
-
-            container.innerHTML = sortedMenu.map(item => `
-                <div class="menu-card">
-                    <img class="menu-img" src="${item.img}" alt="${item.name}">
-                    <span class="menu-badge">${item.category}</span>
-                    <div class="menu-info">
-                        <h4 class="menu-title">${item.name}</h4>
-                        <p class="menu-desc">${item.desc}</p>
-                        <div class="menu-footer">
-                            <span class="menu-price">Rs. ${item.price.toLocaleString()}</span>
-                            <button class="btn-add-cart" onclick="addToCart(${item.id})">
-                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
-                            </button>
-                        </div>
+                    <div class="user-welcome-text">
+                        <p style="margin: 0; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Welcome</p>
+                        <h4 style="margin: 0; font-weight: 700; font-size: 0.9rem;">${state.currentUser.name}</h4>
                     </div>
                 </div>
-            `).join('');
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" id="signout-btn">Sign Out</button>
+            `;
+            document.getElementById('signout-btn').addEventListener('click', logOut);
+        } else {
+            container.innerHTML = `
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" id="signin-trigger">Sign In</button>
+                    <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" id="signup-trigger">Create Account</button>
+                </div>
+            `;
+            document.getElementById('signin-trigger').addEventListener('click', () => { toggleAuthModal(true); toggleAuthMode(true); });
+            document.getElementById('signup-trigger').addEventListener('click', () => { toggleAuthModal(true); toggleAuthMode(false); });
+        }
+        lucide.createIcons();
+    }
+
+    // --- 12. CUSTOM FOOD SORTING ---
+    function changeMenuSorting(sortValue) {
+        state.currentSort = sortValue;
+        renderMenu();
+    }
+
+    // --- 13. FOOD PORTAL & CART ENGINE ---
+    function renderMenu() {
+        const container = document.getElementById('menu-container');
+        if (menuData.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                    <i data-lucide="chef-hat" style="width: 48px; height: 48px; margin-bottom: 1rem; stroke-width: 1;"></i>
+                    <p>Our kitchen is currently preparing new snacks. Check back soon!</p>
+                </div>
+            `;
             lucide.createIcons();
+            return;
         }
 
-        function addToCart(itemId) {
-            const foundItem = menuData.find(i => i.id === itemId);
-            if (!foundItem) return;
+        let sortedMenu = [...menuData];
+        
+        if (state.currentSort === 'price-asc') {
+            sortedMenu.sort((a, b) => a.price - b.price);
+        } else if (state.currentSort === 'price-desc') {
+            sortedMenu.sort((a, b) => b.price - a.price);
+        } else if (state.currentSort === 'alpha-asc') {
+            sortedMenu.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (state.currentSort === 'alpha-desc') {
+            sortedMenu.sort((a, b) => b.name.localeCompare(a.name));
+        }
 
-            const cartItemIndex = state.cart.findIndex(c => c.id === itemId);
-            if(cartItemIndex > -1) {
-                state.cart[cartItemIndex].qty += 1;
-            } else {
-                state.cart.push({ ...foundItem, qty: 1 });
+        container.innerHTML = sortedMenu.map(item => `
+            <div class="menu-card">
+                <img class="menu-img" src="${item.img}" alt="${item.name}">
+                <span class="menu-badge">${item.category}</span>
+                <div class="menu-info">
+                    <h4 class="menu-title">${item.name}</h4>
+                    <p class="menu-desc">${item.desc}</p>
+                    <div class="menu-footer">
+                        <span class="menu-price">Rs. ${item.price.toLocaleString()}</span>
+                        <button class="btn-add-cart" onclick="addToCart(${item.id})">
+                            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    function addToCart(itemId) {
+        const foundItem = menuData.find(i => i.id === itemId);
+        if (!foundItem) return;
+
+        const cartItemIndex = state.cart.findIndex(c => c.id === itemId);
+        if(cartItemIndex > -1) {
+            state.cart[cartItemIndex].qty += 1;
+        } else {
+            state.cart.push({ ...foundItem, qty: 1 });
+        }
+        triggerToast(`${foundItem.name} added to cart`);
+        renderCart();
+    }
+
+    function alterQty(itemId, delta) {
+        const cartIndex = state.cart.findIndex(c => c.id === itemId);
+        if (cartIndex > -1) {
+            state.cart[cartIndex].qty += delta;
+            if(state.cart[cartIndex].qty <= 0) {
+                state.cart.splice(cartIndex, 1);
             }
-            triggerToast(`${foundItem.name} added to cart`);
+        }
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-container');
+        const subtotalText = document.getElementById('subtotal-val');
+        const totalText = document.getElementById('total-val');
+        const badgeElement = document.getElementById('cart-toggle-badge');
+
+        let totalQty = state.cart.reduce((sum, current) => sum + current.qty, 0);
+        badgeElement.innerText = totalQty;
+
+        if(state.cart.length === 0) {
+            container.innerHTML = `
+                <div class="cart-empty">
+                    <i data-lucide="shopping-basket" style="width: 48px; height: 48px; stroke-width: 1.5; color: var(--text-muted)"></i>
+                    <p>No snacks chosen yet.</p>
+                </div>
+            `;
+            subtotalText.innerText = "Rs. 0";
+            totalText.innerText = "Rs. 0";
+            lucide.createIcons();
+            return;
+        }
+
+        container.innerHTML = state.cart.map(item => `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <h4>${item.name}</h4>
+                    <p>Rs. ${(item.price * item.qty).toLocaleString()}</p>
+                </div>
+                <div class="cart-qty-controls">
+                    <button class="cart-qty-btn" onclick="alterQty(${item.id}, -1)">-</button>
+                    <span style="font-weight:600; font-size:0.9rem;">${item.qty}</span>
+                    <button class="cart-qty-btn" onclick="alterQty(${item.id}, 1)">+</button>
+                </div>
+            </div>
+        `).join('');
+
+        let subtotal = state.cart.reduce((sum, current) => sum + (current.price * current.qty), 0);
+        let finalTotal = subtotal + 150; // Standard PKR Delivery Fee (Rs. 150)
+
+        subtotalText.innerText = `Rs. ${subtotal.toLocaleString()}`;
+        totalText.innerText = `Rs. ${finalTotal.toLocaleString()}`;
+        lucide.createIcons();
+    }
+
+    function placeOrder() {
+        if(state.cart.length === 0) {
+            triggerToast("Select food to checkout!", "warning");
+            return;
+        }
+
+        const customerName = state.currentUser ? state.currentUser.name : "Walk-in Guest";
+        const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+        const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 150;
+
+        const newOrder = {
+            id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+            user: customerName,
+            items: itemsSummary,
+            total: parseInt(finalBill),
+            status: "pending",
+            date: new Date().toISOString().slice(0, 10)
+        };
+
+        state.orders.push(newOrder);
+
+        if(state.currentUser) {
+            const userObj = state.users.find(u => u.email === state.currentUser.email);
+            if(userObj) userObj.orderCount += 1;
+        }
+
+        state.cart = [];
+        saveStateToStorage();
+        renderCart();
+        renderOrdersTable();
+        renderUsersTable();
+        triggerToast("Order transmitted to kitchen!");
+    }
+
+    // --- 14. LIFE-CYCLE TICKETS & ADMIN VIEWS ---
+    function renderOrdersTable() {
+        const tableBody = document.getElementById('orders-table-body');
+        if (!tableBody) return;
+        
+        let revSum = state.orders.reduce((sum, o) => o.status === 'completed' ? sum + o.total : sum, 0);
+        let activeLen = state.orders.filter(o => o.status !== 'completed').length;
+        let compLen = state.orders.filter(o => o.status === 'completed').length;
+
+        document.getElementById('stat-revenue').innerText = `Rs. ${revSum.toLocaleString()}`;
+        document.getElementById('stat-completed-count').innerText = compLen;
+        document.getElementById('stat-active-count').innerText = activeLen;
+
+        if (state.orders.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active kitchen tickets.</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = state.orders.map(o => `
+            <tr>
+                <td style="font-weight: 700; color: var(--accent);">${o.id}</td>
+                <td>${o.user}</td>
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items}</td>
+                <td style="font-weight: 700;">Rs. ${o.total.toLocaleString()}</td>
+                <td>
+                    <span class="badge-status ${o.status}">${o.status}</span>
+                </td>
+                <td>
+                    <select class="action-select" onchange="updateOrderStatus('${o.id}', this.value)">
+                        <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                        <option value="delivery" ${o.status === 'delivery' ? 'selected' : ''}>Out for Delivery</option>
+                        <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function updateOrderStatus(orderId, nextStatus) {
+        const targetOrder = state.orders.find(o => o.id === orderId);
+        if(targetOrder) {
+            targetOrder.status = nextStatus;
+            saveStateToStorage();
+            renderOrdersTable();
+            triggerToast(`Order ${orderId} marked as ${nextStatus}`);
+        }
+    }
+
+    function renderUsersTable() {
+        const tableBody = document.getElementById('users-table-body');
+        if (!tableBody) return;
+        
+        const searchKeyword = document.getElementById('user-search-input').value.toLowerCase();
+
+        const filteredUsers = state.users.filter(user => 
+            user.name.toLowerCase().includes(searchKeyword) || 
+            user.email.toLowerCase().includes(searchKeyword)
+        );
+
+        if(filteredUsers.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No matching user accounts.</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = filteredUsers.map(user => `
+            <tr>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar">${user.name[0].toUpperCase()}</div>
+                        <div>
+                            <h4 style="font-weight: 700;">${user.name}</h4>
+                            <span style="font-size:0.75rem; color: var(--accent); font-weight:600;">ID: ${user.id}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${user.email}</td>
+                <td>${user.joined}</td>
+                <td style="font-weight: 700; text-align: center;">${user.orderCount} Orders</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderAdminMenuTable() {
+        const tableBody = document.getElementById('admin-menu-table-body');
+        if (!tableBody) return;
+
+        if (menuData.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active offerings. Add custom items on the left side to begin!</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = menuData.map(item => `
+            <tr>
+                <td>
+                    <div class="user-cell">
+                        <img src="${item.img}" style="width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        <div>
+                            <h4 style="font-weight: 700;">${item.name}</h4>
+                            <span style="font-size:0.75rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 280px;">${item.desc}</span>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="badge-status preparing" style="font-weight: 600; padding: 4px 10px;">${item.category}</span></td>
+                <td style="font-weight: 800; color: var(--accent);">Rs. ${item.price.toLocaleString()}</td>
+                <td>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <button class="btn-action-edit" onclick="initiateEditMenuItem(${item.id})">
+                            <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Edit
+                        </button>
+                        <button class="btn-danger" onclick="removeMenuItem(${item.id})">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Remove
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const editId = document.getElementById('menu-item-edit-id').value;
+        
+        if(editId) {
+            handleUpdateMenuItem(parseInt(editId));
+        } else {
+            handleAddMenuItem();
+        }
+    }
+
+    function handleAddMenuItem() {
+        const name = document.getElementById('menu-item-name').value;
+        const price = parseInt(document.getElementById('menu-item-price').value);
+        const category = document.getElementById('menu-item-category').value;
+        const img = document.getElementById('menu-item-img').value;
+        const desc = document.getElementById('menu-item-desc').value;
+
+        const newItem = {
+            id: Date.now(),
+            name,
+            price,
+            category,
+            img,
+            desc
+        };
+
+        menuData.push(newItem);
+        saveMenuToStorage();
+        triggerToast(`"${name}" successfully added!`);
+        
+        resetFormState();
+        renderMenu();
+        renderAdminMenuTable();
+    }
+
+    function initiateEditMenuItem(itemId) {
+        const item = menuData.find(i => i.id === itemId);
+        if(!item) return;
+
+        document.getElementById('menu-item-edit-id').value = item.id;
+        document.getElementById('menu-item-name').value = item.name;
+        document.getElementById('menu-item-price').value = item.price;
+        document.getElementById('menu-item-category').value = item.category;
+        document.getElementById('menu-item-img').value = item.img;
+        document.getElementById('menu-item-desc').value = item.desc;
+
+        document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="edit" style="color: var(--info);"></i> Edit Existing Item`;
+        document.getElementById('btn-submit-action').innerText = "Update Offering";
+        document.getElementById('btn-submit-action').classList.replace('btn-primary', 'btn-secondary');
+        document.getElementById('btn-cancel-edit').style.display = "block";
+        
+        document.getElementById('add-menu-form').scrollIntoView({ behavior: 'smooth' });
+        lucide.createIcons();
+    }
+
+    function handleUpdateMenuItem(itemId) {
+        const index = menuData.findIndex(i => i.id === itemId);
+        if(index === -1) return;
+
+        const updatedName = document.getElementById('menu-item-name').value;
+        const updatedPrice = parseInt(document.getElementById('menu-item-price').value);
+        const updatedCategory = document.getElementById('menu-item-category').value;
+        const updatedImg = document.getElementById('menu-item-img').value;
+        const updatedDesc = document.getElementById('menu-item-desc').value;
+
+        menuData[index] = {
+            id: itemId,
+            name: updatedName,
+            price: updatedPrice,
+            category: updatedCategory,
+            img: updatedImg,
+            desc: updatedDesc
+        };
+
+        const cartIndex = state.cart.findIndex(c => c.id === itemId);
+        if(cartIndex > -1) {
+            state.cart[cartIndex].name = updatedName;
+            state.cart[cartIndex].price = updatedPrice;
+            state.cart[cartIndex].category = updatedCategory;
+            state.cart[cartIndex].img = updatedImg;
+            state.cart[cartIndex].desc = updatedDesc;
             renderCart();
         }
 
-        function alterQty(itemId, delta) {
+        saveMenuToStorage();
+        triggerToast(`Updated "${updatedName}" successfully!`);
+        
+        resetFormState();
+        renderMenu();
+        renderAdminMenuTable();
+    }
+
+    function resetFormState() {
+        document.getElementById('add-menu-form').reset();
+        document.getElementById('menu-item-edit-id').value = "";
+
+        document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="plus-circle" style="color: var(--accent);"></i> Add New Item`;
+        document.getElementById('btn-submit-action').innerText = "Add to Menu Live";
+        document.getElementById('btn-submit-action').classList.replace('btn-secondary', 'btn-primary');
+        document.getElementById('btn-cancel-edit').style.display = "none";
+        lucide.createIcons();
+    }
+
+    function removeMenuItem(itemId) {
+        const index = menuData.findIndex(item => item.id === itemId);
+        if (index > -1) {
+            const targetName = menuData[index].name;
+            menuData.splice(index, 1);
+            saveMenuToStorage();
+            
             const cartIndex = state.cart.findIndex(c => c.id === itemId);
             if (cartIndex > -1) {
-                state.cart[cartIndex].qty += delta;
-                if(state.cart[cartIndex].qty <= 0) {
-                    state.cart.splice(cartIndex, 1);
-                }
-            }
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cart-container');
-            const subtotalText = document.getElementById('subtotal-val');
-            const totalText = document.getElementById('total-val');
-            const badgeElement = document.getElementById('cart-toggle-badge');
-
-            let totalQty = state.cart.reduce((sum, current) => sum + current.qty, 0);
-            badgeElement.innerText = totalQty;
-
-            if(state.cart.length === 0) {
-                container.innerHTML = `
-                    <div class="cart-empty">
-                        <i data-lucide="shopping-basket" style="width: 48px; height: 48px; stroke-width: 1.5; color: var(--text-muted)"></i>
-                        <p>No snacks chosen yet.</p>
-                    </div>
-                `;
-                subtotalText.innerText = "Rs. 0";
-                totalText.innerText = "Rs. 0";
-                lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = state.cart.map(item => `
-                <div class="cart-item">
-                    <div class="cart-item-info">
-                        <h4>${item.name}</h4>
-                        <p>Rs. ${(item.price * item.qty).toLocaleString()}</p>
-                    </div>
-                    <div class="cart-qty-controls">
-                        <button class="cart-qty-btn" onclick="alterQty(${item.id}, -1)">-</button>
-                        <span style="font-weight:600; font-size:0.9rem;">${item.qty}</span>
-                        <button class="cart-qty-btn" onclick="alterQty(${item.id}, 1)">+</button>
-                    </div>
-                </div>
-            `).join('');
-
-            let subtotal = state.cart.reduce((sum, current) => sum + (current.price * current.qty), 0);
-            let finalTotal = subtotal + 150; // Standard PKR Delivery Fee (Rs. 150)
-
-            subtotalText.innerText = `Rs. ${subtotal.toLocaleString()}`;
-            totalText.innerText = `Rs. ${finalTotal.toLocaleString()}`;
-            lucide.createIcons();
-        }
-
-        // Place Order Logic
-        function placeOrder() {
-            if(state.cart.length === 0) {
-                triggerToast("Select food to checkout!", "warning");
-                return;
-            }
-
-            const customerName = state.currentUser ? state.currentUser.name : "Walk-in Guest";
-            const itemsSummary = state.cart.map(i => `${i.qty}x ${i.name}`).join(', ');
-            const finalBill = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + 150;
-
-            const newOrder = {
-                id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-                user: customerName,
-                items: itemsSummary,
-                total: parseInt(finalBill),
-                status: "pending",
-                date: new Date().toISOString().slice(0, 10)
-            };
-
-            state.orders.push(newOrder);
-
-            if(state.currentUser) {
-                const userObj = state.users.find(u => u.email === state.currentUser.email);
-                if(userObj) userObj.orderCount += 1;
-            }
-
-            state.cart = [];
-            saveStateToStorage();
-            renderCart();
-            renderOrdersTable();
-            renderUsersTable();
-            triggerToast("Order transmitted to kitchen!");
-        }
-
-        // --- LIFE-CYCLE TICKETS ---
-        function renderOrdersTable() {
-            const tableBody = document.getElementById('orders-table-body');
-            
-            let revSum = state.orders.reduce((sum, o) => o.status === 'completed' ? sum + o.total : sum, 0);
-            let activeLen = state.orders.filter(o => o.status !== 'completed').length;
-            let compLen = state.orders.filter(o => o.status === 'completed').length;
-
-            document.getElementById('stat-revenue').innerText = `Rs. ${revSum.toLocaleString()}`;
-            document.getElementById('stat-completed-count').innerText = compLen;
-            document.getElementById('stat-active-count').innerText = activeLen;
-
-            if (state.orders.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active kitchen tickets.</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = state.orders.map(o => `
-                <tr>
-                    <td style="font-weight: 700; color: var(--accent);">${o.id}</td>
-                    <td>${o.user}</td>
-                    <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items}</td>
-                    <td style="font-weight: 700;">Rs. ${o.total.toLocaleString()}</td>
-                    <td>
-                        <span class="badge-status ${o.status}">${o.status}</span>
-                    </td>
-                    <td>
-                        <select class="action-select" onchange="updateOrderStatus('${o.id}', this.value)">
-                            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>Preparing</option>
-                            <option value="delivery" ${o.status === 'delivery' ? 'selected' : ''}>Out for Delivery</option>
-                            <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Delivered</option>
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateOrderStatus(orderId, nextStatus) {
-            const targetOrder = state.orders.find(o => o.id === orderId);
-            if(targetOrder) {
-                targetOrder.status = nextStatus;
-                saveStateToStorage();
-                renderOrdersTable();
-                triggerToast(`Order ${orderId} marked as ${nextStatus}`);
-            }
-        }
-
-        // --- USERS DIRECTORY VIEW ---
-        function renderUsersTable() {
-            const tableBody = document.getElementById('users-table-body');
-            const searchKeyword = document.getElementById('user-search-input').value.toLowerCase();
-
-            const filteredUsers = state.users.filter(user => 
-                user.name.toLowerCase().includes(searchKeyword) || 
-                user.email.toLowerCase().includes(searchKeyword)
-            );
-
-            if(filteredUsers.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No matching user accounts.</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = filteredUsers.map(user => `
-                <tr>
-                    <td>
-                        <div class="user-cell">
-                            <div class="user-avatar">${user.name[0].toUpperCase()}</div>
-                            <div>
-                                <h4 style="font-weight: 700;">${user.name}</h4>
-                                <span style="font-size:0.75rem; color: var(--accent); font-weight:600;">ID: ${user.id}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${user.email}</td>
-                    <td>${user.joined}</td>
-                    <td style="font-weight: 700; text-align: center;">${user.orderCount} Orders</td>
-                </tr>
-            `).join('');
-        }
-
-        // ==========================================
-        // --- NEW DESK ADMIN FUNCTIONS ---
-        // ==========================================
-        function renderAdminMenuTable() {
-            const tableBody = document.getElementById('admin-menu-table-body');
-            if (menuData.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 3rem;">No active offerings. Add custom items on the left side to begin!</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = menuData.map(item => `
-                <tr>
-                    <td>
-                        <div class="user-cell">
-                            <img src="${item.img}" style="width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                            <div>
-                                <h4 style="font-weight: 700;">${item.name}</h4>
-                                <span style="font-size:0.75rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 280px;">${item.desc}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="badge-status preparing" style="font-weight: 600; padding: 4px 10px;">${item.category}</span></td>
-                    <td style="font-weight: 800; color: var(--accent);">Rs. ${item.price.toLocaleString()}</td>
-                    <td>
-                        <div style="display: flex; justify-content: center; gap: 8px;">
-                            <button class="btn-action-edit" onclick="initiateEditMenuItem(${item.id})">
-                                <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Edit
-                            </button>
-                            <button class="btn-danger" onclick="removeMenuItem(${item.id})">
-                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Remove
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // Form Submit Router: Handles additions vs edits
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const editId = document.getElementById('menu-item-edit-id').value;
-            
-            if(editId) {
-                handleUpdateMenuItem(parseInt(editId));
-            } else {
-                handleAddMenuItem();
-            }
-        }
-
-        function handleAddMenuItem() {
-            const name = document.getElementById('menu-item-name').value;
-            const price = parseInt(document.getElementById('menu-item-price').value);
-            const category = document.getElementById('menu-item-category').value;
-            const img = document.getElementById('menu-item-img').value;
-            const desc = document.getElementById('menu-item-desc').value;
-
-            const newItem = {
-                id: Date.now(), // Unique Timestamp ID
-                name,
-                price,
-                category,
-                img,
-                desc
-            };
-
-            menuData.push(newItem);
-            saveMenuToStorage();
-            triggerToast(`"${name}" successfully added!`);
-            
-            // Clear inputs and refresh interfaces
-            resetFormState();
-            renderMenu();
-            renderAdminMenuTable();
-        }
-
-        // Prep form fields with item to edit
-        function initiateEditMenuItem(itemId) {
-            const item = menuData.find(i => i.id === itemId);
-            if(!item) return;
-
-            document.getElementById('menu-item-edit-id').value = item.id;
-            document.getElementById('menu-item-name').value = item.name;
-            document.getElementById('menu-item-price').value = item.price;
-            document.getElementById('menu-item-category').value = item.category;
-            document.getElementById('menu-item-img').value = item.img;
-            document.getElementById('menu-item-desc').value = item.desc;
-
-            // Change Workspace visual cues to edit state
-            document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="edit" style="color: var(--info);"></i> Edit Existing Item`;
-            document.getElementById('btn-submit-action').innerText = "Update Offering";
-            document.getElementById('btn-submit-action').classList.replace('btn-primary', 'btn-secondary');
-            document.getElementById('btn-cancel-edit').style.display = "block";
-            
-            // Scroll Admin Workspace form beautifully into view
-            document.getElementById('add-menu-form').scrollIntoView({ behavior: 'smooth' });
-            lucide.createIcons();
-        }
-
-        // Commit Edit Updates
-        function handleUpdateMenuItem(itemId) {
-            const index = menuData.findIndex(i => i.id === itemId);
-            if(index === -1) return;
-
-            const updatedName = document.getElementById('menu-item-name').value;
-            const updatedPrice = parseInt(document.getElementById('menu-item-price').value);
-            const updatedCategory = document.getElementById('menu-item-category').value;
-            const updatedImg = document.getElementById('menu-item-img').value;
-            const updatedDesc = document.getElementById('menu-item-desc').value;
-
-            // Update item details inside local state
-            menuData[index] = {
-                id: itemId,
-                name: updatedName,
-                price: updatedPrice,
-                category: updatedCategory,
-                img: updatedImg,
-                desc: updatedDesc
-            };
-
-            // Sync updated info to existing Cart items
-            const cartIndex = state.cart.findIndex(c => c.id === itemId);
-            if(cartIndex > -1) {
-                state.cart[cartIndex].name = updatedName;
-                state.cart[cartIndex].price = updatedPrice;
-                state.cart[cartIndex].category = updatedCategory;
-                state.cart[cartIndex].img = updatedImg;
-                state.cart[cartIndex].desc = updatedDesc;
+                state.cart.splice(cartIndex, 1);
                 renderCart();
             }
 
-            saveMenuToStorage();
-            triggerToast(`Updated "${updatedName}" successfully!`);
-            
-            resetFormState();
+            const currentEditId = document.getElementById('menu-item-edit-id').value;
+            if(currentEditId == itemId) {
+                resetFormState();
+            }
+
+            triggerToast(`"${targetName}" removed from menu.`);
             renderMenu();
             renderAdminMenuTable();
         }
+    }
 
-        // Reset the form workspace completely
-        function resetFormState() {
-            document.getElementById('add-menu-form').reset();
-            document.getElementById('menu-item-edit-id').value = "";
-
-            // Restore elements to standard add mode style
-            document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="plus-circle" style="color: var(--accent);"></i> Add New Item`;
-            document.getElementById('btn-submit-action').innerText = "Add to Menu Live";
-            document.getElementById('btn-submit-action').classList.replace('btn-secondary', 'btn-primary');
-            document.getElementById('btn-cancel-edit').style.display = "none";
-            lucide.createIcons();
-        }
-
-        function removeMenuItem(itemId) {
-            const index = menuData.findIndex(item => item.id === itemId);
-            if (index > -1) {
-                const targetName = menuData[index].name;
-                menuData.splice(index, 1);
-                saveMenuToStorage();
-                
-                // Clear out of cart basket if currently selected
-                const cartIndex = state.cart.findIndex(c => c.id === itemId);
-                if (cartIndex > -1) {
-                    state.cart.splice(cartIndex, 1);
-                    renderCart();
-                }
-
-                // Clean form workspace if the active item under edit is deleted
-                const currentEditId = document.getElementById('menu-item-edit-id').value;
-                if(currentEditId == itemId) {
-                    resetFormState();
-                }
-
-                triggerToast(`"${targetName}" removed from menu.`);
-                renderMenu();
-                renderAdminMenuTable();
-            }
-        }
-    </script>
+    // Expose needed callbacks to window scope since type is module
+    window.addToCart = addToCart;
+    window.alterQty = alterQty;
+    window.toggleTheme = toggleTheme;
+    window.switchPanel = switchPanel;
+    window.toggleCartVisibility = toggleCartVisibility;
+    window.placeOrder = placeOrder;
+    window.updateOrderStatus = updateOrderStatus;
+    window.removeMenuItem = removeMenuItem;
+    window.initiateEditMenuItem = initiateEditMenuItem;
+    window.handleFormSubmit = handleFormSubmit;
+    window.resetFormState = resetFormState;
+    window.changeMenuSorting = changeMenuSorting;
+</script>
 </body>
 </html>
