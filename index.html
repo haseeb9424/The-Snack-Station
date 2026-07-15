@@ -1329,7 +1329,42 @@
     </div>
 
     <!-- SCRIPT INFRASTRUCTURE (STATE ENGINE + LOCALSTORAGE PERSISTENCE) -->
-    <script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbEYx361Xg3KfHoghlHAYTC-b8g6Yy2I8",
+            authDomain: "thesnackstation-c6ff9.firebaseapp.com",
+            projectId: "thesnackstation-c6ff9",
+            storageBucket: "thesnackstation-c6ff9.firebasestorage.app",
+            messagingSenderId: "830977242508",
+            appId: "1:830977242508:web:cac072840fc4c9366c12a9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Add these imports to your existing list
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+// Add this line after your 'const app = initializeApp(firebaseConfig);' line
+const db = getFirestore(app);
+
+// Simple test function
+function testConnection() {
+  if (db) {
+    console.log("Firebase and Firestore connection successful!");
+  } else {
+    console.log("Connection failed.");
+  }
+}
+
+testConnection();
+
         // --- DEFAULT SEED DATA ---
         const defaultMenuData = [
             { id: 1, name: "Gourmet Jalapeño Popper Fries", price: 450, category: "Fries", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", desc: "Crispy premium seasoned potato chips with warm cheese sauce & jalapeños." },
