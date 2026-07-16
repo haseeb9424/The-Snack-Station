@@ -112,6 +112,37 @@
             gap: var(--space-lg);
         }
 
+        .menu-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .menu-category-section {
+            width: 100%;
+        }
+
+        .menu-category-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.25rem;
+        }
+
+        .menu-category-heading h4 {
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .menu-category-count {
+            color: var(--accent);
+            background: var(--accent-glow);
+            border-radius: 20px;
+            padding: 4px 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
         @media (max-width: 1024px) {
             .cols-3, .cols-4 { grid-template-columns: repeat(2, 1fr); }
         }
@@ -741,6 +772,8 @@
             display: none;
             align-items: center;
             justify-content: center;
+            padding: 16px;
+            overflow: hidden;
         }
 
         .modal-overlay.active {
@@ -755,6 +788,9 @@
             max-width: 420px;
             padding: 2.5rem;
             position: relative;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
             animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             transition: background-color var(--transition), border-color var(--transition);
         }
@@ -765,13 +801,29 @@
         }
 
         .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: sticky;
+            top: 0;
+            float: right;
+            margin-top: -8px;
+            margin-right: -8px;
             background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
+            z-index: 2;
+        }
+
+        .modal-card::-webkit-scrollbar { width: 8px; }
+        .modal-card::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 8px; }
+
+        @media (max-width: 600px) {
+            .modal-overlay { padding: 10px; align-items: flex-start; }
+            .modal-card {
+                padding: 1.5rem;
+                margin-top: 10px;
+                max-height: calc(100vh - 20px);
+            }
+            .modal-title { padding-right: 28px; }
         }
 
         .modal-title {
@@ -978,6 +1030,34 @@
             color: white;
         }
 
+        .user-role-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+            padding: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            width: fit-content;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .user-role-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 9px 14px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .user-role-tab:hover { color: var(--text-main); background: var(--bg-input); }
+        .user-role-tab.active { color: white; background: var(--accent); }
+
         .tracking-card {
             max-width: 850px;
             margin: 0 auto;
@@ -1157,9 +1237,64 @@
             <div class="layout-grid cols-1">
                 <div>
                     <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
-                    <div class="grid-autofit" id="menu-container">
+                    <div class="menu-categories" id="menu-container">
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="signup-panel" class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Create Your Account</h2>
+                    <p>Save your delivery details for faster checkout.</p>
+                </div>
+                <button class="btn-secondary" onclick="switchPanel('portal')">
+                    <i data-lucide="arrow-left"></i> Back to Menu
+                </button>
+            </div>
+
+            <div class="card" style="max-width:650px; margin:0 auto;">
+                <form id="registration-page-form" onsubmit="handleRegistrationSubmit(event)">
+                    <div class="layout-grid cols-2">
+                        <div class="form-group">
+                            <label for="signup-name">Full Name</label>
+                            <input type="text" id="signup-name" placeholder="Your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Email Address</label>
+                            <input type="email" id="signup-email" placeholder="you@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-phone">Mobile Number</label>
+                            <input type="tel" id="signup-phone" placeholder="+92 300 0000000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-city">City</label>
+                            <select id="signup-city" required>
+                                <option value="Peshawar">Peshawar</option>
+                                <option value="Islamabad">Islamabad</option>
+                                <option value="Lahore">Lahore</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-address">Complete Address</label>
+                        <textarea id="signup-address" placeholder="House, street and area" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" minlength="6" placeholder="At least 6 characters" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" minlength="6" placeholder="Enter the password again" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%; margin-top:0.5rem;">
+                        Create Account
+                    </button>
+                </form>
+                <p class="modal-toggle-text">Already registered? <span onclick="openSignInModal()">Sign In</span></p>
             </div>
         </section>
 
@@ -1245,6 +1380,13 @@
                 </div>
             </div>
 
+            <div class="user-role-tabs" id="user-role-tabs">
+                <button class="user-role-tab active" data-role="all" onclick="setUserRoleFilter('all')">All Users <span id="count-role-all">0</span></button>
+                <button class="user-role-tab" data-role="customer" onclick="setUserRoleFilter('customer')">Customers <span id="count-role-customer">0</span></button>
+                <button class="user-role-tab" data-role="order_updater" onclick="setUserRoleFilter('order_updater')">Order Updaters <span id="count-role-order_updater">0</span></button>
+                <button class="user-role-tab" data-role="admin" onclick="setUserRoleFilter('admin')">Admins <span id="count-role-admin">0</span></button>
+            </div>
+
             <div class="table-container">
                 <table>
                     <thead>
@@ -1299,7 +1441,7 @@
                         </div>
                         <div class="form-group">
                             <label for="menu-item-img">Image Link URL</label>
-                            <input type="url" id="menu-item-img" placeholder="https://images.unsplash.com/..." required>
+                            <input type="url" id="menu-item-img" placeholder="https://example.com/item-image.jpg" required>
                         </div>
                         <div class="form-group">
                             <label for="menu-item-desc">Brief Description</label>
@@ -1430,8 +1572,24 @@
                     <input type="text" id="edit-profile-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit-profile-email">Email Address</label>
-                    <input type="email" id="edit-profile-email" required>
+                    <label for="edit-profile-email">Email Address (managed by Firebase Authentication)</label>
+                    <input type="email" id="edit-profile-email" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-phone">Mobile Number</label>
+                    <input type="tel" id="edit-profile-phone" placeholder="+92 300 0000000">
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-city">City</label>
+                    <select id="edit-profile-city">
+                        <option value="Lahore" selected>Lahore</option>
+                        <option value="Islamabad">Islamabad</option>
+                        <option value="Peshawar">Peshawar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-street">Address</label>
+                    <textarea id="edit-profile-street" placeholder="House, street and area"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="edit-profile-role">Account Level Role</label>
@@ -1443,6 +1601,9 @@
                 </div>
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:1.5rem;">
                     Commit Database Changes
+                </button>
+                <button type="button" class="btn-secondary" style="width:100%; justify-content:center; margin-top:10px;" onclick="sendManagedUserPasswordReset()">
+                    <i data-lucide="key-round"></i> Send Password Reset Email
                 </button>
             </form>
         </div>
@@ -1501,6 +1662,7 @@
         signInWithEmailAndPassword, 
         signOut, 
         onAuthStateChanged,
+        sendPasswordResetEmail,
         updatePassword,
         updateProfile
     } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -1517,12 +1679,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
-    const defaultUsersData = [
-        { id: "U-1001", uid: "mock-uid-sarah", name: "Sarah Khan", email: "sarah@gmail.com", joined: "2026-05-12", orderCount: 4, role: "customer" },
-        { id: "U-1002", uid: "mock-uid-usman", name: "Usman Ahmed", email: "usman@hotmail.com", joined: "2026-06-20", orderCount: 7, role: "order_updater" },
-        { id: "U-1003", uid: "mock-uid-admin", name: "Muhammad Admin", email: "admin@snackstation.com", joined: "2026-07-01", orderCount: 0, role: "admin" }
-    ];
 
     const MENU_CACHE_KEY = 'snackStationMenuCacheV1';
     const AUTH_UI_CACHE_KEY = 'snackStationAuthUiCacheV1';
@@ -1579,11 +1735,12 @@
     
     let state = {
         currentUser: null, 
-        users: defaultUsersData,
+        users: [],
         orders: [],
         cart: [],
         isLoginMode: false,
-        currentSort: 'default'
+        currentSort: 'default',
+        userRoleFilter: 'all'
     };
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -1647,12 +1804,14 @@
             state.currentUser = null;
             cachedAuthUser = null;
             writeCachedAuthUser(null);
+            switchPanel('portal');
         }
         isAuthLoading = false;
         renderAuthBar();
         renderNavigation();
         if (state.currentUser && (state.currentUser.role === 'admin' || state.currentUser.role === 'order_updater')) {
             loadOrders();
+            if (state.currentUser.role === 'admin') loadUsers();
         } else {
             state.orders = [];
             renderOrdersTable();
@@ -1700,6 +1859,7 @@
         if ((panelId === 'users' || panelId === 'admin') && role !== 'admin') return;
 
         if (panelId === 'orders') loadOrders();
+        if (panelId === 'users') loadUsers();
 
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
@@ -1746,7 +1906,78 @@
         title.innerText = toLogin ? "Welcome back to The Station" : "Create Your Station Profile";
         nameGrp.style.display = toLogin ? "none" : "block";
         document.getElementById('reg-username').required = !toLogin;
-        document.getElementById('modal-toggle-desc').innerHTML = toLogin ? `Need an account? <span onclick="toggleAuthMode(false)">Sign Up</span>` : `Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>`;
+        document.getElementById('modal-toggle-desc').innerHTML = toLogin ? `Need an account? <span onclick="openSignupPage()">Create Account</span>` : `Already registered? <span onclick="toggleAuthMode(true)">Sign In</span>`;
+    }
+
+    function openSignupPage() {
+        toggleAuthModal(false);
+        switchPanel('signup');
+    }
+
+    function openSignInModal() {
+        switchPanel('portal');
+        toggleAuthMode(true);
+        toggleAuthModal(true);
+    }
+
+    async function handleRegistrationSubmit(event) {
+        event.preventDefault();
+        const registrationForm = event.currentTarget;
+        const submitButton = event.submitter || registrationForm.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        const profile = {
+            name: document.getElementById('signup-name').value.trim(),
+            email: document.getElementById('signup-email').value.trim(),
+            phone: document.getElementById('signup-phone').value.trim(),
+            street: document.getElementById('signup-address').value.trim(),
+            city: document.getElementById('signup-city').value
+        };
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+        if (password !== confirmPassword) {
+            triggerToast("Passwords do not match.", "danger");
+            document.getElementById('signup-confirm-password').focus();
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Creating Account...';
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, profile.email, password);
+            await updateProfile(userCredential.user, { displayName: profile.name });
+            const now = new Date().toISOString();
+            const newUserProfile = {
+                uid: userCredential.user.uid,
+                ...profile,
+                joined: now.slice(0, 10),
+                orderCount: 0,
+                role: 'customer',
+                createdAt: now,
+                updatedAt: now
+            };
+            await setDoc(doc(db, "users", userCredential.user.uid), newUserProfile);
+            state.currentUser = newUserProfile;
+            cachedAuthUser = newUserProfile;
+            writeCachedAuthUser(newUserProfile);
+            registrationForm.reset();
+            switchPanel('portal');
+            renderAuthBar();
+            renderNavigation();
+            triggerToast("Account created successfully!");
+        } catch (error) {
+            const friendlyErrors = {
+                'auth/email-already-in-use': 'An account already exists with this email. Please sign in.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/weak-password': 'Password must contain at least 6 characters.',
+                'auth/network-request-failed': 'Network error. Please check your connection.'
+            };
+            triggerToast(friendlyErrors[error.code] || error.message || 'Could not create the account.', "danger");
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
     }
 
     async function handleAuthSubmit(e) {
@@ -1881,7 +2112,7 @@
             container.className = "auth-bar";
             container.innerHTML = `
                 <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
-                <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(false);">Create Account</button>
+                <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="openSignupPage()">Create Account</button>
             `;
         }
     }
@@ -1889,38 +2120,67 @@
     function renderMenu() {
         const container = document.getElementById('menu-container');
         if (isMenuLoading && menuData.length === 0) {
-            container.innerHTML = Array.from({ length: 4 }, () => `
-                <div class="menu-card" aria-label="Loading menu item">
-                    <div class="menu-img" style="background:linear-gradient(90deg,var(--bg-input),var(--border-color),var(--bg-input)); background-size:200% 100%; animation:menuLoading 1.2s infinite;"></div>
-                    <div class="menu-info">
-                        <div style="height:18px; width:72%; border-radius:8px; background:var(--bg-input); margin-bottom:12px;"></div>
-                        <div style="height:12px; width:100%; border-radius:8px; background:var(--bg-input); margin-bottom:8px;"></div>
-                        <div style="height:12px; width:60%; border-radius:8px; background:var(--bg-input);"></div>
+            container.innerHTML = `<div class="grid-autofit">${Array.from({ length: 4 }, () => `
+                    <div class="menu-card" aria-label="Loading menu item">
+                        <div class="menu-img" style="background:linear-gradient(90deg,var(--bg-input),var(--border-color),var(--bg-input)); background-size:200% 100%; animation:menuLoading 1.2s infinite;"></div>
+                        <div class="menu-info">
+                            <div style="height:18px; width:72%; border-radius:8px; background:var(--bg-input); margin-bottom:12px;"></div>
+                            <div style="height:12px; width:100%; border-radius:8px; background:var(--bg-input); margin-bottom:8px;"></div>
+                            <div style="height:12px; width:60%; border-radius:8px; background:var(--bg-input);"></div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('')}</div>`;
             return;
         }
-        container.innerHTML = menuData.length ? menuData.map(item => `
-            <div class="menu-card">
-                <img class="menu-img" src="${item.img}" alt="${item.name}">
-                <span class="menu-badge">${item.category}</span>
-                <div class="menu-info">
-                    <h4 class="menu-title">${item.name}</h4>
-                    <p class="menu-desc">${item.desc}</p>
-                    <div class="menu-footer">
-                        <span class="menu-price">Rs. ${item.price.toLocaleString()}</span>
-                        <button class="btn-add-cart" onclick='addToCart(${JSON.stringify(String(item.id))})'><i data-lucide="plus" style="width: 18px;"></i></button>
+
+        if (menuData.length) {
+            const categoryOrder = ['Burgers', 'Fries', 'Snacks', 'Chicken', 'Desserts'];
+            const groupedItems = menuData.reduce((groups, item) => {
+                const category = item.category || 'Other';
+                if (!groups[category]) groups[category] = [];
+                groups[category].push(item);
+                return groups;
+            }, {});
+            const populatedCategories = Object.keys(groupedItems).sort((a, b) => {
+                const aIndex = categoryOrder.indexOf(a);
+                const bIndex = categoryOrder.indexOf(b);
+                if (aIndex !== -1 || bIndex !== -1) {
+                    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+                }
+                return a.localeCompare(b);
+            });
+
+            container.innerHTML = populatedCategories.map(category => `
+                <section class="menu-category-section">
+                    <div class="menu-category-heading">
+                        <h4>${category}</h4>
+                        <span class="menu-category-count">${groupedItems[category].length} ${groupedItems[category].length === 1 ? 'item' : 'items'}</span>
                     </div>
-                </div>
-            </div>
-        `).join('') : `
-            <div class="card" style="text-align:center; color:var(--text-muted); grid-column:1/-1; padding:3rem;">
+                    <div class="grid-autofit">
+                        ${groupedItems[category].map(item => `
+                            <div class="menu-card">
+                                <img class="menu-img" src="${item.img}" alt="${item.name}">
+                                <span class="menu-badge">${item.category}</span>
+                                <div class="menu-info">
+                                    <h4 class="menu-title">${item.name}</h4>
+                                    <p class="menu-desc">${item.desc}</p>
+                                    <div class="menu-footer">
+                                        <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}</span>
+                                        <button class="btn-add-cart" onclick='addToCart(${JSON.stringify(String(item.id))})'><i data-lucide="plus" style="width:18px;"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `).join('');
+        } else {
+            container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); padding:3rem;">
                 <i data-lucide="utensils" style="width:36px; height:36px; margin-bottom:12px;"></i>
                 <h3 style="color:var(--text-main); margin-bottom:6px;">Menu coming soon</h3>
                 <p>No menu items are currently available.</p>
-            </div>
-        `;
+            </div>`;
+        }
         lucide.createIcons();
     }
 
@@ -2131,6 +2391,11 @@
         state.currentUser = null;
         cachedAuthUser = null;
         writeCachedAuthUser(null);
+        if (stopOrderTrackingListener) {
+            stopOrderTrackingListener();
+            stopOrderTrackingListener = null;
+        }
+        switchPanel('portal');
         renderAuthBar();
         renderNavigation();
         signOut(auth);
@@ -2170,6 +2435,145 @@
             state.orders = [];
             renderOrdersTable();
             triggerToast(error.message || "Could not load orders.", "danger");
+        }
+    }
+
+    async function loadUsers() {
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        try {
+            const snapshot = await getDocs(collection(db, "users"));
+            state.users = snapshot.docs
+                .map(userDoc => ({ id: userDoc.id, uid: userDoc.id, ...userDoc.data() }))
+                .sort((a, b) => String(b.createdAt || b.joined || '').localeCompare(String(a.createdAt || a.joined || '')));
+            renderUsersTable();
+        } catch (error) {
+            state.users = [];
+            renderUsersTable();
+            triggerToast(error.message || "Could not load users.", "danger");
+        }
+    }
+
+    function renderUsersTable() {
+        const tableBody = document.getElementById('users-table-body');
+        if (!tableBody) return;
+        const searchInput = document.getElementById('user-search-input');
+        const searchTerm = (searchInput?.value || '').trim().toLowerCase();
+        const filteredUsers = state.users.filter(user => {
+            const matchesRole = state.userRoleFilter === 'all' || (user.role || 'customer') === state.userRoleFilter;
+            const matchesSearch = String(user.name || '').toLowerCase().includes(searchTerm) ||
+                String(user.email || '').toLowerCase().includes(searchTerm);
+            return matchesRole && matchesSearch;
+        });
+
+        const roleCounts = {
+            all: state.users.length,
+            customer: state.users.filter(user => (user.role || 'customer') === 'customer').length,
+            order_updater: state.users.filter(user => user.role === 'order_updater').length,
+            admin: state.users.filter(user => user.role === 'admin').length
+        };
+        Object.entries(roleCounts).forEach(([role, count]) => {
+            const countElement = document.getElementById(`count-role-${role}`);
+            if (countElement) countElement.textContent = `(${count})`;
+        });
+        document.querySelectorAll('.user-role-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.role === state.userRoleFilter);
+        });
+
+        tableBody.innerHTML = filteredUsers.length ? filteredUsers.map(user => {
+            const roleLabels = {
+                customer: 'Customer',
+                order_updater: 'Order Updater',
+                admin: 'Admin'
+            };
+            const joinedDate = user.joined || (user.createdAt ? String(user.createdAt).slice(0, 10) : '—');
+            const initial = String(user.name || user.email || '?')[0].toUpperCase();
+            return `
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar">${initial}</div>
+                            <div>
+                                <strong>${user.name || 'Unnamed User'}</strong>
+                                <p style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">${user.phone || 'No mobile number'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.email || '—'}</td>
+                    <td>${joinedDate}</td>
+                    <td>${Number(user.orderCount || 0)}</td>
+                    <td><span class="badge-status ${user.role === 'admin' ? 'delivery' : user.role === 'order_updater' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
+                    <td style="text-align:center;">
+                        <button class="btn-action-edit" style="margin:0 auto;" onclick='openAdminUserEditor(${JSON.stringify(user.id)})'>
+                            <i data-lucide="user-cog" style="width:14px;"></i> Manage
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:3rem;">${searchTerm ? 'No matching users found.' : 'No users found.'}</td></tr>`;
+        lucide.createIcons();
+    }
+
+    function setUserRoleFilter(role) {
+        state.userRoleFilter = role;
+        renderUsersTable();
+    }
+
+    function openAdminUserEditor(userId) {
+        const user = state.users.find(profile => profile.id === userId);
+        if (!user) return;
+        document.getElementById('edit-profile-user-id').value = user.id;
+        document.getElementById('edit-profile-name').value = user.name || '';
+        document.getElementById('edit-profile-email').value = user.email || '';
+        document.getElementById('edit-profile-phone').value = user.phone || '';
+        const supportedCities = ['Lahore', 'Islamabad', 'Peshawar'];
+        const savedCity = supportedCities.find(city => city.toLowerCase() === String(user.city || '').toLowerCase());
+        document.getElementById('edit-profile-city').value = savedCity || 'Lahore';
+        document.getElementById('edit-profile-street').value = user.street || '';
+        document.getElementById('edit-profile-role').value = user.role || 'customer';
+        toggleAdminUserModal(true);
+    }
+
+    async function handleAdminUserUpdate(event) {
+        event.preventDefault();
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        const userId = document.getElementById('edit-profile-user-id').value;
+        const updates = {
+            name: document.getElementById('edit-profile-name').value.trim(),
+            phone: document.getElementById('edit-profile-phone').value.trim(),
+            city: document.getElementById('edit-profile-city').value.trim(),
+            street: document.getElementById('edit-profile-street').value.trim(),
+            role: document.getElementById('edit-profile-role').value,
+            updatedAt: new Date().toISOString()
+        };
+        try {
+            await setDoc(doc(db, "users", userId), updates, { merge: true });
+            toggleAdminUserModal(false);
+            await loadUsers();
+            triggerToast("User profile updated!");
+        } catch (error) {
+            triggerToast(error.message || "Could not update the user.", "danger");
+        }
+    }
+
+    async function sendManagedUserPasswordReset() {
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        const email = document.getElementById('edit-profile-email').value.trim();
+        if (!email) {
+            triggerToast("This user does not have an email address.", "danger");
+            return;
+        }
+        if (!confirm(`Send a password reset email to ${email}?`)) return;
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            triggerToast(`Password reset email sent to ${email}.`);
+        } catch (error) {
+            const friendlyErrors = {
+                'auth/invalid-email': 'The user email address is invalid.',
+                'auth/user-not-found': 'No Firebase Authentication account was found for this email.',
+                'auth/too-many-requests': 'Too many requests. Please wait and try again.'
+            };
+            triggerToast(friendlyErrors[error.code] || error.message || "Could not send the reset email.", "danger");
         }
     }
 
@@ -2312,7 +2716,7 @@
         document.getElementById('menu-item-name').value = item.name;
         document.getElementById('menu-item-price').value = item.price;
         document.getElementById('menu-item-category').value = item.category;
-        document.getElementById('menu-item-img').value = item.img;
+        document.getElementById('menu-item-img').value = item.img || '';
         document.getElementById('menu-item-desc').value = item.desc;
         document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="pencil" style="color:var(--accent);"></i> Edit Menu Item`;
         document.getElementById('btn-submit-action').textContent = 'Save Changes';
@@ -2371,9 +2775,17 @@
     window.logOut = logOut;
     window.toggleAuthModal = toggleAuthModal;
     window.toggleAuthMode = toggleAuthMode;
+    window.openSignupPage = openSignupPage;
+    window.openSignInModal = openSignInModal;
+    window.handleRegistrationSubmit = handleRegistrationSubmit;
     window.toggleSettingsModal = toggleSettingsModal;
     window.handleSettingsUpdate = handleSettingsUpdate;
     window.toggleAdminUserModal = toggleAdminUserModal;
+    window.openAdminUserEditor = openAdminUserEditor;
+    window.handleAdminUserUpdate = handleAdminUserUpdate;
+    window.sendManagedUserPasswordReset = sendManagedUserPasswordReset;
+    window.renderUsersTable = renderUsersTable;
+    window.setUserRoleFilter = setUserRoleFilter;
     window.toggleGuestCheckoutModal = toggleGuestCheckoutModal;
     window.handleAuthSubmit = handleAuthSubmit;
     window.submitGuestOrder = submitGuestOrder;
