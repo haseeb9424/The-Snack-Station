@@ -526,9 +526,11 @@
                 padding: 0.85rem;
             }
 
-            .logo-text {
-                display: none;
-            }
+            .logo-area { gap: 8px; }
+            .logo-icon { padding: 8px; }
+            .logo-text { display: block; min-width: 0; }
+            .logo-text h1 { font-size: 0.92rem; white-space: nowrap; }
+            .logo-text p { font-size: 0.58rem; letter-spacing: 0.6px; }
 
             .auth-bar {
                 padding: 0.5rem;
@@ -788,6 +790,7 @@
             max-width: 420px;
             padding: 2.5rem;
             position: relative;
+            cursor: pointer;
             max-height: calc(100vh - 32px);
             overflow-y: auto;
             overscroll-behavior: contain;
@@ -932,6 +935,8 @@
         .badge-status.pending { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
         .badge-status.preparing { background-color: rgba(59, 130, 246, 0.1); color: var(--info); }
         .badge-status.delivery { background-color: rgba(255, 94, 58, 0.1); color: var(--accent); }
+        .badge-status.ready { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-status.rejected { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
         .badge-status.completed { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
 
         .action-select {
@@ -1057,6 +1062,403 @@
 
         .user-role-tab:hover { color: var(--text-main); background: var(--bg-input); }
         .user-role-tab.active { color: white; background: var(--accent); }
+
+        .admin-option-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px 38px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .admin-option-row input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 9px 10px;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .meal-item-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 78px 38px;
+            gap: 8px;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 11px;
+            padding: 9px;
+        }
+
+        .meal-item-row select,
+        .meal-item-row input {
+            min-width: 0;
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 9px;
+            color: var(--text-main);
+        }
+
+        .meal-included-list {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+        }
+
+        .meal-included-list h4 { font-size:0.85rem; margin-bottom:8px; }
+        .meal-included-list ul { list-style:none; display:grid; gap:6px; }
+        .meal-included-list li { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:0.82rem; }
+        .meal-included-list li::before { content:'✓'; color:var(--success); font-weight:800; }
+
+        .option-choice {
+            display: grid;
+            grid-template-columns: 20px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .option-choice > span:first-of-type {
+            min-width: 0;
+            line-height: 1.35;
+        }
+        .option-choice input {
+            accent-color: var(--accent);
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .option-choice:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .option-choice:has(input:checked) {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .option-price-badge {
+            color: var(--accent);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .customization-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .customization-section-header h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .customization-section-header span {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+        }
+
+        .customization-option-list {
+            display: grid;
+            gap: 9px;
+        }
+
+        .admin-addon-group {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-input));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: none;
+        }
+
+        .admin-addon-group-header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .admin-addon-group-header input[type="text"] {
+            min-width: 0;
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 9px 10px;
+            color: var(--text-main);
+        }
+
+        .admin-check-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 5px;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            white-space: normal;
+        }
+
+        .admin-check-label input[type="checkbox"],
+        .admin-check-label input[type="radio"] {
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px;
+            margin: 0;
+            padding: 0;
+            flex: 0 0 16px;
+            accent-color: var(--accent);
+        }
+
+        .admin-check-label > span {
+            min-width: 0;
+            flex: 1;
+            text-align: left;
+        }
+
+        .admin-addon-settings {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .admin-addon-settings .admin-check-label {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 11px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .admin-addon-settings input { accent-color: var(--accent); }
+        .admin-addon-option-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 105px 34px;
+            gap: 8px;
+            padding: 0 10px 5px;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .admin-addon-options { display: grid; gap: 9px; }
+        .admin-addon-option-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 105px 34px;
+            gap: 8px;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 11px;
+            padding: 10px;
+        }
+
+        .admin-addon-option-row input[type="text"],
+        .admin-addon-option-row input[type="number"] {
+            min-width: 0;
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            color: var(--text-main);
+        }
+
+        .admin-addon-option-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            padding: 8px 2px 0;
+            border-top: 1px dashed var(--border-color);
+            margin-top: 2px;
+        }
+
+        .admin-addon-option-footer .admin-check-label {
+            color: var(--text-main);
+            cursor: pointer;
+            width: 100%;
+            justify-content: flex-start;
+            gap: 8px;
+            font-size: 0.78rem;
+        }
+
+        .admin-addon-option-footer input { margin: 0; flex: 0 0 auto; }
+
+        .admin-workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-lg);
+            align-items: start;
+        }
+
+        .admin-menu-list-card { min-width: 0; }
+        .admin-header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .admin-control-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+        .admin-control-bar .search-bar { flex:1; min-width:220px; }
+        .admin-control-bar select { width:auto; min-width:150px; }
+        .store-switch { display:flex; align-items:center; gap:9px; padding:10px 13px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--bg-input); font-size:.8rem; font-weight:700; }
+        .store-switch input { width:18px; height:18px; accent-color:var(--success); }
+        .store-status-banner { display:none; margin-bottom:18px; padding:13px 16px; border:1px solid rgba(239,68,68,.3); border-radius:var(--radius-md); background:rgba(239,68,68,.1); color:var(--danger); font-weight:700; }
+        .menu-card.sold-out { opacity:.72; cursor:not-allowed; }
+        .sold-out-badge { position:absolute; top:14px; right:14px; z-index:2; padding:6px 10px; border-radius:999px; background:var(--danger); color:#fff; font-size:.7rem; font-weight:800; text-transform:uppercase; }
+        .menu-labels { position:absolute; top:14px; left:14px; z-index:2; display:flex; flex-wrap:wrap; gap:5px; max-width:70%; }
+        .menu-label { padding:5px 8px; border-radius:999px; background:rgba(9,10,15,.82); color:#fff; font-size:.62rem; font-weight:800; backdrop-filter:blur(5px); }
+        .menu-label.spicy { background:rgba(239,68,68,.9); }
+        .menu-label.vegetarian { background:rgba(16,185,129,.9); }
+        .menu-label.popular { background:rgba(245,158,11,.92); }
+        .menu-label.new { background:rgba(59,130,246,.92); }
+        .addon-limit-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+        .addon-limit-grid label { font-size:.72rem; color:var(--text-muted); }
+        .addon-limit-grid input { margin-top:5px; }
+        #menu-item-workspace-card { border:0; padding:0; background:transparent; overflow:visible; }
+        #item-editor-modal .modal-card { width:min(720px, calc(100vw - 28px)); max-height:90vh; overflow-y:auto; }
+        #category-manager-modal .modal-card { width:min(560px, calc(100vw - 28px)); }
+
+        .category-manager {
+            padding: 14px;
+            margin-bottom: 18px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-input);
+        }
+
+        .category-manager-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+        }
+
+        .category-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 11px;
+        }
+
+        .category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px 6px 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: .76rem;
+            font-weight: 700;
+        }
+
+        .category-chip button {
+            width: 22px;
+            height: 22px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .category-chip button:hover { background: rgba(239,68,68,.12); color: var(--danger); }
+        .category-chip.hidden-category { opacity:.58; }
+
+        .kitchen-board { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; align-items:start; }
+        .kitchen-column { background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:12px; min-height:260px; }
+        .kitchen-column-header { display:flex; justify-content:space-between; align-items:center; padding:5px 3px 13px; }
+        .kitchen-column-header span { min-width:27px; height:27px; display:grid; place-items:center; border-radius:999px; background:var(--bg-card); font-size:.75rem; font-weight:800; }
+        .kitchen-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; margin-bottom:10px; }
+        .kitchen-card-head { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .kitchen-card-items { display:grid; gap:7px; margin:10px 0; font-size:.8rem; }
+        .kitchen-item-note { color:var(--warning); font-size:.72rem; margin-top:2px; }
+        .kitchen-card-actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
+        .kitchen-card-actions button { flex:1; padding:8px 10px; white-space:nowrap; }
+        .prep-time-control { display:flex; align-items:center; gap:7px; margin-top:10px; }
+        .prep-time-control input { width:76px; padding:8px; }
+        .empty-kitchen-column { text-align:center; color:var(--text-muted); padding:36px 10px; font-size:.8rem; }
+
+        @media (max-width: 1100px) {
+            .admin-workspace-grid { grid-template-columns: 1fr; }
+            .kitchen-board { grid-template-columns:1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .admin-addon-option-head { grid-template-columns: 1fr 90px 34px; }
+            .admin-addon-option-row { grid-template-columns: 1fr 90px 34px; }
+            .admin-header-actions { width:100%; }
+            .admin-header-actions button { flex:1; }
+            .admin-control-bar > * { width:100% !important; }
+        }
+
+        .modal-card.item-detail-modal {
+            max-width: 920px;
+            width: min(920px, 100%);
+            padding: 1.5rem;
+        }
+
+        .item-detail-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+            gap: 1.75rem;
+            align-items: start;
+        }
+
+        .item-detail-visual {
+            min-height: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            position: sticky;
+            top: 0;
+        }
+
+        .item-detail-visual img {
+            width: 100%;
+            height: auto;
+            max-height: 520px;
+            object-fit: contain;
+            display: block;
+            border-radius: var(--radius-lg);
+        }
+
+        .item-detail-content { min-width: 0; }
+        .item-detail-content .modal-title { margin-bottom: 0.6rem; padding-right: 32px; }
+
+        @media (max-width: 768px) {
+            .modal-card.item-detail-modal { padding: 1rem; }
+            .item-detail-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+            .item-detail-visual { min-height: 0; position: static; }
+            .item-detail-visual img { max-height: 380px; }
+        }
 
         .tracking-card {
             max-width: 850px;
@@ -1200,7 +1602,7 @@
                                 <span>Total Amount</span>
                                 <span id="total-val">Rs. 0</span>
                             </div>
-                            <button class="btn-primary btn-checkout" onclick="placeOrder()">
+                            <button class="btn-primary btn-checkout" id="checkout-button" onclick="placeOrder()">
                                 Place Order <i data-lucide="arrow-right" style="width:16px;"></i>
                             </button>
                         </div>
@@ -1234,6 +1636,10 @@
                 </div>
             </div>
 
+            <div class="store-status-banner" id="store-status-banner">
+                <i data-lucide="store" style="width:18px; vertical-align:middle; margin-right:6px;"></i>
+                The kitchen is currently closed. You may browse the menu, but ordering is unavailable.
+            </div>
             <div class="layout-grid cols-1">
                 <div>
                     <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
@@ -1348,21 +1754,10 @@
                 </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer Account</th>
-                            <th>Items Placed</th>
-                            <th>Bill</th>
-                            <th>Status Badge</th>
-                            <th>Update Lifecycle</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-table-body">
-                    </tbody>
-                </table>
+            <div class="kitchen-board" id="kitchen-board"></div>
+            <div class="card" style="margin-top:18px;">
+                <h3 style="margin-bottom:12px;">Recent Completed and Rejected Orders</h3>
+                <div id="order-history-list" class="table-container"></div>
             </div>
         </section>
 
@@ -1409,12 +1804,20 @@
             <div class="panel-header">
                 <div>
                     <h2>Admin Desk</h2>
-                    <p>Add new culinary options or remove items currently on rotation.</p>
+                    <p>Manage the live menu, item availability and food categories.</p>
+                </div>
+                <div class="admin-header-actions">
+                    <button type="button" class="btn-primary" onclick="openNewItemModal()">
+                        <i data-lucide="plus-circle" style="width:17px;"></i> Add New Item
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="toggleCategoryManagerModal(true)">
+                        <i data-lucide="tags" style="width:17px;"></i> Manage Categories
+                    </button>
                 </div>
             </div>
 
-            <div class="layout-grid cols-3">
-                <div class="card" style="height: fit-content;">
+            <div class="admin-workspace-grid">
+                <div class="card" id="menu-item-workspace-card" style="height: fit-content;">
                     <h3 id="form-workspace-title" style="font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
                         <i data-lucide="plus-circle" style="color: var(--accent);"></i> Add New Item
                     </h3>
@@ -1431,13 +1834,27 @@
                         </div>
                         <div class="form-group">
                             <label for="menu-item-category">Food Category</label>
-                            <select id="menu-item-category" required>
-                                <option value="Burgers">Burgers</option>
-                                <option value="Fries">Fries</option>
-                                <option value="Snacks">Snacks</option>
-                                <option value="Chicken">Chicken</option>
-                                <option value="Desserts">Desserts</option>
-                            </select>
+                            <select id="menu-item-category" onchange="handleMenuCategoryChange()" required></select>
+                        </div>
+                        <div class="form-group" id="meal-builder-section" style="display:none;">
+                            <label>Meal Composition</label>
+                            <div class="admin-addon-settings" style="margin-bottom:10px;">
+                                <label class="admin-check-label">
+                                    <input type="radio" name="meal-build-mode" value="existing" checked onchange="toggleMealBuildMode()">
+                                    <span><strong>Use existing items</strong><br><small style="color:var(--text-muted);">Select products already in the menu</small></span>
+                                </label>
+                                <label class="admin-check-label">
+                                    <input type="radio" name="meal-build-mode" value="standalone" onchange="toggleMealBuildMode()">
+                                    <span><strong>Create standalone meal</strong><br><small style="color:var(--text-muted);">Use the fields above as a new meal</small></span>
+                                </label>
+                            </div>
+                            <div id="existing-meal-items-editor">
+                                <div id="meal-items-container" style="display:grid; gap:8px;"></div>
+                                <button type="button" class="btn-secondary" style="width:100%; margin-top:8px; padding:9px;" onclick="addMealItemRow()">
+                                    <i data-lucide="plus" style="width:15px;"></i> Add Existing Menu Item
+                                </button>
+                                <p style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">The meal price remains editable, allowing you to apply a combo discount.</p>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="menu-item-img">Image Link URL</label>
@@ -1446,6 +1863,38 @@
                         <div class="form-group">
                             <label for="menu-item-desc">Brief Description</label>
                             <textarea id="menu-item-desc" placeholder="Describe flavor profiles, main key ingredients..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Menu Labels</label>
+                            <div class="admin-addon-settings">
+                                <label class="admin-check-label"><input type="checkbox" name="menu-label" value="Popular"><span><strong>Popular</strong></span></label>
+                                <label class="admin-check-label"><input type="checkbox" name="menu-label" value="New"><span><strong>New</strong></span></label>
+                                <label class="admin-check-label"><input type="checkbox" name="menu-label" value="Spicy"><span><strong>Spicy</strong></span></label>
+                                <label class="admin-check-label"><input type="checkbox" name="menu-label" value="Vegetarian"><span><strong>Vegetarian</strong></span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Size / Main Options</label>
+                            <div id="menu-variants-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+                            <button type="button" class="btn-secondary" style="width:100%; margin-top:8px; padding:9px;" onclick="addAdminOptionRow('variant')">
+                                <i data-lucide="plus" style="width:15px;"></i> Add Size or Option
+                            </button>
+                            <p style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">Example: Small + Rs. 0, Large + Rs. 200.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Add-on Groups</label>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                                <button type="button" class="btn-secondary" style="padding:9px;" onclick="applyMealTemplate('combo')"><i data-lucide="sandwich" style="width:15px;"></i> Combo Template</button>
+                                <button type="button" class="btn-secondary" style="padding:9px;" onclick="applyMealTemplate('family')"><i data-lucide="users" style="width:15px;"></i> Family Template</button>
+                            </div>
+                            <div id="menu-addon-groups-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                            <button type="button" class="btn-secondary" style="width:100%; margin-top:8px; padding:9px;" onclick="addAdminAddonGroup()">
+                                <i data-lucide="plus" style="width:15px;"></i> Add Add-on Group
+                            </button>
+                            <p style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">Example: “Choose a drink” · Required · Single selection · Pepsi selected by default.</p>
                         </div>
                         
                         <div style="display:flex; flex-direction:column; gap:10px; margin-top: 0.5rem;">
@@ -1459,10 +1908,27 @@
                     </form>
                 </div>
 
-                <div class="card" style="grid-column: span 2;">
+                <div class="card admin-menu-list-card">
                     <h3 style="font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
                         <i data-lucide="menu" style="color: var(--accent);"></i> Current Kitchen Offerings
                     </h3>
+                    <div class="admin-control-bar">
+                        <div class="search-bar">
+                            <i data-lucide="search" style="width:17px; color:var(--text-muted);"></i>
+                            <input id="admin-menu-search" type="text" placeholder="Search menu items..." oninput="setAdminMenuSearch(this.value)">
+                        </div>
+                        <select class="action-select" id="admin-category-filter" onchange="setAdminMenuFilter('category', this.value)"><option value="all">All categories</option></select>
+                        <select class="action-select" id="admin-status-filter" onchange="setAdminMenuFilter('status', this.value)">
+                            <option value="all">All statuses</option>
+                            <option value="active">Active</option>
+                            <option value="soldout">Sold Out</option>
+                            <option value="hidden">Hidden</option>
+                        </select>
+                        <label class="store-switch" title="Customers can only order while the store is open">
+                            <input type="checkbox" id="store-open-toggle" onchange="setStoreOpen(this.checked)">
+                            <span id="store-open-label">Store Open</span>
+                        </label>
+                    </div>
                     <div class="table-container">
                         <table>
                             <thead>
@@ -1470,6 +1936,8 @@
                                     <th>Item Details</th>
                                     <th>Category</th>
                                     <th>Price</th>
+                                    <th style="text-align:center;">Stock</th>
+                                    <th style="text-align:center;">Visibility</th>
                                     <th style="text-align: center;">Actions</th>
                                 </tr>
                             </thead>
@@ -1481,6 +1949,31 @@
             </div>
         </section>
     </main>
+
+    <div class="modal-overlay" id="item-editor-modal">
+        <div class="modal-card">
+            <button class="modal-close" type="button" onclick="closeItemEditorModal()"><i data-lucide="x"></i></button>
+            <div id="item-editor-modal-body"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="category-manager-modal">
+        <div class="modal-card">
+            <button class="modal-close" type="button" onclick="toggleCategoryManagerModal(false)"><i data-lucide="x"></i></button>
+            <h3 class="modal-title" style="margin-bottom:6px;">Manage Food Categories</h3>
+            <p style="color:var(--text-muted); font-size:.82rem; margin-bottom:18px;">Add categories for organizing products on the customer menu.</p>
+            <div class="category-manager" style="margin-bottom:0;">
+                <div class="category-manager-row">
+                    <input type="text" id="new-category-name" maxlength="40" placeholder="e.g. Drinks" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); addMenuCategory(); }">
+                    <button type="button" class="btn-primary" style="padding:10px 13px;" onclick="addMenuCategory()">
+                        <i data-lucide="plus" style="width:15px;"></i> Add Category
+                    </button>
+                </div>
+                <div class="category-chip-list" id="category-chip-list"></div>
+                <p style="font-size:.7rem; color:var(--text-muted); margin-top:10px;">Categories in use cannot be removed until their menu items are moved.</p>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="auth-modal">
         <div class="modal-card">
@@ -1639,6 +2132,51 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="item-customization-modal">
+        <div class="modal-card item-detail-modal">
+            <button class="modal-close" onclick="toggleItemCustomizationModal(false)">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="item-detail-grid">
+                <div class="item-detail-visual">
+                    <img id="customization-item-image" alt="Menu item">
+                </div>
+                <div class="item-detail-content">
+                    <h3 class="modal-title" id="customization-item-title">Customize Item</h3>
+                    <p id="customization-item-description" style="color:var(--text-muted); line-height:1.6; margin-bottom:1.5rem;"></p>
+                    <div id="customization-meal-items" style="display:none; margin-bottom:1.25rem;"></div>
+                    <form id="item-customization-form" onsubmit="confirmCustomizedItem(event)">
+                        <input type="hidden" id="customization-item-id">
+                        <div id="customization-variants-section" class="form-group"></div>
+                        <div id="customization-addons-section" class="form-group"></div>
+                        <div class="form-group" id="customization-instructions-section">
+                            <label for="customization-instructions">Special instructions <span style="color:var(--text-muted); font-weight:500;">(optional)</span></label>
+                            <textarea id="customization-instructions" maxlength="250" placeholder="e.g. No onions, extra crispy"></textarea>
+                            <p style="font-size:.7rem; color:var(--text-muted); margin-top:5px;">The kitchen will try its best to accommodate your request.</p>
+                        </div>
+                        <div class="form-group" id="customization-quantity-section">
+                            <div class="customization-section-header">
+                                <h4><i data-lucide="plus-minus" style="width:17px; color:var(--accent);"></i> Quantity</h4>
+                            </div>
+                            <div class="cart-qty-controls" style="justify-content:center; width:fit-content; padding:4px; margin:0 auto;">
+                                <button type="button" class="cart-qty-btn" onclick="changeCustomizationQuantity(-1)">−</button>
+                                <strong id="customization-quantity" style="min-width:34px; text-align:center; font-size:1.05rem;">1</strong>
+                                <button type="button" class="cart-qty-btn" onclick="changeCustomizationQuantity(1)">+</button>
+                            </div>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Price</span>
+                            <span id="customization-total">Rs. 0</span>
+                        </div>
+                        <button type="submit" id="customization-add-button" class="btn-primary" style="width:100%; margin-top:1rem;">
+                            <i data-lucide="shopping-basket" style="width:18px;"></i> Add to Basket
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast-box">
         <i data-lucide="check-circle" id="toast-icon" style="color: var(--accent)"></i>
         <span id="toast-message">Success message text!</span>
@@ -1682,6 +2220,7 @@
 
     const MENU_CACHE_KEY = 'snackStationMenuCacheV1';
     const AUTH_UI_CACHE_KEY = 'snackStationAuthUiCacheV1';
+    const DEFAULT_CATEGORIES = ['Combos', 'Family Meals', 'Burgers', 'Fries', 'Snacks', 'Chicken', 'Desserts'];
 
     function readCachedMenu() {
         try {
@@ -1732,6 +2271,8 @@
     let cachedAuthUser = readCachedAuthUser();
     let isAuthLoading = true;
     let stopOrderTrackingListener = null;
+    let stopKitchenOrdersListener = null;
+    let kitchenListenerInitialized = false;
     
     let state = {
         currentUser: null, 
@@ -1740,22 +2281,34 @@
         cart: [],
         isLoginMode: false,
         currentSort: 'default',
-        userRoleFilter: 'all'
+        userRoleFilter: 'all',
+        categories: [...DEFAULT_CATEGORIES],
+        hiddenCategories: [],
+        adminMenuSearch: '',
+        adminMenuCategoryFilter: 'all',
+        adminMenuStatusFilter: 'all',
+        storeOpen: true
     };
 
     window.addEventListener('DOMContentLoaded', () => {
+        const itemWorkspace = document.getElementById('menu-item-workspace-card');
+        const itemModalBody = document.getElementById('item-editor-modal-body');
+        if (itemWorkspace && itemModalBody) itemModalBody.appendChild(itemWorkspace);
         initTheme();
         renderMenu();
         renderCart();
         if (typeof renderOrdersTable === 'function') renderOrdersTable();
         if (typeof renderUsersTable === 'function') renderUsersTable();
         renderAdminMenuTable();
+        renderCategoryManager();
         renderNavigation();
         renderAuthBar();
         lucide.createIcons();
         loadMenuItems();
+        loadMenuCategories();
+        loadStoreSettings();
 
-        const modals = ['auth-modal', 'settings-modal', 'admin-user-edit-modal', 'guest-checkout-modal'];
+        const modals = ['auth-modal', 'settings-modal', 'admin-user-edit-modal', 'guest-checkout-modal', 'item-customization-modal', 'item-editor-modal', 'category-manager-modal'];
         modals.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1773,6 +2326,7 @@
                 toggleSettingsModal(false);
                 toggleAdminUserModal(false);
                 toggleGuestCheckoutModal(false);
+                toggleItemCustomizationModal(false);
             }
         });
     });
@@ -1898,6 +2452,10 @@
     function toggleGuestCheckoutModal(show) {
         document.getElementById('guest-checkout-modal').classList.toggle('active', show);
         if (!show) document.getElementById('guest-checkout-form').reset();
+    }
+    function toggleItemCustomizationModal(show) {
+        document.getElementById('item-customization-modal').classList.toggle('active', show);
+        if (!show) document.getElementById('item-customization-form').reset();
     }
 
     function toggleAuthMode(toLogin) {
@@ -2136,9 +2694,10 @@
             return;
         }
 
-        if (menuData.length) {
-            const categoryOrder = ['Burgers', 'Fries', 'Snacks', 'Chicken', 'Desserts'];
-            const groupedItems = menuData.reduce((groups, item) => {
+        const visibleMenuItems = menuData.filter(item => item.isVisible !== false && !state.hiddenCategories.includes(item.category));
+        if (visibleMenuItems.length) {
+            const categoryOrder = state.categories;
+            const groupedItems = visibleMenuItems.reduce((groups, item) => {
                 const category = item.category || 'Other';
                 if (!groups[category]) groups[category] = [];
                 groups[category].push(item);
@@ -2161,15 +2720,17 @@
                     </div>
                     <div class="grid-autofit">
                         ${groupedItems[category].map(item => `
-                            <div class="menu-card">
+                            <div class="menu-card ${item.isSoldOut ? 'sold-out' : ''}" ${item.isSoldOut ? '' : `onclick='openItemCustomization(${JSON.stringify(String(item.id))})' role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemCustomization(${JSON.stringify(String(item.id))})}"`}>
                                 <img class="menu-img" src="${item.img}" alt="${item.name}">
+                                ${Array.isArray(item.labels) && item.labels.length ? `<div class="menu-labels">${item.labels.map(label => `<span class="menu-label ${label.toLowerCase()}">${label}</span>`).join('')}</div>` : ''}
+                                ${item.isSoldOut ? '<span class="sold-out-badge">Sold Out</span>' : ''}
                                 <span class="menu-badge">${item.category}</span>
                                 <div class="menu-info">
                                     <h4 class="menu-title">${item.name}</h4>
                                     <p class="menu-desc">${item.desc}</p>
                                     <div class="menu-footer">
                                         <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}</span>
-                                        ${canAddToCart ? `<button class="btn-add-cart" onclick='addToCart(${JSON.stringify(String(item.id))})'><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
+                                        ${canAddToCart && state.storeOpen && !item.isSoldOut ? `<button class="btn-add-cart" onclick='event.stopPropagation();quickAddToCart(${JSON.stringify(String(item.id))})' aria-label="Quick add to basket"><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -2187,25 +2748,234 @@
         lucide.createIcons();
     }
 
-    function addToCart(itemId) {
+    function openItemCustomization(itemId) {
+        const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
+        if (!item || item.isVisible === false || item.isSoldOut) return;
+        const variants = Array.isArray(item.variants) ? item.variants : [];
+        const addonGroups = Array.isArray(item.addonGroups) && item.addonGroups.length
+            ? item.addonGroups
+            : (Array.isArray(item.addons) && item.addons.length
+                ? [{ name: 'Extras', required: false, multiple: true, defaultOptionIndex: -1, options: item.addons }]
+                : []);
+
+        document.getElementById('customization-item-id').value = String(item.id);
+        document.getElementById('customization-item-title').textContent = item.name;
+        document.getElementById('customization-item-image').src = item.img || '';
+        document.getElementById('customization-item-description').textContent = item.desc || '';
+        document.getElementById('customization-instructions').value = '';
+        const mealItemsContainer = document.getElementById('customization-meal-items');
+        const includedMealItems = Array.isArray(item.mealItems) ? item.mealItems : [];
+        mealItemsContainer.style.display = includedMealItems.length ? 'block' : 'none';
+        mealItemsContainer.innerHTML = includedMealItems.length ? `
+            <div class="meal-included-list">
+                <h4>Included in this meal</h4>
+                <ul>${includedMealItems.map(mealItem => `<li>${Number(mealItem.quantity || 1)} × ${mealItem.name}</li>`).join('')}</ul>
+            </div>
+        ` : '';
+        document.getElementById('customization-quantity').textContent = '1';
+        const canAdd = (!state.currentUser || state.currentUser.role === 'customer') && state.storeOpen;
+        document.getElementById('customization-add-button').style.display = canAdd ? 'flex' : 'none';
+        document.getElementById('customization-quantity-section').style.display = canAdd ? 'block' : 'none';
+        const variantSection = document.getElementById('customization-variants-section');
+        const addonSection = document.getElementById('customization-addons-section');
+
+        variantSection.style.display = variants.length ? 'block' : 'none';
+        variantSection.innerHTML = variants.length ? `
+            <div class="customization-section-header">
+                <h4><i data-lucide="layers-3" style="width:17px; color:var(--accent);"></i> Choose an option</h4>
+                <span>Required · Select one</span>
+            </div>
+            <div class="customization-option-list">
+                ${variants.map((variant, index) => `
+                    <label class="option-choice">
+                        <input type="radio" name="item-variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="updateCustomizationTotal()">
+                        <span><strong>${variant.name}</strong></span>
+                        <strong class="option-price-badge">${Number(variant.priceAdjustment || 0) ? `+ Rs. ${Number(variant.priceAdjustment).toLocaleString()}` : 'Included'}</strong>
+                    </label>
+                `).join('')}
+            </div>
+        ` : '';
+
+        addonSection.style.display = addonGroups.length ? 'block' : 'none';
+        addonSection.innerHTML = addonGroups.length ? addonGroups.map((group, groupIndex) => `
+            <div class="form-group addon-customer-group" data-group-index="${groupIndex}" data-min="${Number(group.minSelections ?? (group.required ? 1 : 0))}" data-max="${Number(group.maxSelections ?? (group.multiple ? Math.max(1, group.options?.length || 1) : 1))}">
+                <div class="customization-section-header">
+                    <h4><i data-lucide="circle-plus" style="width:17px; color:var(--accent);"></i> ${group.name}</h4>
+                    <span>${Number(group.minSelections ?? (group.required ? 1 : 0)) > 0 ? `Choose at least ${Number(group.minSelections ?? 1)}` : 'Optional'} · Up to ${Number(group.maxSelections ?? (group.multiple ? Math.max(1, group.options?.length || 1) : 1))}</span>
+                </div>
+                <div class="customization-option-list">
+                    ${(Number(group.minSelections ?? (group.required ? 1 : 0)) === 0 && !group.multiple) ? `
+                        <label class="option-choice">
+                            <input type="radio" name="addon-group-${groupIndex}" value="" ${Number(group.defaultOptionIndex) < 0 ? 'checked' : ''} onchange="handleAddonSelection(${groupIndex}, this)">
+                            <span><strong>No, thanks</strong></span>
+                            <strong class="option-price-badge">Included</strong>
+                        </label>
+                    ` : ''}
+                    ${(Array.isArray(group.options) ? group.options : []).map((addon, optionIndex) => `
+                        <label class="option-choice">
+                            <input type="${group.multiple ? 'checkbox' : 'radio'}" name="addon-group-${groupIndex}" value="${optionIndex}" ${optionIndex === Number(group.defaultOptionIndex) ? 'checked' : ''} onchange="handleAddonSelection(${groupIndex}, this)">
+                            <span><strong>${addon.name}</strong></span>
+                            <strong class="option-price-badge">${Number(addon.priceAdjustment || 0) ? `+ Rs. ${Number(addon.priceAdjustment).toLocaleString()}` : 'Included'}</strong>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('') : '';
+
+        updateCustomizationTotal();
+        toggleItemCustomizationModal(true);
+        lucide.createIcons();
+    }
+
+    function quickAddToCart(itemId) {
+        const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
+        if (!item || item.isVisible === false || item.isSoldOut || !state.storeOpen) return;
+        const variants = Array.isArray(item.variants) ? item.variants : [];
+        const addonGroups = Array.isArray(item.addonGroups) ? item.addonGroups : [];
+        const selectedVariant = variants[0] || null;
+        const selectedAddons = [];
+
+        for (const group of addonGroups) {
+            const minSelections = Number(group.minSelections ?? (group.required ? 1 : 0));
+            if (minSelections === 0) continue;
+            const options = Array.isArray(group.options) ? group.options : [];
+            const defaultOption = options[Number(group.defaultOptionIndex)] || options[0];
+            if (!defaultOption || minSelections > 1) {
+                openItemCustomization(itemId);
+                triggerToast(`Please configure ${group.name} before adding this item.`, "danger");
+                return;
+            }
+            selectedAddons.push({ ...defaultOption, groupName: group.name });
+        }
+
+        addToCart(itemId, { selectedVariant, selectedAddons }, 1);
+    }
+
+    function getCurrentCustomization() {
+        const itemId = document.getElementById('customization-item-id').value;
+        const item = menuData.find(menuItem => String(menuItem.id) === itemId);
+        if (!item) return null;
+        const variants = Array.isArray(item.variants) ? item.variants : [];
+        const addonGroups = Array.isArray(item.addonGroups) && item.addonGroups.length
+            ? item.addonGroups
+            : (Array.isArray(item.addons) && item.addons.length
+                ? [{ name: 'Extras', required: false, multiple: true, options: item.addons }]
+                : []);
+        const selectedVariantInput = document.querySelector('input[name="item-variant"]:checked');
+        const selectedVariant = selectedVariantInput ? variants[Number(selectedVariantInput.value)] : null;
+        const selectedAddons = [];
+        addonGroups.forEach((group, groupIndex) => {
+            document.querySelectorAll(`input[name="addon-group-${groupIndex}"]:checked`).forEach(input => {
+                if (input.value === '') return;
+                const option = group.options?.[Number(input.value)];
+                if (option) selectedAddons.push({ ...option, groupName: group.name });
+            });
+        });
+        const instructions = document.getElementById('customization-instructions')?.value.trim() || '';
+        return { item, selectedVariant, selectedAddons, addonGroups, instructions };
+    }
+
+    function handleAddonSelection(groupIndex, changedInput) {
+        const groupElement = document.querySelector(`.addon-customer-group[data-group-index="${groupIndex}"]`);
+        if (!groupElement) return;
+        const maxSelections = Number(groupElement.dataset.max || 1);
+        const selectedInputs = [...document.querySelectorAll(`input[name="addon-group-${groupIndex}"]:checked`)].filter(input => input.value !== '');
+        if (selectedInputs.length > maxSelections) {
+            changedInput.checked = false;
+            triggerToast(`You can select up to ${maxSelections} option${maxSelections === 1 ? '' : 's'} in this group.`, "danger");
+        }
+        updateCustomizationTotal();
+    }
+
+    function getCustomizationSelectionError(customization) {
+        for (let groupIndex = 0; groupIndex < customization.addonGroups.length; groupIndex += 1) {
+            const group = customization.addonGroups[groupIndex];
+            const minSelections = Number(group.minSelections ?? (group.required ? 1 : 0));
+            const maxSelections = Number(group.maxSelections ?? (group.multiple ? Math.max(1, group.options?.length || 1) : 1));
+            const selectedCount = [...document.querySelectorAll(`input[name="addon-group-${groupIndex}"]:checked`)].filter(input => input.value !== '').length;
+            if (selectedCount < minSelections) return `Please select at least ${minSelections} option${minSelections === 1 ? '' : 's'} for ${group.name}.`;
+            if (selectedCount > maxSelections) return `Please select no more than ${maxSelections} option${maxSelections === 1 ? '' : 's'} for ${group.name}.`;
+        }
+        return '';
+    }
+
+    function updateCustomizationTotal() {
+        const customization = getCurrentCustomization();
+        if (!customization) return;
+        const quantity = Number(document.getElementById('customization-quantity').textContent || 1);
+        const unitPrice = Number(customization.item.price) + Number(customization.selectedVariant?.priceAdjustment || 0) +
+            customization.selectedAddons.reduce((sum, addon) => sum + Number(addon.priceAdjustment || 0), 0);
+        const total = unitPrice * quantity;
+        document.getElementById('customization-total').textContent = `Rs. ${total.toLocaleString()}`;
+    }
+
+    function changeCustomizationQuantity(delta) {
+        const quantityElement = document.getElementById('customization-quantity');
+        const currentQuantity = Number(quantityElement.textContent || 1);
+        quantityElement.textContent = String(Math.max(1, Math.min(20, currentQuantity + delta)));
+        updateCustomizationTotal();
+    }
+
+    function confirmCustomizedItem(event) {
+        event.preventDefault();
+        const customization = getCurrentCustomization();
+        if (!customization) return;
+        const selectionError = getCustomizationSelectionError(customization);
+        if (selectionError) {
+            triggerToast(selectionError, "danger");
+            return;
+        }
+        const quantity = Number(document.getElementById('customization-quantity').textContent || 1);
+        addToCart(customization.item.id, {
+            selectedVariant: customization.selectedVariant,
+            selectedAddons: customization.selectedAddons,
+            instructions: customization.instructions
+        }, quantity);
+        toggleItemCustomizationModal(false);
+    }
+
+    function addToCart(itemId, customization = {}, quantity = 1) {
         if (state.currentUser && state.currentUser.role !== 'customer') return;
         const foundItem = menuData.find(i => String(i.id) === String(itemId));
-        if (!foundItem) return;
-        const cartItemIndex = state.cart.findIndex(c => String(c.id) === String(itemId));
-        if(cartItemIndex > -1) state.cart[cartItemIndex].qty += 1;
-        else state.cart.push({ ...foundItem, qty: 1 });
+        if (!foundItem || foundItem.isVisible === false || foundItem.isSoldOut || !state.storeOpen) return;
+        const selectedVariant = customization.selectedVariant || null;
+        const selectedAddons = customization.selectedAddons || [];
+        const instructions = String(customization.instructions || '').trim();
+        const optionKey = [selectedVariant?.name || 'standard', ...selectedAddons.map(addon => addon.name).sort(), instructions.toLowerCase()].join('|');
+        const cartKey = `${itemId}::${optionKey}`;
+        const finalPrice = Number(foundItem.price) + Number(selectedVariant?.priceAdjustment || 0) +
+            selectedAddons.reduce((sum, addon) => sum + Number(addon.priceAdjustment || 0), 0);
+        const cartItemIndex = state.cart.findIndex(c => c.cartKey === cartKey);
+        if(cartItemIndex > -1) state.cart[cartItemIndex].qty += quantity;
+        else state.cart.push({
+            ...foundItem,
+            cartKey,
+            basePrice: Number(foundItem.price),
+            price: finalPrice,
+            selectedVariant,
+            selectedAddons,
+            instructions,
+            qty: quantity
+        });
         renderCart();
+        triggerToast(`${foundItem.name} added to basket!`);
     }
 
     function renderCart() {
         document.getElementById('cart-toggle-badge').innerText = state.cart.reduce((sum, item) => sum + item.qty, 0);
         document.getElementById('cart-container').innerHTML = state.cart.map(item => `
             <div class="cart-item">
-                <div class="cart-item-info"><h4>${item.name}</h4><p>Rs. ${item.price}</p></div>
+                <div class="cart-item-info">
+                    <h4>${item.name}</h4>
+                    ${item.selectedVariant ? `<small style="display:block; color:var(--text-muted); margin-top:3px;">${item.selectedVariant.name}</small>` : ''}
+                    ${item.selectedAddons?.length ? `<small style="display:block; color:var(--text-muted); margin-top:3px;">+ ${item.selectedAddons.map(addon => addon.name).join(', ')}</small>` : ''}
+                    ${item.instructions ? `<small style="display:block; color:var(--warning); margin-top:4px;">Note: ${item.instructions}</small>` : ''}
+                    <p>Rs. ${Number(item.price).toLocaleString()}</p>
+                </div>
                 <div class="cart-qty-controls">
-                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(String(item.id))}, -1)'>-</button>
+                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(item.cartKey || String(item.id))}, -1)'>-</button>
                     <span>${item.qty}</span>
-                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(String(item.id))}, 1)'>+</button>
+                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(item.cartKey || String(item.id))}, 1)'>+</button>
                 </div>
             </div>
         `).join('');
@@ -2214,8 +2984,8 @@
         document.getElementById('total-val').innerText = `Rs. ${(subtotal + 150).toLocaleString()}`;
     }
 
-    function alterQty(itemId, delta) {
-        const index = state.cart.findIndex(c => String(c.id) === String(itemId));
+    function alterQty(cartKey, delta) {
+        const index = state.cart.findIndex(c => (c.cartKey || String(c.id)) === cartKey);
         if (index < 0) return;
         state.cart[index].qty += delta;
         if(state.cart[index].qty <= 0) state.cart.splice(index, 1);
@@ -2223,6 +2993,10 @@
     }
 
     async function placeOrder() {
+        if (!state.storeOpen) {
+            triggerToast("The kitchen is currently closed and cannot accept orders.", "danger");
+            return;
+        }
         if (state.cart.length === 0) {
             triggerToast("Your cart is empty.", "danger");
             return;
@@ -2279,6 +3053,18 @@
     }
 
     async function createOrder(customerDetails, closeCart = true) {
+        if (!state.storeOpen) {
+            triggerToast("The kitchen is currently closed and cannot accept orders.", "danger");
+            return false;
+        }
+        const unavailableItem = state.cart.find(cartItem => {
+            const currentItem = menuData.find(item => String(item.id) === String(cartItem.id));
+            return !currentItem || currentItem.isVisible === false || currentItem.isSoldOut;
+        });
+        if (unavailableItem) {
+            triggerToast(`${unavailableItem.name} is no longer available. Please remove it from your cart.`, "danger");
+            return false;
+        }
         const subtotal = state.cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
         const deliveryFee = 150;
         const orderRef = doc(collection(db, "orders"));
@@ -2289,7 +3075,11 @@
                 itemId: String(item.id),
                 name: item.name,
                 price: Number(item.price),
-                quantity: item.qty
+                quantity: item.qty,
+                selectedVariant: item.selectedVariant || null,
+                selectedAddons: item.selectedAddons || [],
+                instructions: item.instructions || '',
+                mealItems: Array.isArray(item.mealItems) ? item.mealItems : []
             })),
             subtotal,
             deliveryFee,
@@ -2335,14 +3125,16 @@
         const stages = [
             { key: 'pending', label: 'Order Received', icon: 'clipboard-check' },
             { key: 'preparing', label: 'Preparing', icon: 'cooking-pot' },
-            { key: 'delivery', label: 'Out for Delivery', icon: 'bike' },
+            { key: 'ready', label: 'Ready', icon: 'package-check' },
             { key: 'completed', label: 'Completed', icon: 'badge-check' }
         ];
-        const currentIndex = Math.max(0, stages.findIndex(stage => stage.key === order.status));
-        const currentStage = stages[currentIndex];
+        const normalizedStatus = order.status === 'new' ? 'pending' : order.status === 'delivery' ? 'ready' : order.status;
+        const isRejected = normalizedStatus === 'rejected';
+        const currentIndex = Math.max(0, stages.findIndex(stage => stage.key === normalizedStatus));
+        const currentStage = isRejected ? { label: 'Order Rejected', icon: 'circle-x' } : stages[currentIndex];
         const itemRows = Array.isArray(order.items) ? order.items.map(item => `
             <div class="summary-row">
-                <span>${item.quantity} × ${item.name}</span>
+                <span>${item.quantity} × ${item.name}${item.selectedVariant?.name ? ` (${item.selectedVariant.name})` : ''}${item.selectedAddons?.length ? ` + ${item.selectedAddons.map(addon => addon.name).join(', ')}` : ''}${item.instructions ? `<small style="display:block; color:var(--warning);">Note: ${item.instructions}</small>` : ''}</span>
                 <span>Rs. ${(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
             </div>
         `).join('') : '';
@@ -2352,10 +3144,10 @@
                 <div class="tracking-animation"><i data-lucide="${currentStage.icon}" style="width:42px; height:42px;"></i></div>
                 <p style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">${order.orderNumber || order.id}</p>
                 <h3 style="font-size:1.7rem; margin-top:6px;">${currentStage.label}</h3>
-                <p style="color:var(--text-muted); margin-top:6px;">This page updates automatically when your order status changes.</p>
+                <p style="color:${isRejected ? 'var(--danger)' : 'var(--text-muted)'}; margin-top:6px;">${isRejected ? (order.rejectionReason || 'The kitchen could not accept this order.') : order.status === 'preparing' ? `Estimated preparation time: ${Number(order.preparationMinutes || 20)} minutes.` : 'This page updates automatically when your order status changes.'}</p>
             </div>
 
-            <div class="tracking-steps">
+            <div class="tracking-steps" style="${isRejected ? 'display:none;' : ''}">
                 ${stages.map((stage, index) => `
                     <div class="tracking-step ${index < currentIndex ? 'complete' : ''} ${index === currentIndex ? 'active' : ''}">
                         <div class="tracking-step-icon"><i data-lucide="${index < currentIndex ? 'check' : stage.icon}" style="width:18px;"></i></div>
@@ -2399,6 +3191,11 @@
             stopOrderTrackingListener();
             stopOrderTrackingListener = null;
         }
+        if (stopKitchenOrdersListener) {
+            stopKitchenOrdersListener();
+            stopKitchenOrdersListener = null;
+            kitchenListenerInitialized = false;
+        }
         switchPanel('portal');
         renderAuthBar();
         renderNavigation();
@@ -2418,29 +3215,41 @@
                 localStorage.removeItem(MENU_CACHE_KEY);
             }
             isMenuLoading = false;
+            state.categories = [...new Set([...state.categories, ...menuData.map(item => item.category).filter(Boolean)])];
             applyMenuSorting();
             renderAdminMenuTable();
+            renderCategoryManager();
         } catch (error) {
             console.warn("Could not load Firestore items:", error);
             isMenuLoading = false;
             applyMenuSorting();
             renderAdminMenuTable();
+            renderCategoryManager();
         }
     }
 
     async function loadOrders() {
         if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) return;
-        try {
-            const snapshot = await getDocs(collection(db, "orders"));
-            state.orders = snapshot.docs
+        if (stopKitchenOrdersListener) {
+            renderOrdersTable();
+            return;
+        }
+        stopKitchenOrdersListener = onSnapshot(collection(db, "orders"), snapshot => {
+            const previousIds = new Set(state.orders.map(order => order.id));
+            const incomingOrders = snapshot.docs
                 .map(orderDoc => ({ id: orderDoc.id, ...orderDoc.data() }))
                 .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+            const hasNewOrder = kitchenListenerInitialized && incomingOrders.some(order => !previousIds.has(order.id) && ['pending', 'new'].includes(order.status || 'pending'));
+            state.orders = incomingOrders;
             renderOrdersTable();
-        } catch (error) {
-            state.orders = [];
-            renderOrdersTable();
-            triggerToast(error.message || "Could not load orders.", "danger");
-        }
+            if (hasNewOrder) {
+                playNewOrderSound();
+                triggerToast("New kitchen order received!");
+            }
+            kitchenListenerInitialized = true;
+        }, error => {
+            triggerToast(error.message || "Could not load live orders.", "danger");
+        });
     }
 
     async function loadUsers() {
@@ -2583,46 +3392,76 @@
     }
 
     function renderOrdersTable() {
-        const tableBody = document.getElementById('orders-table-body');
-        if (!tableBody) return;
-
-        tableBody.innerHTML = state.orders.length ? state.orders.map(order => {
-            const itemSummary = Array.isArray(order.items)
-                ? order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')
-                : (order.items || 'No item details');
-            const customer = order.customerName || order.user || 'Unknown customer';
-            const orderNumber = order.orderNumber || order.id;
-            const status = order.status || 'pending';
+        const board = document.getElementById('kitchen-board');
+        if (!board) return;
+        const columns = [
+            { key: 'new', title: 'New Orders', icon: 'bell-ring', statuses: ['pending', 'new'] },
+            { key: 'preparing', title: 'Preparing', icon: 'cooking-pot', statuses: ['preparing'] },
+            { key: 'ready', title: 'Ready', icon: 'package-check', statuses: ['ready', 'delivery'] }
+        ];
+        board.innerHTML = columns.map(column => {
+            const orders = state.orders.filter(order => column.statuses.includes(order.status || 'pending'));
             return `
-                <tr>
-                    <td><strong>${orderNumber}</strong></td>
-                    <td>
-                        <strong>${customer}</strong>
-                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">${order.customerEmail || ''}</p>
-                    </td>
-                    <td>${itemSummary}</td>
-                    <td>Rs. ${Number(order.total || 0).toLocaleString()}</td>
-                    <td><span class="badge-status ${status}">${status.replace('_', ' ')}</span></td>
-                    <td>
-                        <select class="action-select" onchange='updateOrderStatus(${JSON.stringify(order.id)}, this.value)'>
-                            <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="preparing" ${status === 'preparing' ? 'selected' : ''}>Preparing</option>
-                            <option value="delivery" ${status === 'delivery' ? 'selected' : ''}>Out for Delivery</option>
-                            <option value="completed" ${status === 'completed' ? 'selected' : ''}>Completed</option>
-                        </select>
-                    </td>
-                </tr>
+                <section class="kitchen-column">
+                    <div class="kitchen-column-header">
+                        <h3 style="display:flex; align-items:center; gap:7px;"><i data-lucide="${column.icon}" style="width:18px; color:var(--accent);"></i>${column.title}</h3>
+                        <span>${orders.length}</span>
+                    </div>
+                    <div>${orders.length ? orders.map(order => renderKitchenOrderCard(order, column.key)).join('') : `<div class="empty-kitchen-column">No ${column.title.toLowerCase()}</div>`}</div>
+                </section>
             `;
-        }).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:3rem;">No orders found.</td></tr>`;
+        }).join('');
+
+        const historyList = document.getElementById('order-history-list');
+        const historyOrders = state.orders.filter(order => ['completed', 'rejected'].includes(order.status)).slice(0, 20);
+        if (historyList) {
+            historyList.innerHTML = historyOrders.length ? `<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Details</th></tr></thead><tbody>${historyOrders.map(order => `
+                <tr><td><strong>${order.orderNumber || order.id}</strong></td><td>${order.customerName || 'Guest'}</td><td>Rs. ${Number(order.total || 0).toLocaleString()}</td><td><span class="badge-status ${order.status}">${order.status}</span></td><td>${order.status === 'rejected' ? (order.rejectionReason || 'No reason provided') : 'Completed'}</td></tr>
+            `).join('')}</tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--text-muted);">No completed or rejected orders yet.</div>';
+        }
 
         const completedOrders = state.orders.filter(order => order.status === 'completed');
         const revenue = completedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
         document.getElementById('stat-revenue').textContent = `Rs. ${revenue.toLocaleString()}`;
         document.getElementById('stat-completed-count').textContent = completedOrders.length;
-        document.getElementById('stat-active-count').textContent = state.orders.length - completedOrders.length;
+        document.getElementById('stat-active-count').textContent = state.orders.filter(order => !['completed', 'rejected'].includes(order.status)).length;
+        lucide.createIcons();
     }
 
-    async function updateOrderStatus(orderId, newStatus) {
+    function renderKitchenOrderCard(order, columnKey) {
+        const orderNumber = order.orderNumber || order.id;
+        const createdTime = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const items = Array.isArray(order.items) ? order.items.map(item => `
+            <div>
+                <strong>${Number(item.quantity || 1)} × ${item.name}</strong>
+                ${item.selectedVariant?.name ? `<div style="color:var(--text-muted); font-size:.72rem;">${item.selectedVariant.name}</div>` : ''}
+                ${item.selectedAddons?.length ? `<div style="color:var(--text-muted); font-size:.72rem;">+ ${item.selectedAddons.map(addon => addon.name).join(', ')}</div>` : ''}
+                ${item.instructions ? `<div class="kitchen-item-note">Note: ${item.instructions}</div>` : ''}
+            </div>
+        `).join('') : '<div>No item details</div>';
+        const actions = columnKey === 'new' ? `
+            <div class="prep-time-control"><label for="prep-${order.id}" style="font-size:.72rem; color:var(--text-muted);">Prep time</label><input id="prep-${order.id}" type="number" min="5" max="180" step="5" value="${Number(order.preparationMinutes || 20)}"><span style="font-size:.72rem;">minutes</span></div>
+            <div class="kitchen-card-actions">
+                <button class="btn-primary" onclick='acceptOrder(${JSON.stringify(order.id)})'><i data-lucide="check" style="width:14px;"></i> Accept</button>
+                <button class="btn-danger" onclick='rejectOrder(${JSON.stringify(order.id)})'><i data-lucide="x" style="width:14px;"></i> Reject</button>
+            </div>
+        ` : columnKey === 'preparing' ? `
+            <p style="font-size:.75rem; color:var(--info); margin-top:8px;"><strong>Estimate:</strong> ${Number(order.preparationMinutes || 20)} minutes</p>
+            <div class="kitchen-card-actions"><button class="btn-primary" onclick='markOrderReady(${JSON.stringify(order.id)})'><i data-lucide="package-check" style="width:14px;"></i> Mark Ready</button></div>
+        ` : `
+            <div class="kitchen-card-actions"><button class="btn-primary" onclick='completeKitchenOrder(${JSON.stringify(order.id)})'><i data-lucide="badge-check" style="width:14px;"></i> Complete Order</button></div>
+        `;
+        return `
+            <article class="kitchen-card">
+                <div class="kitchen-card-head"><div><strong>${orderNumber}</strong><p style="font-size:.7rem; color:var(--text-muted); margin-top:3px;">${order.customerName || 'Guest'} · ${createdTime}</p></div><strong>Rs. ${Number(order.total || 0).toLocaleString()}</strong></div>
+                <div class="kitchen-card-items">${items}</div>
+                <p style="font-size:.72rem; color:var(--text-muted);">${order.customerPhone || ''}${order.deliveryAddress ? ` · ${order.deliveryAddress}` : ''}</p>
+                ${actions}
+            </article>
+        `;
+    }
+
+    async function updateOrderStatus(orderId, newStatus, extraUpdates = {}) {
         if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) {
             triggerToast("Order management access is required.", "danger");
             return;
@@ -2630,10 +3469,11 @@
         try {
             await setDoc(doc(db, "orders", orderId), {
                 status: newStatus,
+                ...extraUpdates,
                 updatedAt: new Date().toISOString()
             }, { merge: true });
             const order = state.orders.find(item => item.id === orderId);
-            if (order) order.status = newStatus;
+            if (order) Object.assign(order, { status: newStatus, ...extraUpdates });
             renderOrdersTable();
             triggerToast("Order status updated!");
         } catch (error) {
@@ -2645,8 +3485,24 @@
     function renderAdminMenuTable() {
         const tableBody = document.getElementById('admin-menu-table-body');
         if (!tableBody) return;
+        const query = state.adminMenuSearch.toLowerCase();
+        const filteredItems = menuData.filter(item => {
+            const matchesSearch = !query || `${item.name} ${item.desc || ''} ${item.category || ''}`.toLowerCase().includes(query);
+            const matchesCategory = state.adminMenuCategoryFilter === 'all' || item.category === state.adminMenuCategoryFilter;
+            const matchesStatus = state.adminMenuStatusFilter === 'all' ||
+                (state.adminMenuStatusFilter === 'hidden' && item.isVisible === false) ||
+                (state.adminMenuStatusFilter === 'soldout' && item.isVisible !== false && item.isSoldOut) ||
+                (state.adminMenuStatusFilter === 'active' && item.isVisible !== false && !item.isSoldOut);
+            return matchesSearch && matchesCategory && matchesStatus;
+        });
+        const categoryFilter = document.getElementById('admin-category-filter');
+        if (categoryFilter) {
+            const selected = state.adminMenuCategoryFilter;
+            categoryFilter.innerHTML = '<option value="all">All categories</option>' + state.categories.map(category => `<option value="${category}">${category}</option>`).join('');
+            categoryFilter.value = selected;
+        }
 
-        tableBody.innerHTML = menuData.length ? menuData.map(item => `
+        tableBody.innerHTML = filteredItems.length ? filteredItems.map(item => `
             <tr>
                 <td>
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -2659,6 +3515,18 @@
                 </td>
                 <td>${item.category}</td>
                 <td>Rs. ${Number(item.price).toLocaleString()}</td>
+                <td style="text-align:center;">
+                    <button type="button" class="${item.isSoldOut ? 'btn-danger' : 'btn-secondary'}" style="padding:7px 10px; min-width:96px; margin:auto; justify-content:center;" onclick='toggleMenuItemSoldOut(${JSON.stringify(String(item.id))})'>
+                        <i data-lucide="${item.isSoldOut ? 'circle-x' : 'circle-check'}" style="width:14px;"></i>
+                        ${item.isSoldOut ? 'Sold Out' : 'In Stock'}
+                    </button>
+                </td>
+                <td style="text-align:center;">
+                    <button type="button" class="${item.isVisible === false ? 'btn-secondary' : 'btn-primary'}" style="padding:7px 10px; min-width:92px; margin:auto;" onclick='toggleMenuItemVisibility(${JSON.stringify(String(item.id))})' title="${item.isVisible === false ? 'Show this item to customers' : 'Hide this item from customers'}">
+                        <i data-lucide="${item.isVisible === false ? 'eye-off' : 'eye'}" style="width:14px;"></i>
+                        ${item.isVisible === false ? 'Hidden' : 'Active'}
+                    </button>
+                </td>
                 <td>
                     <div style="display:flex; justify-content:center; gap:8px;">
                         <button class="btn-action-edit" onclick='editMenuItem(${JSON.stringify(String(item.id))})'>
@@ -2670,8 +3538,510 @@
                     </div>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No menu items available.</td></tr>`;
+        `).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No menu items match the selected filters.</td></tr>`;
         lucide.createIcons();
+    }
+
+    function setAdminMenuSearch(value) {
+        state.adminMenuSearch = value.trim();
+        renderAdminMenuTable();
+    }
+
+    function setAdminMenuFilter(type, value) {
+        if (type === 'category') state.adminMenuCategoryFilter = value;
+        if (type === 'status') state.adminMenuStatusFilter = value;
+        renderAdminMenuTable();
+    }
+
+    function openNewItemModal() {
+        resetFormState();
+        document.getElementById('item-editor-modal').classList.add('active');
+        lucide.createIcons();
+    }
+
+    function closeItemEditorModal() {
+        document.getElementById('item-editor-modal').classList.remove('active');
+        resetFormState();
+    }
+
+    function toggleCategoryManagerModal(show) {
+        document.getElementById('category-manager-modal').classList.toggle('active', show);
+        if (show) {
+            renderCategoryManager();
+            setTimeout(() => document.getElementById('new-category-name')?.focus(), 50);
+        }
+        lucide.createIcons();
+    }
+
+    async function toggleMenuItemSoldOut(itemId) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') {
+            triggerToast("Admin access is required.", "danger");
+            return;
+        }
+        const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
+        if (!item) return;
+        const previousValue = Boolean(item.isSoldOut);
+        item.isSoldOut = !previousValue;
+        renderAdminMenuTable();
+        renderMenu();
+        try {
+            await setDoc(doc(db, "items", String(itemId)), { isSoldOut: item.isSoldOut, updatedAt: new Date().toISOString() }, { merge: true });
+            writeCachedMenu(menuData);
+            triggerToast(item.isSoldOut ? `“${item.name}” marked Sold Out.` : `“${item.name}” is back in stock.`);
+        } catch (error) {
+            item.isSoldOut = previousValue;
+            renderAdminMenuTable();
+            renderMenu();
+            triggerToast(error.message || "Could not update stock status.", "danger");
+        }
+    }
+
+    function acceptOrder(orderId) {
+        const preparationMinutes = Math.max(5, Math.min(180, Number(document.getElementById(`prep-${orderId}`)?.value || 20)));
+        updateOrderStatus(orderId, 'preparing', {
+            preparationMinutes,
+            acceptedAt: new Date().toISOString(),
+            estimatedReadyAt: new Date(Date.now() + preparationMinutes * 60000).toISOString()
+        });
+    }
+
+    function rejectOrder(orderId) {
+        const reason = prompt('Reason for rejecting this order:', 'Item unavailable');
+        if (reason === null) return;
+        updateOrderStatus(orderId, 'rejected', { rejectionReason: reason.trim() || 'Unable to fulfil the order', rejectedAt: new Date().toISOString() });
+    }
+
+    function markOrderReady(orderId) {
+        updateOrderStatus(orderId, 'ready', { readyAt: new Date().toISOString() });
+    }
+
+    function completeKitchenOrder(orderId) {
+        updateOrderStatus(orderId, 'completed', { completedAt: new Date().toISOString() });
+    }
+
+    function playNewOrderSound() {
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+            const context = new AudioContextClass();
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, context.currentTime);
+            gain.gain.setValueAtTime(0.001, context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.55);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.58);
+            oscillator.onended = () => context.close();
+        } catch (error) {
+            console.warn('New-order sound could not play:', error);
+        }
+    }
+
+    async function loadStoreSettings() {
+        try {
+            const snapshot = await getDoc(doc(db, "settings", "store"));
+            state.storeOpen = !snapshot.exists() || snapshot.data().isOpen !== false;
+        } catch (error) {
+            state.storeOpen = true;
+            console.warn("Could not load store settings:", error);
+        }
+        renderStoreStatus();
+        renderMenu();
+    }
+
+    function renderStoreStatus() {
+        const toggle = document.getElementById('store-open-toggle');
+        const label = document.getElementById('store-open-label');
+        const banner = document.getElementById('store-status-banner');
+        const checkoutButton = document.getElementById('checkout-button');
+        if (toggle) toggle.checked = state.storeOpen;
+        if (label) label.textContent = state.storeOpen ? 'Store Open' : 'Store Closed';
+        if (banner) banner.style.display = state.storeOpen ? 'none' : 'block';
+        if (checkoutButton) {
+            checkoutButton.disabled = !state.storeOpen;
+            checkoutButton.innerHTML = state.storeOpen ? 'Place Order <i data-lucide="arrow-right" style="width:16px;"></i>' : 'Store Closed';
+        }
+        lucide.createIcons();
+    }
+
+    async function setStoreOpen(isOpen) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') {
+            renderStoreStatus();
+            triggerToast("Admin access is required.", "danger");
+            return;
+        }
+        const previousValue = state.storeOpen;
+        state.storeOpen = Boolean(isOpen);
+        renderStoreStatus();
+        renderMenu();
+        try {
+            await setDoc(doc(db, "settings", "store"), { isOpen: state.storeOpen, updatedAt: new Date().toISOString() }, { merge: true });
+            triggerToast(state.storeOpen ? "The store is now open." : "The store is now closed.");
+        } catch (error) {
+            state.storeOpen = previousValue;
+            renderStoreStatus();
+            renderMenu();
+            triggerToast(error.message || "Could not update store status.", "danger");
+        }
+    }
+
+    async function toggleMenuItemVisibility(itemId) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') {
+            triggerToast("Admin access is required.", "danger");
+            return;
+        }
+        const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
+        if (!item) return;
+        const previousValue = item.isVisible;
+        item.isVisible = item.isVisible === false;
+        renderAdminMenuTable();
+        renderMenu();
+        try {
+            await setDoc(doc(db, "items", String(itemId)), {
+                isVisible: item.isVisible,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+            writeCachedMenu(menuData);
+            triggerToast(item.isVisible ? `“${item.name}” is now available.` : `“${item.name}” is now hidden.`);
+        } catch (error) {
+            item.isVisible = previousValue;
+            renderAdminMenuTable();
+            renderMenu();
+            triggerToast(error.message || "Could not update item visibility.", "danger");
+        }
+    }
+
+    async function loadMenuCategories() {
+        const itemCategories = menuData.map(item => item.category).filter(Boolean);
+        try {
+            const snapshot = await getDoc(doc(db, "settings", "menuCategories"));
+            const savedCategories = snapshot.exists() && Array.isArray(snapshot.data().categories)
+                ? snapshot.data().categories
+                : DEFAULT_CATEGORIES;
+            state.categories = [...new Set([...savedCategories, ...itemCategories])];
+            state.hiddenCategories = snapshot.exists() && Array.isArray(snapshot.data().hiddenCategories)
+                ? snapshot.data().hiddenCategories.filter(category => state.categories.includes(category))
+                : [];
+        } catch (error) {
+            state.categories = [...new Set([...DEFAULT_CATEGORIES, ...itemCategories])];
+            console.warn("Could not load menu categories:", error);
+        }
+        renderCategoryManager();
+        renderMenu();
+    }
+
+    function renderCategoryManager(selectedCategory) {
+        const select = document.getElementById('menu-item-category');
+        if (!select) return;
+        const previousValue = selectedCategory || select.value;
+        select.innerHTML = state.categories.map(category => `<option value="${category}">${category}</option>`).join('');
+        if (state.categories.includes(previousValue)) select.value = previousValue;
+
+        const chipList = document.getElementById('category-chip-list');
+        if (chipList) {
+            chipList.innerHTML = state.categories.map(category => `
+                <span class="category-chip ${state.hiddenCategories.includes(category) ? 'hidden-category' : ''}">
+                    ${category}
+                    <button type="button" onclick='toggleCategoryVisibility(${JSON.stringify(category)})' aria-label="${state.hiddenCategories.includes(category) ? 'Show' : 'Hide'} ${category}" title="${state.hiddenCategories.includes(category) ? 'Show category' : 'Hide category'}">
+                        <i data-lucide="${state.hiddenCategories.includes(category) ? 'eye-off' : 'eye'}" style="width:13px;"></i>
+                    </button>
+                    <button type="button" onclick='removeMenuCategory(${JSON.stringify(category)})' aria-label="Remove ${category}" title="Remove category">
+                        <i data-lucide="x" style="width:13px;"></i>
+                    </button>
+                </span>
+            `).join('');
+        }
+        handleMenuCategoryChange();
+        lucide.createIcons();
+    }
+
+    async function saveMenuCategories() {
+        await setDoc(doc(db, "settings", "menuCategories"), {
+            categories: state.categories,
+            hiddenCategories: state.hiddenCategories,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    }
+
+    async function toggleCategoryVisibility(category) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        const previousHidden = [...state.hiddenCategories];
+        state.hiddenCategories = state.hiddenCategories.includes(category)
+            ? state.hiddenCategories.filter(item => item !== category)
+            : [...state.hiddenCategories, category];
+        renderCategoryManager();
+        renderMenu();
+        try {
+            await saveMenuCategories();
+            triggerToast(state.hiddenCategories.includes(category) ? `“${category}” is hidden.` : `“${category}” is visible.`);
+        } catch (error) {
+            state.hiddenCategories = previousHidden;
+            renderCategoryManager();
+            renderMenu();
+            triggerToast(error.message || "Could not update category visibility.", "danger");
+        }
+    }
+
+    async function addMenuCategory() {
+        if (!state.currentUser || state.currentUser.role !== 'admin') {
+            triggerToast("Admin access is required.", "danger");
+            return;
+        }
+        const input = document.getElementById('new-category-name');
+        const category = input.value.trim().replace(/\s+/g, ' ');
+        if (!category || !/^[a-zA-Z0-9 &'-]+$/.test(category)) {
+            triggerToast("Enter a valid category name.", "danger");
+            return;
+        }
+        if (state.categories.some(existing => existing.toLowerCase() === category.toLowerCase())) {
+            triggerToast("That category already exists.", "danger");
+            return;
+        }
+        const previousCategories = [...state.categories];
+        state.categories.push(category);
+        renderCategoryManager(category);
+        input.value = '';
+        try {
+            await saveMenuCategories();
+            triggerToast(`“${category}” category added.`);
+        } catch (error) {
+            state.categories = previousCategories;
+            renderCategoryManager();
+            triggerToast(error.message || "Could not save the category.", "danger");
+        }
+    }
+
+    async function removeMenuCategory(category) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') {
+            triggerToast("Admin access is required.", "danger");
+            return;
+        }
+        if (menuData.some(item => item.category === category)) {
+            triggerToast(`Move the items in “${category}” before removing it.`, "danger");
+            return;
+        }
+        if (state.categories.length <= 1 || !confirm(`Remove the “${category}” category?`)) return;
+        const previousCategories = [...state.categories];
+        state.categories = state.categories.filter(existing => existing !== category);
+        state.hiddenCategories = state.hiddenCategories.filter(existing => existing !== category);
+        renderCategoryManager();
+        try {
+            await saveMenuCategories();
+            triggerToast(`“${category}” category removed.`);
+        } catch (error) {
+            state.categories = previousCategories;
+            renderCategoryManager();
+            triggerToast(error.message || "Could not remove the category.", "danger");
+        }
+    }
+
+    function handleMenuCategoryChange() {
+        const category = document.getElementById('menu-item-category').value;
+        const isMeal = category === 'Combos' || category === 'Family Meals';
+        document.getElementById('meal-builder-section').style.display = isMeal ? 'block' : 'none';
+        if (isMeal && !document.querySelector('input[name="meal-build-mode"]:checked')) {
+            document.querySelector('input[name="meal-build-mode"][value="existing"]').checked = true;
+        }
+        toggleMealBuildMode();
+        lucide.createIcons();
+    }
+
+    function toggleMealBuildMode() {
+        const mode = document.querySelector('input[name="meal-build-mode"]:checked')?.value || 'existing';
+        const category = document.getElementById('menu-item-category').value;
+        const enabled = (category === 'Combos' || category === 'Family Meals') && mode === 'existing';
+        document.getElementById('existing-meal-items-editor').style.display = enabled ? 'block' : 'none';
+        document.querySelectorAll('#meal-items-container select, #meal-items-container input').forEach(control => {
+            control.disabled = !enabled;
+        });
+    }
+
+    function addMealItemRow(mealItem = {}) {
+        const currentEditId = document.getElementById('menu-item-edit-id').value;
+        const availableItems = menuData.filter(item => String(item.id) !== String(currentEditId));
+        const row = document.createElement('div');
+        row.className = 'meal-item-row';
+        row.innerHTML = `
+            <select class="meal-component-id" required>
+                <option value="">Select an existing menu item</option>
+                ${availableItems.map(item => `<option value="${item.id}" ${String(item.id) === String(mealItem.itemId) ? 'selected' : ''}>${item.name} · Rs. ${Number(item.price).toLocaleString()}</option>`).join('')}
+            </select>
+            <input type="number" class="meal-component-quantity" min="1" max="20" value="${Number(mealItem.quantity || 1)}" title="Quantity" required>
+            <button type="button" class="btn-danger" style="width:38px; height:38px; padding:0; justify-content:center;" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:15px;"></i></button>
+        `;
+        document.getElementById('meal-items-container').appendChild(row);
+        toggleMealBuildMode();
+        lucide.createIcons();
+    }
+
+    function collectMealItems() {
+        return [...document.querySelectorAll('#meal-items-container .meal-item-row')].map(row => {
+            const itemId = row.querySelector('.meal-component-id').value;
+            const sourceItem = menuData.find(item => String(item.id) === String(itemId));
+            return {
+                itemId,
+                name: sourceItem?.name || '',
+                quantity: Number(row.querySelector('.meal-component-quantity').value || 1)
+            };
+        }).filter(item => item.itemId);
+    }
+
+    function addAdminOptionRow(type, option = {}) {
+        const container = document.getElementById('menu-variants-container');
+        const row = document.createElement('div');
+        row.className = `admin-option-row variant-option-row`;
+        row.innerHTML = `
+            <input type="text" class="option-name" placeholder="e.g. Large" value="${option.name || ''}" required>
+            <input type="number" class="option-price" min="0" step="1" placeholder="Extra Rs." value="${Number(option.priceAdjustment || 0)}" required>
+            <button type="button" class="btn-danger" style="width:38px; height:38px; padding:0; justify-content:center;" onclick="this.parentElement.remove()" title="Remove option">
+                <i data-lucide="x" style="width:15px;"></i>
+            </button>
+        `;
+        container.appendChild(row);
+        lucide.createIcons();
+    }
+
+    function collectAdminOptions() {
+        return [...document.querySelectorAll('#menu-variants-container .variant-option-row')].map(row => ({
+            name: row.querySelector('.option-name').value.trim(),
+            priceAdjustment: Number(row.querySelector('.option-price').value || 0)
+        })).filter(option => option.name);
+    }
+
+    function addAdminAddonGroup(group = {}) {
+        const groupElement = document.createElement('div');
+        const groupId = `addon-group-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        groupElement.className = 'admin-addon-group';
+        groupElement.dataset.groupId = groupId;
+        groupElement.innerHTML = `
+            <div class="admin-addon-group-header">
+                <input type="text" class="addon-group-name" placeholder="Group name, e.g. Choose a drink" value="${group.name || ''}" required>
+                <button type="button" class="btn-danger" style="width:38px; height:38px; padding:0; justify-content:center;" onclick="this.closest('.admin-addon-group').remove()" title="Remove group"><i data-lucide="trash-2" style="width:15px;"></i></button>
+            </div>
+            <div class="admin-addon-settings">
+                <label class="admin-check-label"><input type="checkbox" class="addon-group-required" ${group.required ? 'checked' : ''} onchange="syncAddonGroupLimits(this.closest('.admin-addon-group'))"> <span><strong>Required</strong><br><small style="color:var(--text-muted);">Customer must select</small></span></label>
+                <label class="admin-check-label"><input type="checkbox" class="addon-group-multiple" ${group.multiple ? 'checked' : ''} onchange="syncAddonGroupLimits(this.closest('.admin-addon-group'))"> <span><strong>Allow multiple</strong><br><small style="color:var(--text-muted);">More than one option</small></span></label>
+            </div>
+            <div class="addon-limit-grid">
+                <label>Minimum selections
+                    <input type="number" class="addon-group-min" min="0" max="50" value="${Number(group.minSelections ?? (group.required ? 1 : 0))}" required>
+                </label>
+                <label>Maximum selections
+                    <input type="number" class="addon-group-max" min="1" max="50" value="${Number(group.maxSelections ?? (group.multiple ? Math.max(1, group.options?.length || 1) : 1))}" required>
+                </label>
+            </div>
+            <div class="admin-addon-option-head"><span>Option name</span><span>Extra price</span><span></span></div>
+            <div class="admin-addon-options"></div>
+            <button type="button" class="btn-secondary" style="width:100%; margin-top:8px; padding:8px;" onclick="addAdminAddonOption(this.closest('.admin-addon-group'))"><i data-lucide="plus" style="width:14px;"></i> Add Group Option</button>
+        `;
+        document.getElementById('menu-addon-groups-container').appendChild(groupElement);
+        const options = Array.isArray(group.options) ? group.options : [];
+        options.forEach((option, index) => addAdminAddonOption(groupElement, option, index === Number(group.defaultOptionIndex)));
+        if (!options.length) addAdminAddonOption(groupElement, {}, true);
+        syncAddonGroupLimits(groupElement);
+        lucide.createIcons();
+    }
+
+    function addAdminAddonOption(groupElement, option = {}, isDefault = false) {
+        const optionsContainer = groupElement.querySelector('.admin-addon-options');
+        const row = document.createElement('div');
+        row.className = 'admin-addon-option-row';
+        row.innerHTML = `
+            <input type="text" class="addon-option-name" placeholder="e.g. Pepsi" value="${option.name || ''}" required>
+            <input type="number" class="addon-option-price" min="0" step="1" placeholder="Extra Rs." value="${Number(option.priceAdjustment || 0)}" required>
+            <button type="button" class="btn-danger" style="width:34px; height:34px; padding:0; justify-content:center;" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:14px;"></i></button>
+            <div class="admin-addon-option-footer">
+                <label class="admin-check-label default-option-label"><input type="radio" class="addon-option-default" name="default-${groupElement.dataset.groupId}" ${isDefault ? 'checked' : ''}> Use as default selection</label>
+            </div>
+        `;
+        optionsContainer.appendChild(row);
+        if (!optionsContainer.querySelector('.addon-option-default:checked')) row.querySelector('.addon-option-default').checked = true;
+        lucide.createIcons();
+    }
+
+    function syncAddonGroupLimits(groupElement) {
+        const required = groupElement.querySelector('.addon-group-required').checked;
+        const multiple = groupElement.querySelector('.addon-group-multiple').checked;
+        const minInput = groupElement.querySelector('.addon-group-min');
+        const maxInput = groupElement.querySelector('.addon-group-max');
+        if (required && Number(minInput.value) < 1) minInput.value = '1';
+        if (!required && Number(minInput.value) === 1) minInput.value = '0';
+        if (!multiple) {
+            maxInput.value = '1';
+            maxInput.disabled = true;
+            if (Number(minInput.value) > 1) minInput.value = '1';
+        } else {
+            maxInput.disabled = false;
+        }
+    }
+
+    function applyMealTemplate(type) {
+        const container = document.getElementById('menu-addon-groups-container');
+        if (container.children.length && !confirm('Replace the current add-on groups with this meal template?')) return;
+        container.innerHTML = '';
+
+        const drinkGroup = {
+            name: 'Choose a drink',
+            required: true,
+            multiple: false,
+            defaultOptionIndex: 0,
+            options: [
+                { name: 'Pepsi', priceAdjustment: 0 },
+                { name: '7Up', priceAdjustment: 0 },
+                { name: 'Water', priceAdjustment: 0 }
+            ]
+        };
+
+        if (type === 'combo') {
+            document.getElementById('menu-item-category').value = 'Combos';
+            addAdminAddonGroup(drinkGroup);
+        } else {
+            document.getElementById('menu-item-category').value = 'Family Meals';
+            addAdminAddonGroup(drinkGroup);
+            addAdminAddonGroup({
+                name: 'Choose a side',
+                required: true,
+                multiple: false,
+                defaultOptionIndex: 0,
+                options: [
+                    { name: 'Regular Fries', priceAdjustment: 0 },
+                    { name: 'Loaded Fries', priceAdjustment: 250 },
+                    { name: 'Onion Rings', priceAdjustment: 200 }
+                ]
+            });
+        }
+        document.querySelector('input[name="meal-build-mode"][value="existing"]').checked = true;
+        handleMenuCategoryChange();
+        if (!document.querySelector('#meal-items-container .meal-item-row')) addMealItemRow();
+        triggerToast(`${type === 'combo' ? 'Combo' : 'Family Meal'} template applied.`);
+    }
+
+    function collectAdminAddonGroups() {
+        return [...document.querySelectorAll('#menu-addon-groups-container .admin-addon-group')].map(groupElement => {
+            const optionRows = [...groupElement.querySelectorAll('.admin-addon-option-row')];
+            const options = optionRows.map(row => ({
+                name: row.querySelector('.addon-option-name').value.trim(),
+                priceAdjustment: Number(row.querySelector('.addon-option-price').value || 0)
+            })).filter(option => option.name);
+            const defaultRow = optionRows.findIndex(row => row.querySelector('.addon-option-default').checked);
+            const multiple = groupElement.querySelector('.addon-group-multiple').checked;
+            const minSelections = Math.max(0, Number(groupElement.querySelector('.addon-group-min').value || 0));
+            const requestedMax = Math.max(1, Number(groupElement.querySelector('.addon-group-max').value || 1));
+            const maxSelections = multiple ? Math.min(options.length, requestedMax) : 1;
+            return {
+                name: groupElement.querySelector('.addon-group-name').value.trim(),
+                required: minSelections > 0,
+                multiple,
+                minSelections: Math.min(minSelections, maxSelections),
+                maxSelections,
+                defaultOptionIndex: Math.max(0, defaultRow),
+                options
+            };
+        }).filter(group => group.name && group.options.length);
     }
 
     async function handleFormSubmit(event) {
@@ -2682,12 +4052,31 @@
         }
 
         const editId = document.getElementById('menu-item-edit-id').value;
+        const category = document.getElementById('menu-item-category').value;
+        const isMeal = category === 'Combos' || category === 'Family Meals';
+        const mealMode = isMeal ? (document.querySelector('input[name="meal-build-mode"]:checked')?.value || 'standalone') : null;
+        const mealItems = isMeal && mealMode === 'existing' ? collectMealItems() : [];
+        if (isMeal && mealMode === 'existing' && !mealItems.length) {
+            triggerToast("Select at least one existing menu item for this meal.", "danger");
+            return;
+        }
         const itemData = {
             name: document.getElementById('menu-item-name').value.trim(),
             price: Number(document.getElementById('menu-item-price').value),
-            category: document.getElementById('menu-item-category').value,
+            category,
             img: document.getElementById('menu-item-img').value.trim(),
             desc: document.getElementById('menu-item-desc').value.trim(),
+            labels: [...document.querySelectorAll('input[name="menu-label"]:checked')].map(input => input.value),
+            variants: collectAdminOptions(),
+            addonGroups: collectAdminAddonGroups(),
+            mealMode,
+            mealItems,
+            isVisible: editId
+                ? menuData.find(item => String(item.id) === String(editId))?.isVisible !== false
+                : true,
+            isSoldOut: editId
+                ? Boolean(menuData.find(item => String(item.id) === String(editId))?.isSoldOut)
+                : false,
             updatedAt: new Date().toISOString()
         };
 
@@ -2721,13 +4110,36 @@
         document.getElementById('menu-item-name').value = item.name;
         document.getElementById('menu-item-price').value = item.price;
         document.getElementById('menu-item-category').value = item.category;
+        handleMenuCategoryChange();
+        document.getElementById('meal-items-container').innerHTML = '';
+        if (item.category === 'Combos' || item.category === 'Family Meals') {
+            const mealMode = item.mealMode || (Array.isArray(item.mealItems) && item.mealItems.length ? 'existing' : 'standalone');
+            const modeInput = document.querySelector(`input[name="meal-build-mode"][value="${mealMode}"]`);
+            if (modeInput) modeInput.checked = true;
+            toggleMealBuildMode();
+            (Array.isArray(item.mealItems) ? item.mealItems : []).forEach(mealItem => addMealItemRow(mealItem));
+            if (mealMode === 'existing' && !item.mealItems?.length) addMealItemRow();
+        }
         document.getElementById('menu-item-img').value = item.img || '';
         document.getElementById('menu-item-desc').value = item.desc;
+        document.querySelectorAll('input[name="menu-label"]').forEach(input => {
+            input.checked = Array.isArray(item.labels) && item.labels.includes(input.value);
+        });
+        document.getElementById('menu-variants-container').innerHTML = '';
+        document.getElementById('menu-addon-groups-container').innerHTML = '';
+        (Array.isArray(item.variants) ? item.variants : []).forEach(option => addAdminOptionRow('variant', option));
+        const groups = Array.isArray(item.addonGroups) ? item.addonGroups : [];
+        if (groups.length) {
+            groups.forEach(group => addAdminAddonGroup(group));
+        } else if (Array.isArray(item.addons) && item.addons.length) {
+            addAdminAddonGroup({ name: 'Extras', required: false, multiple: true, defaultOptionIndex: 0, options: item.addons });
+        }
         document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="pencil" style="color:var(--accent);"></i> Edit Menu Item`;
         document.getElementById('btn-submit-action').textContent = 'Save Changes';
         document.getElementById('btn-cancel-edit').style.display = 'flex';
+        document.getElementById('item-editor-modal').classList.add('active');
         lucide.createIcons();
-        document.getElementById('add-menu-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector('#item-editor-modal .modal-card').scrollTop = 0;
     }
 
     async function removeMenuItem(itemId) {
@@ -2751,9 +4163,14 @@
     function resetFormState() {
         document.getElementById('add-menu-form').reset();
         document.getElementById('menu-item-edit-id').value = '';
+        document.getElementById('meal-items-container').innerHTML = '';
+        document.getElementById('meal-builder-section').style.display = 'none';
+        document.getElementById('menu-variants-container').innerHTML = '';
+        document.getElementById('menu-addon-groups-container').innerHTML = '';
         document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="plus-circle" style="color:var(--accent);"></i> Add New Item`;
         document.getElementById('btn-submit-action').textContent = 'Add to Menu Live';
         document.getElementById('btn-cancel-edit').style.display = 'none';
+        document.getElementById('item-editor-modal')?.classList.remove('active');
         lucide.createIcons();
     }
 
@@ -2792,15 +4209,45 @@
     window.renderUsersTable = renderUsersTable;
     window.setUserRoleFilter = setUserRoleFilter;
     window.toggleGuestCheckoutModal = toggleGuestCheckoutModal;
+    window.toggleItemCustomizationModal = toggleItemCustomizationModal;
     window.handleAuthSubmit = handleAuthSubmit;
     window.submitGuestOrder = submitGuestOrder;
     window.stopTrackingAndReturn = stopTrackingAndReturn;
     window.handleFormSubmit = handleFormSubmit;
+    window.openNewItemModal = openNewItemModal;
+    window.closeItemEditorModal = closeItemEditorModal;
+    window.toggleCategoryManagerModal = toggleCategoryManagerModal;
+    window.addMenuCategory = addMenuCategory;
+    window.removeMenuCategory = removeMenuCategory;
+    window.toggleCategoryVisibility = toggleCategoryVisibility;
+    window.setAdminMenuSearch = setAdminMenuSearch;
+    window.setAdminMenuFilter = setAdminMenuFilter;
+    window.setStoreOpen = setStoreOpen;
+    window.toggleMenuItemSoldOut = toggleMenuItemSoldOut;
+    window.addAdminOptionRow = addAdminOptionRow;
+    window.handleMenuCategoryChange = handleMenuCategoryChange;
+    window.toggleMealBuildMode = toggleMealBuildMode;
+    window.addMealItemRow = addMealItemRow;
+    window.addAdminAddonGroup = addAdminAddonGroup;
+    window.addAdminAddonOption = addAdminAddonOption;
+    window.syncAddonGroupLimits = syncAddonGroupLimits;
+    window.applyMealTemplate = applyMealTemplate;
+    window.openItemCustomization = openItemCustomization;
+    window.quickAddToCart = quickAddToCart;
+    window.updateCustomizationTotal = updateCustomizationTotal;
+    window.handleAddonSelection = handleAddonSelection;
+    window.changeCustomizationQuantity = changeCustomizationQuantity;
+    window.confirmCustomizedItem = confirmCustomizedItem;
     window.editMenuItem = editMenuItem;
+    window.toggleMenuItemVisibility = toggleMenuItemVisibility;
     window.removeMenuItem = removeMenuItem;
     window.resetFormState = resetFormState;
     window.changeMenuSorting = changeMenuSorting;
     window.updateOrderStatus = updateOrderStatus;
+    window.acceptOrder = acceptOrder;
+    window.rejectOrder = rejectOrder;
+    window.markOrderReady = markOrderReady;
+    window.completeKitchenOrder = completeKitchenOrder;
     </script>
 </body>
 </html>
