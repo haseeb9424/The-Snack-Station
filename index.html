@@ -1846,6 +1846,7 @@
                 <button class="user-role-tab" data-role="customer" onclick="setUserRoleFilter('customer')">Customers <span id="count-role-customer">0</span></button>
                 <button class="user-role-tab" data-role="order_updater" onclick="setUserRoleFilter('order_updater')">Order Updaters <span id="count-role-order_updater">0</span></button>
                 <button class="user-role-tab" data-role="admin" onclick="setUserRoleFilter('admin')">Admins <span id="count-role-admin">0</span></button>
+                <button class="user-role-tab" data-role="super_admin" onclick="setUserRoleFilter('super_admin')">Super Admins <span id="count-role-super_admin">0</span></button>
             </div>
 
             <div class="table-container">
@@ -2168,13 +2169,15 @@
                     <label for="edit-profile-street">Address</label>
                     <textarea id="edit-profile-street" placeholder="House, street and area"></textarea>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="edit-profile-role-group">
                     <label for="edit-profile-role">Account Level Role</label>
                     <select id="edit-profile-role" required>
                         <option value="customer">Customer (Level 1)</option>
                         <option value="order_updater">Order Updater (Level 2)</option>
                         <option value="admin">Admin Desk (Level 3)</option>
+                        <option value="super_admin">Super Admin (Level 4)</option>
                     </select>
+                    <small style="display:block; margin-top:7px; color:var(--text-muted);">Only a super-admin can change account roles.</small>
                 </div>
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:1.5rem;">
                     Commit Database Changes
@@ -2455,9 +2458,9 @@
         renderAuthBar();
         renderNavigation();
         renderMenu();
-        if (state.currentUser && (state.currentUser.role === 'admin' || state.currentUser.role === 'order_updater')) {
+        if (state.currentUser && (hasAdminAccess() || state.currentUser.role === 'order_updater')) {
             loadOrders();
-            if (state.currentUser.role === 'admin') loadUsers();
+            if (hasAdminAccess()) loadUsers();
         } else {
             state.orders = [];
             renderOrdersTable();
@@ -2485,12 +2488,21 @@
         }
     }
 
+    function hasAdminAccess(user = state.currentUser) {
+        return Boolean(user && ['admin', 'super_admin'].includes(user.role));
+    }
+
+    function hasSuperAdminAccess(user = state.currentUser) {
+        return Boolean(user && user.role === 'super_admin');
+    }
+
     function renderNavigation() {
         const role = state.currentUser ? state.currentUser.role : 'customer';
-        document.getElementById('btn-portal').style.display = (role === 'order_updater' || role === 'admin') ? 'flex' : 'none';
-        document.getElementById('btn-orders').style.display = (role === 'order_updater' || role === 'admin') ? 'flex' : 'none';
-        document.getElementById('btn-users').style.display = (role === 'admin') ? 'flex' : 'none';
-        document.getElementById('btn-admin').style.display = (role === 'admin') ? 'flex' : 'none';
+        const adminAccess = hasAdminAccess();
+        document.getElementById('btn-portal').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
+        document.getElementById('btn-orders').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
+        document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
+        document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
 
         const cartWrapper = document.getElementById('cart-dropdown-wrapper');
         const displayRole = state.currentUser?.role || (isAuthLoading ? cachedAuthUser?.role : null) || 'customer';
@@ -2502,7 +2514,7 @@
     function switchPanel(panelId) {
         const role = state.currentUser ? state.currentUser.role : 'customer';
         if (panelId === 'orders' && role === 'customer') return;
-        if ((panelId === 'users' || panelId === 'admin') && role !== 'admin') return;
+        if ((panelId === 'users' || panelId === 'admin') && !hasAdminAccess()) return;
 
         if (panelId === 'orders') loadOrders();
         if (panelId === 'users') loadUsers();
@@ -2523,7 +2535,7 @@
     }
 
     async function writeAuditLog(action, details = {}) {
-        if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) return;
+        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) return;
         try {
             const auditRef = doc(collection(db, 'auditLogs'));
             const auditRecord = {
@@ -2544,7 +2556,7 @@
     }
 
     async function loadAuditLogs() {
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         const body = document.getElementById('audit-log-table-body');
         if (body) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading audit records...</td></tr>';
         try {
@@ -2602,7 +2614,8 @@
             'item.visibility_change':'Item visibility changed', 'item.sold_out_change':'Stock status changed',
             'category.create':'Category created', 'category.rename':'Category renamed', 'category.delete':'Category deleted',
             'category.reorder':'Categories reordered', 'category.visibility_change':'Category visibility changed',
-            'store.status_change':'Store status changed', 'order.status_change':'Order status changed'
+            'store.status_change':'Store status changed', 'order.status_change':'Order status changed',
+            'user.role_change':'User role changed'
         };
         body.innerHTML = state.auditLogs.length ? state.auditLogs.map(log => {
             const date = log.createdAt ? new Date(log.createdAt).toLocaleString() : '—';
@@ -3533,7 +3546,7 @@
     }
 
     async function loadOrders() {
-        if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) return;
+        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) return;
         if (stopKitchenOrdersListener) {
             renderOrdersTable();
             return;
@@ -3557,7 +3570,7 @@
     }
 
     async function loadUsers() {
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         try {
             const snapshot = await getDocs(collection(db, "users"));
             state.users = snapshot.docs
@@ -3587,7 +3600,8 @@
             all: state.users.length,
             customer: state.users.filter(user => (user.role || 'customer') === 'customer').length,
             order_updater: state.users.filter(user => user.role === 'order_updater').length,
-            admin: state.users.filter(user => user.role === 'admin').length
+            admin: state.users.filter(user => user.role === 'admin').length,
+            super_admin: state.users.filter(user => user.role === 'super_admin').length
         };
         Object.entries(roleCounts).forEach(([role, count]) => {
             const countElement = document.getElementById(`count-role-${role}`);
@@ -3601,7 +3615,8 @@
             const roleLabels = {
                 customer: 'Customer',
                 order_updater: 'Order Updater',
-                admin: 'Admin'
+                admin: 'Admin',
+                super_admin: 'Super Admin'
             };
             const joinedDate = user.joined || (user.createdAt ? String(user.createdAt).slice(0, 10) : '—');
             const initial = String(user.name || user.email || '?')[0].toUpperCase();
@@ -3619,7 +3634,7 @@
                     <td>${user.email || '—'}</td>
                     <td>${joinedDate}</td>
                     <td>${Number(user.orderCount || 0)}</td>
-                    <td><span class="badge-status ${user.role === 'admin' ? 'delivery' : user.role === 'order_updater' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
+                    <td><span class="badge-status ${user.role === 'super_admin' ? 'pending' : user.role === 'admin' ? 'delivery' : user.role === 'order_updater' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
                     <td style="text-align:center;">
                         <button class="btn-action-edit" style="margin:0 auto;" onclick='openAdminUserEditor(${JSON.stringify(user.id)})'>
                             <i data-lucide="user-cog" style="width:14px;"></i> Manage
@@ -3648,23 +3663,42 @@
         document.getElementById('edit-profile-city').value = savedCity || 'Lahore';
         document.getElementById('edit-profile-street').value = user.street || '';
         document.getElementById('edit-profile-role').value = user.role || 'customer';
+        document.getElementById('edit-profile-role-group').style.display = hasSuperAdminAccess() ? 'block' : 'none';
         toggleAdminUserModal(true);
     }
 
     async function handleAdminUserUpdate(event) {
         event.preventDefault();
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         const userId = document.getElementById('edit-profile-user-id').value;
+        const existingUser = state.users.find(profile => profile.id === userId);
+        if (!existingUser) return;
+        const previousRole = existingUser.role || 'customer';
+        const requestedRole = document.getElementById('edit-profile-role').value;
+        const nextRole = hasSuperAdminAccess() ? requestedRole : previousRole;
+
+        if (userId === state.currentUser.uid && previousRole === 'super_admin' && nextRole !== 'super_admin') {
+            triggerToast("You cannot remove your own super-admin access.", "danger");
+            return;
+        }
+
         const updates = {
             name: document.getElementById('edit-profile-name').value.trim(),
             phone: document.getElementById('edit-profile-phone').value.trim(),
             city: document.getElementById('edit-profile-city').value.trim(),
             street: document.getElementById('edit-profile-street').value.trim(),
-            role: document.getElementById('edit-profile-role').value,
+            role: nextRole,
             updatedAt: new Date().toISOString()
         };
         try {
             await setDoc(doc(db, "users", userId), updates, { merge: true });
+            if (previousRole !== nextRole) {
+                await writeAuditLog('user.role_change', {
+                    userId,
+                    userName: existingUser.name || existingUser.email || userId,
+                    changes: { Role: { from: previousRole, to: nextRole } }
+                });
+            }
             toggleAdminUserModal(false);
             await loadUsers();
             triggerToast("User profile updated!");
@@ -3674,7 +3708,7 @@
     }
 
     async function sendManagedUserPasswordReset() {
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         const email = document.getElementById('edit-profile-email').value.trim();
         if (!email) {
             triggerToast("This user does not have an email address.", "danger");
@@ -3766,7 +3800,7 @@
     }
 
     async function updateOrderStatus(orderId, newStatus, extraUpdates = {}) {
-        if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) {
+        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) {
             triggerToast("Order management access is required.", "danger");
             return;
         }
@@ -3880,7 +3914,7 @@
     }
 
     async function toggleMenuItemSoldOut(itemId) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
@@ -3976,7 +4010,7 @@
     }
 
     async function setStoreOpen(isOpen) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             renderStoreStatus();
             triggerToast("Admin access is required.", "danger");
             return;
@@ -3998,7 +4032,7 @@
     }
 
     async function toggleMenuItemVisibility(itemId) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
@@ -4103,7 +4137,7 @@
     }
 
     async function renameMenuCategory(category) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         const proposedName = prompt('New category name:', category);
         if (proposedName === null) return;
         const newName = proposedName.trim().replace(/\s+/g, ' ');
@@ -4132,7 +4166,7 @@
     }
 
     async function toggleCategoryVisibility(category) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        if (!hasAdminAccess()) return;
         const previousHidden = [...state.hiddenCategories];
         state.hiddenCategories = state.hiddenCategories.includes(category)
             ? state.hiddenCategories.filter(item => item !== category)
@@ -4152,7 +4186,7 @@
     }
 
     async function addMenuCategory() {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
@@ -4182,7 +4216,7 @@
     }
 
     async function removeMenuCategory(category) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
@@ -4440,7 +4474,7 @@
 
     async function handleFormSubmit(event) {
         event.preventDefault();
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
@@ -4542,7 +4576,7 @@
     }
 
     async function removeMenuItem(itemId) {
-        if (!state.currentUser || state.currentUser.role !== 'admin') {
+        if (!hasAdminAccess()) {
             triggerToast("Admin access is required.", "danger");
             return;
         }
