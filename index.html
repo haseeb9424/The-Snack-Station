@@ -1101,6 +1101,9 @@
             padding: 9px;
             color: var(--text-main);
         }
+        .meal-substitution-editor { grid-column:1 / -1; }
+        .meal-substitution-editor label { display:block; font-size:.7rem; color:var(--text-muted); margin-bottom:5px; }
+        .meal-substitution-editor select { min-height:72px; }
 
         .meal-included-list {
             background: var(--bg-input);
@@ -1830,7 +1833,7 @@
                         </div>
                         <div class="form-group">
                             <label for="menu-item-price">Selling Price (Rs.)</label>
-                            <input type="number" step="1" id="menu-item-price" placeholder="450" required>
+                            <input type="number" step="1" id="menu-item-price" placeholder="450" required oninput="updateMealPriceSummary()">
                         </div>
                         <div class="form-group">
                             <label for="menu-item-category">Food Category</label>
@@ -1854,6 +1857,7 @@
                                     <i data-lucide="plus" style="width:15px;"></i> Add Existing Menu Item
                                 </button>
                                 <p style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">The meal price remains editable, allowing you to apply a combo discount.</p>
+                                <div id="meal-price-summary" style="margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--bg-input); font-size:.78rem; color:var(--text-muted);">Add components to calculate the original price and customer savings.</div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -1946,6 +1950,13 @@
                         </table>
                     </div>
                 </div>
+            </div>
+            <div class="card" style="margin-top:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div><h3 style="display:flex; align-items:center; gap:8px;"><i data-lucide="history" style="color:var(--accent);"></i> Admin Audit Log</h3><p style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">Latest administrative and kitchen actions.</p></div>
+                    <button type="button" class="btn-secondary" style="padding:8px 11px;" onclick="loadAuditLogs()"><i data-lucide="refresh-cw" style="width:14px;"></i> Refresh</button>
+                </div>
+                <div class="table-container"><table><thead><tr><th>Date & Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="audit-log-table-body"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No audit records loaded.</td></tr></tbody></table></div>
             </div>
         </section>
     </main>
@@ -2144,6 +2155,7 @@
                 <div class="item-detail-content">
                     <h3 class="modal-title" id="customization-item-title">Customize Item</h3>
                     <p id="customization-item-description" style="color:var(--text-muted); line-height:1.6; margin-bottom:1.5rem;"></p>
+                    <div id="customization-savings" style="display:none; margin:-.7rem 0 1rem; color:var(--success); font-weight:800;"></div>
                     <div id="customization-meal-items" style="display:none; margin-bottom:1.25rem;"></div>
                     <form id="item-customization-form" onsubmit="confirmCustomizedItem(event)">
                         <input type="hidden" id="customization-item-id">
@@ -2184,7 +2196,7 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-    import {
+    import { 
         getFirestore,
         collection,
         doc,
@@ -2273,6 +2285,7 @@
     let stopOrderTrackingListener = null;
     let stopKitchenOrdersListener = null;
     let kitchenListenerInitialized = false;
+    let draggedCategoryName = null;
     
     let state = {
         currentUser: null, 
@@ -2287,6 +2300,7 @@
         adminMenuSearch: '',
         adminMenuCategoryFilter: 'all',
         adminMenuStatusFilter: 'all',
+        auditLogs: [],
         storeOpen: true
     };
 
@@ -2415,6 +2429,7 @@
 
         if (panelId === 'orders') loadOrders();
         if (panelId === 'users') loadUsers();
+        if (panelId === 'admin') loadAuditLogs();
 
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
@@ -2428,6 +2443,59 @@
         document.getElementById('toast-message').innerText = message;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    async function writeAuditLog(action, details = {}) {
+        if (!state.currentUser || !['admin', 'order_updater'].includes(state.currentUser.role)) return;
+        try {
+            const auditRef = doc(collection(db, 'auditLogs'));
+            const auditRecord = {
+                action,
+                details,
+                actorId: state.currentUser.uid || null,
+                actorName: state.currentUser.name || '',
+                actorEmail: state.currentUser.email || '',
+                actorRole: state.currentUser.role,
+                createdAt: new Date().toISOString()
+            };
+            await setDoc(auditRef, auditRecord);
+            state.auditLogs = [{ id: auditRef.id, ...auditRecord }, ...state.auditLogs.filter(log => log.id !== auditRef.id)].slice(0, 100);
+            renderAuditLogs();
+        } catch (error) {
+            console.warn('Audit log could not be written:', error);
+        }
+    }
+
+    async function loadAuditLogs() {
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        const body = document.getElementById('audit-log-table-body');
+        if (body) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading audit records...</td></tr>';
+        try {
+            const snapshot = await getDocs(collection(db, 'auditLogs'));
+            state.auditLogs = snapshot.docs.map(logDoc => ({ id: logDoc.id, ...logDoc.data() }))
+                .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+                .slice(0, 100);
+            renderAuditLogs();
+        } catch (error) {
+            if (body) body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">${error.message || 'Could not load audit records.'}</td></tr>`;
+        }
+    }
+
+    function renderAuditLogs() {
+        const body = document.getElementById('audit-log-table-body');
+        if (!body) return;
+        const actionLabels = {
+            'item.create':'Item created', 'item.update':'Item updated', 'item.delete':'Item deleted',
+            'item.visibility_change':'Item visibility changed', 'item.sold_out_change':'Stock status changed',
+            'category.create':'Category created', 'category.rename':'Category renamed', 'category.delete':'Category deleted',
+            'category.reorder':'Categories reordered', 'category.visibility_change':'Category visibility changed',
+            'store.status_change':'Store status changed', 'order.status_change':'Order status changed'
+        };
+        body.innerHTML = state.auditLogs.length ? state.auditLogs.map(log => {
+            const date = log.createdAt ? new Date(log.createdAt).toLocaleString() : '—';
+            const details = JSON.stringify(log.details || {}).replace(/[<>]/g, '');
+            return `<tr><td>${date}</td><td><strong>${log.actorName || log.actorEmail || 'Unknown'}</strong><small style="display:block; color:var(--text-muted);">${log.actorRole || ''}</small></td><td>${actionLabels[log.action] || log.action}</td><td><code style="font-size:.7rem; white-space:normal;">${details}</code></td></tr>`;
+        }).join('') : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No audit records found.</td></tr>';
     }
 
     function toggleCartVisibility() {
@@ -2676,6 +2744,19 @@
         }
     }
 
+    function isBasicItemAvailable(item) {
+        return Boolean(item) && item.isVisible !== false && !item.isSoldOut && !state.hiddenCategories.includes(item.category);
+    }
+
+    function isMenuItemAvailable(item) {
+        if (!isBasicItemAvailable(item)) return false;
+        if (!Array.isArray(item.mealItems) || !item.mealItems.length) return true;
+        return item.mealItems.every(component => {
+            const candidateIds = [component.itemId, ...(Array.isArray(component.substituteItemIds) ? component.substituteItemIds : [])];
+            return candidateIds.some(candidateId => isBasicItemAvailable(menuData.find(menuItem => String(menuItem.id) === String(candidateId))));
+        });
+    }
+
     function renderMenu() {
         const container = document.getElementById('menu-container');
         const displayRole = state.currentUser?.role || (isAuthLoading ? cachedAuthUser?.role : null) || 'customer';
@@ -2720,17 +2801,17 @@
                     </div>
                     <div class="grid-autofit">
                         ${groupedItems[category].map(item => `
-                            <div class="menu-card ${item.isSoldOut ? 'sold-out' : ''}" ${item.isSoldOut ? '' : `onclick='openItemCustomization(${JSON.stringify(String(item.id))})' role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemCustomization(${JSON.stringify(String(item.id))})}"`}>
+                            <div class="menu-card ${!isMenuItemAvailable(item) ? 'sold-out' : ''}" ${!isMenuItemAvailable(item) ? '' : `onclick='openItemCustomization(${JSON.stringify(String(item.id))})' role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemCustomization(${JSON.stringify(String(item.id))})}"`}>
                                 <img class="menu-img" src="${item.img}" alt="${item.name}">
                                 ${Array.isArray(item.labels) && item.labels.length ? `<div class="menu-labels">${item.labels.map(label => `<span class="menu-label ${label.toLowerCase()}">${label}</span>`).join('')}</div>` : ''}
-                                ${item.isSoldOut ? '<span class="sold-out-badge">Sold Out</span>' : ''}
+                                ${!isMenuItemAvailable(item) ? '<span class="sold-out-badge">Unavailable</span>' : ''}
                                 <span class="menu-badge">${item.category}</span>
                                 <div class="menu-info">
                                     <h4 class="menu-title">${item.name}</h4>
                                     <p class="menu-desc">${item.desc}</p>
                                     <div class="menu-footer">
-                                        <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}</span>
-                                        ${canAddToCart && state.storeOpen && !item.isSoldOut ? `<button class="btn-add-cart" onclick='event.stopPropagation();quickAddToCart(${JSON.stringify(String(item.id))})' aria-label="Quick add to basket"><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
+                                        <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}${calculateMealOriginalPrice(item.mealItems) > Number(item.price) ? `<small style="display:block; color:var(--success); font-size:.65rem;">Save Rs. ${(calculateMealOriginalPrice(item.mealItems) - Number(item.price)).toLocaleString()}</small>` : ''}</span>
+                                        ${canAddToCart && state.storeOpen && isMenuItemAvailable(item) ? `<button class="btn-add-cart" onclick='event.stopPropagation();quickAddToCart(${JSON.stringify(String(item.id))})' aria-label="Quick add to basket"><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -2750,7 +2831,7 @@
 
     function openItemCustomization(itemId) {
         const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
-        if (!item || item.isVisible === false || item.isSoldOut) return;
+        if (!item || !isMenuItemAvailable(item)) return;
         const variants = Array.isArray(item.variants) ? item.variants : [];
         const addonGroups = Array.isArray(item.addonGroups) && item.addonGroups.length
             ? item.addonGroups
@@ -2762,6 +2843,11 @@
         document.getElementById('customization-item-title').textContent = item.name;
         document.getElementById('customization-item-image').src = item.img || '';
         document.getElementById('customization-item-description').textContent = item.desc || '';
+        const originalMealPrice = calculateMealOriginalPrice(item.mealItems);
+        const savingsElement = document.getElementById('customization-savings');
+        const mealSavings = Math.max(0, originalMealPrice - Number(item.price));
+        savingsElement.style.display = mealSavings ? 'block' : 'none';
+        savingsElement.textContent = mealSavings ? `Combo value Rs. ${originalMealPrice.toLocaleString()} · You save Rs. ${mealSavings.toLocaleString()}` : '';
         document.getElementById('customization-instructions').value = '';
         const mealItemsContainer = document.getElementById('customization-meal-items');
         const includedMealItems = Array.isArray(item.mealItems) ? item.mealItems : [];
@@ -2769,7 +2855,13 @@
         mealItemsContainer.innerHTML = includedMealItems.length ? `
             <div class="meal-included-list">
                 <h4>Included in this meal</h4>
-                <ul>${includedMealItems.map(mealItem => `<li>${Number(mealItem.quantity || 1)} × ${mealItem.name}</li>`).join('')}</ul>
+                <div style="display:grid; gap:9px; margin-top:9px;">${includedMealItems.map((mealItem, componentIndex) => {
+                    const candidateIds = [mealItem.itemId, ...(Array.isArray(mealItem.substituteItemIds) ? mealItem.substituteItemIds : [])];
+                    const candidates = candidateIds.map(candidateId => menuData.find(menuItem => String(menuItem.id) === String(candidateId))).filter(isBasicItemAvailable);
+                    return `<label style="font-size:.75rem; color:var(--text-muted);">${Number(mealItem.quantity || 1)} × component
+                        <select name="meal-substitution-${componentIndex}" style="margin-top:5px; width:100%;">${candidates.map(candidate => `<option value="${candidate.id}">${candidate.name}</option>`).join('')}</select>
+                    </label>`;
+                }).join('')}</div>
             </div>
         ` : '';
         document.getElementById('customization-quantity').textContent = '1';
@@ -2829,7 +2921,12 @@
 
     function quickAddToCart(itemId) {
         const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
-        if (!item || item.isVisible === false || item.isSoldOut || !state.storeOpen) return;
+        if (!item || !isMenuItemAvailable(item) || !state.storeOpen) return;
+        if (Array.isArray(item.mealItems) && item.mealItems.some(component => (component.substituteItemIds?.length || !isBasicItemAvailable(menuData.find(menuItem => String(menuItem.id) === String(component.itemId)))))) {
+            openItemCustomization(itemId);
+            triggerToast('Choose the meal components before adding this item.');
+            return;
+        }
         const variants = Array.isArray(item.variants) ? item.variants : [];
         const addonGroups = Array.isArray(item.addonGroups) ? item.addonGroups : [];
         const selectedVariant = variants[0] || null;
@@ -2871,8 +2968,13 @@
                 if (option) selectedAddons.push({ ...option, groupName: group.name });
             });
         });
+        const selectedMealItems = (Array.isArray(item.mealItems) ? item.mealItems : []).map((component, componentIndex) => {
+            const selectedId = document.querySelector(`select[name="meal-substitution-${componentIndex}"]`)?.value || component.itemId;
+            const selectedItem = menuData.find(menuItem => String(menuItem.id) === String(selectedId));
+            return { itemId: selectedId, name: selectedItem?.name || component.name, quantity: Number(component.quantity || 1) };
+        });
         const instructions = document.getElementById('customization-instructions')?.value.trim() || '';
-        return { item, selectedVariant, selectedAddons, addonGroups, instructions };
+        return { item, selectedVariant, selectedAddons, addonGroups, selectedMealItems, instructions };
     }
 
     function handleAddonSelection(groupIndex, changedInput) {
@@ -2929,6 +3031,7 @@
         addToCart(customization.item.id, {
             selectedVariant: customization.selectedVariant,
             selectedAddons: customization.selectedAddons,
+            selectedMealItems: customization.selectedMealItems,
             instructions: customization.instructions
         }, quantity);
         toggleItemCustomizationModal(false);
@@ -2937,11 +3040,12 @@
     function addToCart(itemId, customization = {}, quantity = 1) {
         if (state.currentUser && state.currentUser.role !== 'customer') return;
         const foundItem = menuData.find(i => String(i.id) === String(itemId));
-        if (!foundItem || foundItem.isVisible === false || foundItem.isSoldOut || !state.storeOpen) return;
+        if (!foundItem || !isMenuItemAvailable(foundItem) || !state.storeOpen) return;
         const selectedVariant = customization.selectedVariant || null;
         const selectedAddons = customization.selectedAddons || [];
+        const selectedMealItems = customization.selectedMealItems || (Array.isArray(foundItem.mealItems) ? foundItem.mealItems : []);
         const instructions = String(customization.instructions || '').trim();
-        const optionKey = [selectedVariant?.name || 'standard', ...selectedAddons.map(addon => addon.name).sort(), instructions.toLowerCase()].join('|');
+        const optionKey = [selectedVariant?.name || 'standard', ...selectedAddons.map(addon => addon.name).sort(), ...selectedMealItems.map(item => item.itemId), instructions.toLowerCase()].join('|');
         const cartKey = `${itemId}::${optionKey}`;
         const finalPrice = Number(foundItem.price) + Number(selectedVariant?.priceAdjustment || 0) +
             selectedAddons.reduce((sum, addon) => sum + Number(addon.priceAdjustment || 0), 0);
@@ -2954,6 +3058,7 @@
             price: finalPrice,
             selectedVariant,
             selectedAddons,
+            selectedMealItems,
             instructions,
             qty: quantity
         });
@@ -2969,6 +3074,7 @@
                     <h4>${item.name}</h4>
                     ${item.selectedVariant ? `<small style="display:block; color:var(--text-muted); margin-top:3px;">${item.selectedVariant.name}</small>` : ''}
                     ${item.selectedAddons?.length ? `<small style="display:block; color:var(--text-muted); margin-top:3px;">+ ${item.selectedAddons.map(addon => addon.name).join(', ')}</small>` : ''}
+                    ${item.selectedMealItems?.length ? `<small style="display:block; color:var(--text-muted); margin-top:3px;">Includes: ${item.selectedMealItems.map(component => `${component.quantity}× ${component.name}`).join(', ')}</small>` : ''}
                     ${item.instructions ? `<small style="display:block; color:var(--warning); margin-top:4px;">Note: ${item.instructions}</small>` : ''}
                     <p>Rs. ${Number(item.price).toLocaleString()}</p>
                 </div>
@@ -3052,35 +3158,50 @@
         if (placed) toggleGuestCheckoutModal(false);
     }
 
+    function buildValidatedOrderItems() {
+        return state.cart.map(cartItem => {
+            const currentItem = menuData.find(item => String(item.id) === String(cartItem.id));
+            if (!currentItem || !isMenuItemAvailable(currentItem)) throw new Error(`${cartItem.name} is no longer available.`);
+            const selectedVariant = cartItem.selectedVariant
+                ? (currentItem.variants || []).find(variant => variant.name === cartItem.selectedVariant.name)
+                : null;
+            if (cartItem.selectedVariant && !selectedVariant) throw new Error(`A selected option for ${currentItem.name} is no longer available.`);
+            const selectedAddons = (cartItem.selectedAddons || []).map(selected => {
+                const group = (currentItem.addonGroups || []).find(item => item.name === selected.groupName);
+                const option = group?.options?.find(item => item.name === selected.name);
+                if (!option) throw new Error(`${selected.name} is no longer available for ${currentItem.name}.`);
+                return { ...option, groupName: group.name };
+            });
+            const selectedMealItems = (cartItem.selectedMealItems || currentItem.mealItems || []).map((selected, index) => {
+                const component = currentItem.mealItems?.[index];
+                const allowedIds = component ? [component.itemId, ...(component.substituteItemIds || [])].map(String) : [];
+                const selectedItem = menuData.find(item => String(item.id) === String(selected.itemId));
+                if (!component || !allowedIds.includes(String(selected.itemId)) || !isBasicItemAvailable(selectedItem)) throw new Error(`A component of ${currentItem.name} is unavailable. Please choose another substitution.`);
+                return { itemId: String(selectedItem.id), name: selectedItem.name, quantity: Number(component.quantity || 1) };
+            });
+            const unitPrice = Number(currentItem.price) + Number(selectedVariant?.priceAdjustment || 0) + selectedAddons.reduce((sum, addon) => sum + Number(addon.priceAdjustment || 0), 0);
+            return {
+                itemId: String(currentItem.id), name: currentItem.name, price: unitPrice, quantity: Number(cartItem.qty),
+                selectedVariant, selectedAddons, selectedMealItems, instructions: String(cartItem.instructions || '').slice(0, 250)
+            };
+        });
+    }
+
     async function createOrder(customerDetails, closeCart = true) {
         if (!state.storeOpen) {
             triggerToast("The kitchen is currently closed and cannot accept orders.", "danger");
             return false;
         }
-        const unavailableItem = state.cart.find(cartItem => {
-            const currentItem = menuData.find(item => String(item.id) === String(cartItem.id));
-            return !currentItem || currentItem.isVisible === false || currentItem.isSoldOut;
-        });
-        if (unavailableItem) {
-            triggerToast(`${unavailableItem.name} is no longer available. Please remove it from your cart.`, "danger");
-            return false;
-        }
-        const subtotal = state.cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
+        let validatedItems;
+        try { validatedItems = buildValidatedOrderItems(); }
+        catch (error) { triggerToast(error.message, 'danger'); return false; }
+        const subtotal = validatedItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
         const deliveryFee = 150;
         const orderRef = doc(collection(db, "orders"));
         const orderData = {
             orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
             ...customerDetails,
-            items: state.cart.map(item => ({
-                itemId: String(item.id),
-                name: item.name,
-                price: Number(item.price),
-                quantity: item.qty,
-                selectedVariant: item.selectedVariant || null,
-                selectedAddons: item.selectedAddons || [],
-                instructions: item.instructions || '',
-                mealItems: Array.isArray(item.mealItems) ? item.mealItems : []
-            })),
+            items: validatedItems.map(item => ({ ...item, mealItems: item.selectedMealItems })),
             subtotal,
             deliveryFee,
             total: subtotal + deliveryFee,
@@ -3107,11 +3228,8 @@
         if (stopOrderTrackingListener) stopOrderTrackingListener();
         renderTrackingOrder({ id: orderId, ...initialOrder });
         switchPanel('tracking');
-
         stopOrderTrackingListener = onSnapshot(doc(db, "orders", orderId), snapshot => {
-            if (snapshot.exists()) {
-                renderTrackingOrder({ id: snapshot.id, ...snapshot.data() });
-            }
+            if (snapshot.exists()) renderTrackingOrder({ id: snapshot.id, ...snapshot.data() });
         }, error => {
             console.warn("Live order tracking stopped:", error);
             triggerToast("Live updates are temporarily unavailable.", "danger");
@@ -3474,6 +3592,7 @@
             }, { merge: true });
             const order = state.orders.find(item => item.id === orderId);
             if (order) Object.assign(order, { status: newStatus, ...extraUpdates });
+            await writeAuditLog('order.status_change', { orderId, status: newStatus, ...extraUpdates });
             renderOrdersTable();
             triggerToast("Order status updated!");
         } catch (error) {
@@ -3586,6 +3705,7 @@
         renderMenu();
         try {
             await setDoc(doc(db, "items", String(itemId)), { isSoldOut: item.isSoldOut, updatedAt: new Date().toISOString() }, { merge: true });
+            await writeAuditLog('item.sold_out_change', { itemId: String(itemId), itemName: item.name, isSoldOut: item.isSoldOut });
             writeCachedMenu(menuData);
             triggerToast(item.isSoldOut ? `“${item.name}” marked Sold Out.` : `“${item.name}” is back in stock.`);
         } catch (error) {
@@ -3680,6 +3800,7 @@
         renderMenu();
         try {
             await setDoc(doc(db, "settings", "store"), { isOpen: state.storeOpen, updatedAt: new Date().toISOString() }, { merge: true });
+            await writeAuditLog('store.status_change', { isOpen: state.storeOpen });
             triggerToast(state.storeOpen ? "The store is now open." : "The store is now closed.");
         } catch (error) {
             state.storeOpen = previousValue;
@@ -3705,6 +3826,7 @@
                 isVisible: item.isVisible,
                 updatedAt: new Date().toISOString()
             }, { merge: true });
+            await writeAuditLog('item.visibility_change', { itemId: String(itemId), itemName: item.name, isVisible: item.isVisible });
             writeCachedMenu(menuData);
             triggerToast(item.isVisible ? `“${item.name}” is now available.` : `“${item.name}” is now hidden.`);
         } catch (error) {
@@ -3744,8 +3866,10 @@
         const chipList = document.getElementById('category-chip-list');
         if (chipList) {
             chipList.innerHTML = state.categories.map(category => `
-                <span class="category-chip ${state.hiddenCategories.includes(category) ? 'hidden-category' : ''}">
+                <span class="category-chip ${state.hiddenCategories.includes(category) ? 'hidden-category' : ''}" draggable="true" ondragstart='startCategoryDrag(${JSON.stringify(category)})' ondragover="event.preventDefault()" ondrop='dropCategoryBefore(${JSON.stringify(category)})'>
+                    <i data-lucide="grip-vertical" style="width:13px; color:var(--text-muted); cursor:grab;"></i>
                     ${category}
+                    <button type="button" onclick='renameMenuCategory(${JSON.stringify(category)})' aria-label="Rename ${category}" title="Rename category"><i data-lucide="pencil" style="width:13px;"></i></button>
                     <button type="button" onclick='toggleCategoryVisibility(${JSON.stringify(category)})' aria-label="${state.hiddenCategories.includes(category) ? 'Show' : 'Hide'} ${category}" title="${state.hiddenCategories.includes(category) ? 'Show category' : 'Hide category'}">
                         <i data-lucide="${state.hiddenCategories.includes(category) ? 'eye-off' : 'eye'}" style="width:13px;"></i>
                     </button>
@@ -3767,6 +3891,59 @@
         }, { merge: true });
     }
 
+    function startCategoryDrag(category) {
+        draggedCategoryName = category;
+    }
+
+    async function dropCategoryBefore(targetCategory) {
+        if (!draggedCategoryName || draggedCategoryName === targetCategory) return;
+        const previousCategories = [...state.categories];
+        const reordered = state.categories.filter(category => category !== draggedCategoryName);
+        reordered.splice(reordered.indexOf(targetCategory), 0, draggedCategoryName);
+        state.categories = reordered;
+        draggedCategoryName = null;
+        renderCategoryManager();
+        renderMenu();
+        try {
+            await saveMenuCategories();
+            await writeAuditLog('category.reorder', { categories: state.categories });
+        } catch (error) {
+            state.categories = previousCategories;
+            renderCategoryManager();
+            renderMenu();
+            triggerToast(error.message || 'Could not reorder categories.', 'danger');
+        }
+    }
+
+    async function renameMenuCategory(category) {
+        if (!state.currentUser || state.currentUser.role !== 'admin') return;
+        const proposedName = prompt('New category name:', category);
+        if (proposedName === null) return;
+        const newName = proposedName.trim().replace(/\s+/g, ' ');
+        if (!newName || !/^[a-zA-Z0-9 &'-]+$/.test(newName) || state.categories.some(item => item !== category && item.toLowerCase() === newName.toLowerCase())) {
+            triggerToast('Enter a unique valid category name.', 'danger');
+            return;
+        }
+        try {
+            const affectedItems = menuData.filter(item => item.category === category);
+            await Promise.all(affectedItems.map(item => setDoc(doc(db, 'items', String(item.id)), { category: newName, updatedAt: new Date().toISOString() }, { merge: true })));
+            affectedItems.forEach(item => { item.category = newName; });
+            state.categories = state.categories.map(item => item === category ? newName : item);
+            state.hiddenCategories = state.hiddenCategories.map(item => item === category ? newName : item);
+            await saveMenuCategories();
+            writeCachedMenu(menuData);
+            renderCategoryManager(newName);
+            renderAdminMenuTable();
+            renderMenu();
+            await writeAuditLog('category.rename', { from: category, to: newName, affectedItems: affectedItems.length });
+            triggerToast(`“${category}” renamed to “${newName}”.`);
+        } catch (error) {
+            await loadMenuItems();
+            await loadMenuCategories();
+            triggerToast(error.message || 'Could not rename the category.', 'danger');
+        }
+    }
+
     async function toggleCategoryVisibility(category) {
         if (!state.currentUser || state.currentUser.role !== 'admin') return;
         const previousHidden = [...state.hiddenCategories];
@@ -3777,6 +3954,7 @@
         renderMenu();
         try {
             await saveMenuCategories();
+            await writeAuditLog('category.visibility_change', { category, hidden: state.hiddenCategories.includes(category) });
             triggerToast(state.hiddenCategories.includes(category) ? `“${category}” is hidden.` : `“${category}” is visible.`);
         } catch (error) {
             state.hiddenCategories = previousHidden;
@@ -3807,6 +3985,7 @@
         input.value = '';
         try {
             await saveMenuCategories();
+            await writeAuditLog('category.create', { category });
             triggerToast(`“${category}” category added.`);
         } catch (error) {
             state.categories = previousCategories;
@@ -3831,6 +4010,7 @@
         renderCategoryManager();
         try {
             await saveMenuCategories();
+            await writeAuditLog('category.delete', { category });
             triggerToast(`“${category}” category removed.`);
         } catch (error) {
             state.categories = previousCategories;
@@ -3865,16 +4045,24 @@
         const availableItems = menuData.filter(item => String(item.id) !== String(currentEditId));
         const row = document.createElement('div');
         row.className = 'meal-item-row';
+        const substituteIds = Array.isArray(mealItem.substituteItemIds) ? mealItem.substituteItemIds.map(String) : [];
         row.innerHTML = `
-            <select class="meal-component-id" required>
+            <select class="meal-component-id" required onchange="updateMealPriceSummary()">
                 <option value="">Select an existing menu item</option>
                 ${availableItems.map(item => `<option value="${item.id}" ${String(item.id) === String(mealItem.itemId) ? 'selected' : ''}>${item.name} · Rs. ${Number(item.price).toLocaleString()}</option>`).join('')}
             </select>
-            <input type="number" class="meal-component-quantity" min="1" max="20" value="${Number(mealItem.quantity || 1)}" title="Quantity" required>
-            <button type="button" class="btn-danger" style="width:38px; height:38px; padding:0; justify-content:center;" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:15px;"></i></button>
+            <input type="number" class="meal-component-quantity" min="1" max="20" value="${Number(mealItem.quantity || 1)}" title="Quantity" required oninput="updateMealPriceSummary()">
+            <button type="button" class="btn-danger" style="width:38px; height:38px; padding:0; justify-content:center;" onclick="this.parentElement.remove(); updateMealPriceSummary();"><i data-lucide="x" style="width:15px;"></i></button>
+            <div class="meal-substitution-editor">
+                <label>Allowed substitutes (Ctrl/Cmd-click to select multiple)</label>
+                <select class="meal-component-substitutes" multiple>
+                    ${availableItems.map(item => `<option value="${item.id}" ${substituteIds.includes(String(item.id)) ? 'selected' : ''}>${item.name}</option>`).join('')}
+                </select>
+            </div>
         `;
         document.getElementById('meal-items-container').appendChild(row);
         toggleMealBuildMode();
+        updateMealPriceSummary();
         lucide.createIcons();
     }
 
@@ -3885,9 +4073,28 @@
             return {
                 itemId,
                 name: sourceItem?.name || '',
-                quantity: Number(row.querySelector('.meal-component-quantity').value || 1)
+                quantity: Number(row.querySelector('.meal-component-quantity').value || 1),
+                substituteItemIds: [...row.querySelector('.meal-component-substitutes').selectedOptions].map(option => option.value)
             };
         }).filter(item => item.itemId);
+    }
+
+    function calculateMealOriginalPrice(mealItems) {
+        return (Array.isArray(mealItems) ? mealItems : []).reduce((sum, component) => {
+            const sourceItem = menuData.find(item => String(item.id) === String(component.itemId));
+            return sum + (sourceItem ? Number(sourceItem.price || 0) * Number(component.quantity || 1) : 0);
+        }, 0);
+    }
+
+    function updateMealPriceSummary() {
+        const summary = document.getElementById('meal-price-summary');
+        if (!summary) return;
+        const originalPrice = calculateMealOriginalPrice(collectMealItems());
+        const sellingPrice = Number(document.getElementById('menu-item-price')?.value || 0);
+        const savings = Math.max(0, originalPrice - sellingPrice);
+        summary.innerHTML = originalPrice
+            ? `<strong style="color:var(--text-main);">Original components: Rs. ${originalPrice.toLocaleString()}</strong>${sellingPrice ? ` · Customer saves Rs. ${savings.toLocaleString()}` : ' · Enter the selling price to calculate savings.'}`
+            : 'Add components to calculate the original price and customer savings.';
     }
 
     function addAdminOptionRow(type, option = {}) {
@@ -4071,6 +4278,7 @@
             addonGroups: collectAdminAddonGroups(),
             mealMode,
             mealItems,
+            originalComponentPrice: calculateMealOriginalPrice(mealItems),
             isVisible: editId
                 ? menuData.find(item => String(item.id) === String(editId))?.isVisible !== false
                 : true,
@@ -4087,10 +4295,12 @@
         try {
             if (editId) {
                 await setDoc(doc(db, "items", editId), itemData, { merge: true });
+                await writeAuditLog('item.update', { itemId: editId, itemName: itemData.name, category: itemData.category });
                 triggerToast("Menu item updated successfully!");
             } else {
                 const newItemRef = doc(collection(db, "items"));
                 await setDoc(newItemRef, { ...itemData, createdAt: new Date().toISOString() });
+                await writeAuditLog('item.create', { itemId: newItemRef.id, itemName: itemData.name, category: itemData.category });
                 triggerToast("Menu item added successfully!");
             }
             resetFormState();
@@ -4152,6 +4362,7 @@
 
         try {
             await deleteDoc(doc(db, "items", String(itemId)));
+            await writeAuditLog('item.delete', { itemId: String(itemId), itemName: item.name });
             if (document.getElementById('menu-item-edit-id').value === String(itemId)) resetFormState();
             await loadMenuItems();
             triggerToast("Menu item removed successfully!");
@@ -4214,12 +4425,16 @@
     window.submitGuestOrder = submitGuestOrder;
     window.stopTrackingAndReturn = stopTrackingAndReturn;
     window.handleFormSubmit = handleFormSubmit;
+    window.loadAuditLogs = loadAuditLogs;
     window.openNewItemModal = openNewItemModal;
     window.closeItemEditorModal = closeItemEditorModal;
     window.toggleCategoryManagerModal = toggleCategoryManagerModal;
     window.addMenuCategory = addMenuCategory;
     window.removeMenuCategory = removeMenuCategory;
     window.toggleCategoryVisibility = toggleCategoryVisibility;
+    window.startCategoryDrag = startCategoryDrag;
+    window.dropCategoryBefore = dropCategoryBefore;
+    window.renameMenuCategory = renameMenuCategory;
     window.setAdminMenuSearch = setAdminMenuSearch;
     window.setAdminMenuFilter = setAdminMenuFilter;
     window.setStoreOpen = setStoreOpen;
@@ -4228,6 +4443,7 @@
     window.handleMenuCategoryChange = handleMenuCategoryChange;
     window.toggleMealBuildMode = toggleMealBuildMode;
     window.addMealItemRow = addMealItemRow;
+    window.updateMealPriceSummary = updateMealPriceSummary;
     window.addAdminAddonGroup = addAdminAddonGroup;
     window.addAdminAddonOption = addAdminAddonOption;
     window.syncAddonGroupLimits = syncAddonGroupLimits;
