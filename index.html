@@ -597,6 +597,7 @@
             position: absolute;
             top: 12px;
             left: 12px;
+            z-index: 2;
             background-color: var(--accent);
             color: white;
             padding: 4px 10px;
@@ -1329,7 +1330,8 @@
         .store-status-banner { display:none; margin-bottom:18px; padding:13px 16px; border:1px solid rgba(239,68,68,.3); border-radius:var(--radius-md); background:rgba(239,68,68,.1); color:var(--danger); font-weight:700; }
         .menu-card.sold-out { opacity:.72; cursor:not-allowed; }
         .sold-out-badge { position:absolute; top:14px; right:14px; z-index:2; padding:6px 10px; border-radius:999px; background:var(--danger); color:#fff; font-size:.7rem; font-weight:800; text-transform:uppercase; }
-        .menu-labels { position:absolute; top:14px; left:14px; z-index:2; display:flex; flex-wrap:wrap; gap:5px; max-width:70%; }
+        .menu-labels { position:absolute; top:12px; right:12px; z-index:2; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:5px; max-width:58%; }
+        .menu-card.sold-out .menu-labels { top:50px; }
         .menu-label { padding:5px 8px; border-radius:999px; background:rgba(9,10,15,.82); color:#fff; font-size:.62rem; font-weight:800; backdrop-filter:blur(5px); }
         .menu-label.spicy { background:rgba(239,68,68,.9); }
         .menu-label.vegetarian { background:rgba(16,185,129,.9); }
@@ -2940,7 +2942,42 @@
         }
 
         const visibleMenuItems = menuData.filter(item => item.isVisible !== false && !state.hiddenCategories.includes(item.category));
+        if (state.currentSort === 'price-asc') visibleMenuItems.sort((a, b) => Number(a.price) - Number(b.price));
+        if (state.currentSort === 'price-desc') visibleMenuItems.sort((a, b) => Number(b.price) - Number(a.price));
+        if (state.currentSort === 'alpha-asc') visibleMenuItems.sort((a, b) => a.name.localeCompare(b.name));
+        if (state.currentSort === 'alpha-desc') visibleMenuItems.sort((a, b) => b.name.localeCompare(a.name));
+
+        const renderCustomerMenuCards = items => items.map(item => `
+            <div class="menu-card ${!isMenuItemAvailable(item) ? 'sold-out' : ''}" ${!isMenuItemAvailable(item) ? '' : `onclick='openItemCustomization(${JSON.stringify(String(item.id))})' role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemCustomization(${JSON.stringify(String(item.id))})}"`}>
+                <img class="menu-img" src="${item.img}" alt="${item.name}">
+                ${Array.isArray(item.labels) && item.labels.length ? `<div class="menu-labels">${item.labels.map(label => `<span class="menu-label ${label.toLowerCase()}">${label}</span>`).join('')}</div>` : ''}
+                ${!isMenuItemAvailable(item) ? '<span class="sold-out-badge">Unavailable</span>' : ''}
+                <span class="menu-badge">${item.category}</span>
+                <div class="menu-info">
+                    <h4 class="menu-title">${item.name}</h4>
+                    <p class="menu-desc">${item.desc}</p>
+                    <div class="menu-footer">
+                        <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}${calculateMealOriginalPrice(item.mealItems) > Number(item.price) ? `<small style="display:block; color:var(--success); font-size:.65rem;">Save Rs. ${(calculateMealOriginalPrice(item.mealItems) - Number(item.price)).toLocaleString()}</small>` : ''}</span>
+                        ${canAddToCart && state.storeOpen && isMenuItemAvailable(item) ? `<button class="btn-add-cart" onclick='event.stopPropagation();quickAddToCart(${JSON.stringify(String(item.id))})' aria-label="Quick add to basket"><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
         if (visibleMenuItems.length) {
+            if (state.currentSort !== 'default') {
+                container.innerHTML = `
+                    <section class="menu-category-section">
+                        <div class="menu-category-heading">
+                            <h4>All Menu Items</h4>
+                            <span class="menu-category-count">${visibleMenuItems.length} ${visibleMenuItems.length === 1 ? 'item' : 'items'}</span>
+                        </div>
+                        <div class="grid-autofit">${renderCustomerMenuCards(visibleMenuItems)}</div>
+                    </section>`;
+                lucide.createIcons();
+                return;
+            }
+
             const categoryOrder = state.categories;
             const groupedItems = visibleMenuItems.reduce((groups, item) => {
                 const category = item.category || 'Other';
@@ -2964,22 +3001,7 @@
                         <span class="menu-category-count">${groupedItems[category].length} ${groupedItems[category].length === 1 ? 'item' : 'items'}</span>
                     </div>
                     <div class="grid-autofit">
-                        ${groupedItems[category].map(item => `
-                            <div class="menu-card ${!isMenuItemAvailable(item) ? 'sold-out' : ''}" ${!isMenuItemAvailable(item) ? '' : `onclick='openItemCustomization(${JSON.stringify(String(item.id))})' role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemCustomization(${JSON.stringify(String(item.id))})}"`}>
-                                <img class="menu-img" src="${item.img}" alt="${item.name}">
-                                ${Array.isArray(item.labels) && item.labels.length ? `<div class="menu-labels">${item.labels.map(label => `<span class="menu-label ${label.toLowerCase()}">${label}</span>`).join('')}</div>` : ''}
-                                ${!isMenuItemAvailable(item) ? '<span class="sold-out-badge">Unavailable</span>' : ''}
-                                <span class="menu-badge">${item.category}</span>
-                                <div class="menu-info">
-                                    <h4 class="menu-title">${item.name}</h4>
-                                    <p class="menu-desc">${item.desc}</p>
-                                    <div class="menu-footer">
-                                        <span class="menu-price">Rs. ${Number(item.price).toLocaleString()}${calculateMealOriginalPrice(item.mealItems) > Number(item.price) ? `<small style="display:block; color:var(--success); font-size:.65rem;">Save Rs. ${(calculateMealOriginalPrice(item.mealItems) - Number(item.price)).toLocaleString()}</small>` : ''}</span>
-                                        ${canAddToCart && state.storeOpen && isMenuItemAvailable(item) ? `<button class="btn-add-cart" onclick='event.stopPropagation();quickAddToCart(${JSON.stringify(String(item.id))})' aria-label="Quick add to basket"><i data-lucide="plus" style="width:18px;"></i></button>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${renderCustomerMenuCards(groupedItems[category])}
                     </div>
                 </section>
             `).join('');
@@ -4553,11 +4575,6 @@
     }
 
     function applyMenuSorting() {
-        const sort = state.currentSort;
-        if (sort === 'price-asc') menuData.sort((a, b) => Number(a.price) - Number(b.price));
-        if (sort === 'price-desc') menuData.sort((a, b) => Number(b.price) - Number(a.price));
-        if (sort === 'alpha-asc') menuData.sort((a, b) => a.name.localeCompare(b.name));
-        if (sort === 'alpha-desc') menuData.sort((a, b) => b.name.localeCompare(a.name));
         renderMenu();
     }
 
