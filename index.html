@@ -2481,6 +2481,42 @@
         }
     }
 
+    function valuesEqual(first, second) {
+        return JSON.stringify(first ?? null) === JSON.stringify(second ?? null);
+    }
+
+    function buildItemChangeSet(before, after) {
+        const fields = {
+            name: 'Name', price: 'Price', category: 'Category', img: 'Image URL', desc: 'Description',
+            labels: 'Menu labels', variants: 'Size/options', addonGroups: 'Add-on groups', mealMode: 'Meal mode',
+            mealItems: 'Meal components/substitutions', originalComponentPrice: 'Original component price'
+        };
+        return Object.entries(fields).reduce((changes, [key, label]) => {
+            if (!valuesEqual(before?.[key], after?.[key])) changes[label] = { from: before?.[key] ?? null, to: after?.[key] ?? null };
+            return changes;
+        }, {});
+    }
+
+    function formatAuditValue(value, field = '') {
+        if (value === null || value === undefined || value === '') return 'Not set';
+        if (field.toLowerCase().includes('price') && typeof value === 'number') return `Rs. ${value.toLocaleString()}`;
+        if (Array.isArray(value)) {
+            if (!value.length) return 'None';
+            return value.map(item => typeof item === 'object' ? (item.name || item.itemId || 'Configured item') : item).join(', ');
+        }
+        if (typeof value === 'object') return JSON.stringify(value).replace(/[<>]/g, '');
+        return String(value).replace(/[<>]/g, '');
+    }
+
+    function formatAuditDetails(details = {}) {
+        if (details.changes && Object.keys(details.changes).length) {
+            return `<div style="display:grid; gap:6px;">${Object.entries(details.changes).map(([field, change]) => `<div><strong>${field}:</strong> <span style="color:var(--danger); text-decoration:line-through;">${formatAuditValue(change.from, field)}</span> <span style="color:var(--text-muted);">→</span> <span style="color:var(--success);">${formatAuditValue(change.to, field)}</span></div>`).join('')}</div>`;
+        }
+        const ignored = new Set(['itemId', 'orderId']);
+        const entries = Object.entries(details).filter(([key]) => !ignored.has(key));
+        return entries.length ? entries.map(([key, value]) => `<div><strong>${key.replace(/([A-Z])/g, ' $1').replace(/^./, letter => letter.toUpperCase())}:</strong> ${formatAuditValue(value, key)}</div>`).join('') : 'No additional details';
+    }
+
     function renderAuditLogs() {
         const body = document.getElementById('audit-log-table-body');
         if (!body) return;
@@ -2493,8 +2529,8 @@
         };
         body.innerHTML = state.auditLogs.length ? state.auditLogs.map(log => {
             const date = log.createdAt ? new Date(log.createdAt).toLocaleString() : '—';
-            const details = JSON.stringify(log.details || {}).replace(/[<>]/g, '');
-            return `<tr><td>${date}</td><td><strong>${log.actorName || log.actorEmail || 'Unknown'}</strong><small style="display:block; color:var(--text-muted);">${log.actorRole || ''}</small></td><td>${actionLabels[log.action] || log.action}</td><td><code style="font-size:.7rem; white-space:normal;">${details}</code></td></tr>`;
+            const details = formatAuditDetails(log.details || {});
+            return `<tr><td>${date}</td><td><strong>${log.actorName || log.actorEmail || 'Unknown'}</strong><small style="display:block; color:var(--text-muted);">${log.actorRole || ''}</small></td><td>${actionLabels[log.action] || log.action}</td><td style="font-size:.75rem; min-width:280px;">${details}</td></tr>`;
         }).join('') : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No audit records found.</td></tr>';
     }
 
@@ -3584,15 +3620,16 @@
             triggerToast("Order management access is required.", "danger");
             return;
         }
+        const existingOrder = state.orders.find(item => item.id === orderId);
+        const previousStatus = existingOrder?.status || 'pending';
         try {
             await setDoc(doc(db, "orders", orderId), {
                 status: newStatus,
                 ...extraUpdates,
                 updatedAt: new Date().toISOString()
             }, { merge: true });
-            const order = state.orders.find(item => item.id === orderId);
-            if (order) Object.assign(order, { status: newStatus, ...extraUpdates });
-            await writeAuditLog('order.status_change', { orderId, status: newStatus, ...extraUpdates });
+            if (existingOrder) Object.assign(existingOrder, { status: newStatus, ...extraUpdates });
+            await writeAuditLog('order.status_change', { orderId, changes: { Status: { from: previousStatus, to: newStatus } }, ...extraUpdates });
             renderOrdersTable();
             triggerToast("Order status updated!");
         } catch (error) {
@@ -3705,7 +3742,7 @@
         renderMenu();
         try {
             await setDoc(doc(db, "items", String(itemId)), { isSoldOut: item.isSoldOut, updatedAt: new Date().toISOString() }, { merge: true });
-            await writeAuditLog('item.sold_out_change', { itemId: String(itemId), itemName: item.name, isSoldOut: item.isSoldOut });
+            await writeAuditLog('item.sold_out_change', { itemId: String(itemId), itemName: item.name, changes: { Stock: { from: previousValue ? 'Sold Out' : 'In Stock', to: item.isSoldOut ? 'Sold Out' : 'In Stock' } } });
             writeCachedMenu(menuData);
             triggerToast(item.isSoldOut ? `“${item.name}” marked Sold Out.` : `“${item.name}” is back in stock.`);
         } catch (error) {
@@ -3800,7 +3837,7 @@
         renderMenu();
         try {
             await setDoc(doc(db, "settings", "store"), { isOpen: state.storeOpen, updatedAt: new Date().toISOString() }, { merge: true });
-            await writeAuditLog('store.status_change', { isOpen: state.storeOpen });
+            await writeAuditLog('store.status_change', { changes: { Store: { from: previousValue ? 'Open' : 'Closed', to: state.storeOpen ? 'Open' : 'Closed' } } });
             triggerToast(state.storeOpen ? "The store is now open." : "The store is now closed.");
         } catch (error) {
             state.storeOpen = previousValue;
@@ -3826,7 +3863,7 @@
                 isVisible: item.isVisible,
                 updatedAt: new Date().toISOString()
             }, { merge: true });
-            await writeAuditLog('item.visibility_change', { itemId: String(itemId), itemName: item.name, isVisible: item.isVisible });
+            await writeAuditLog('item.visibility_change', { itemId: String(itemId), itemName: item.name, changes: { Visibility: { from: previousValue === false ? 'Hidden' : 'Visible', to: item.isVisible ? 'Visible' : 'Hidden' } } });
             writeCachedMenu(menuData);
             triggerToast(item.isVisible ? `“${item.name}” is now available.` : `“${item.name}” is now hidden.`);
         } catch (error) {
@@ -3906,7 +3943,7 @@
         renderMenu();
         try {
             await saveMenuCategories();
-            await writeAuditLog('category.reorder', { categories: state.categories });
+            await writeAuditLog('category.reorder', { changes: { Order: { from: previousCategories, to: state.categories } } });
         } catch (error) {
             state.categories = previousCategories;
             renderCategoryManager();
@@ -3935,7 +3972,7 @@
             renderCategoryManager(newName);
             renderAdminMenuTable();
             renderMenu();
-            await writeAuditLog('category.rename', { from: category, to: newName, affectedItems: affectedItems.length });
+            await writeAuditLog('category.rename', { changes: { 'Category name': { from: category, to: newName } }, affectedItems: affectedItems.length });
             triggerToast(`“${category}” renamed to “${newName}”.`);
         } catch (error) {
             await loadMenuItems();
@@ -3954,7 +3991,7 @@
         renderMenu();
         try {
             await saveMenuCategories();
-            await writeAuditLog('category.visibility_change', { category, hidden: state.hiddenCategories.includes(category) });
+            await writeAuditLog('category.visibility_change', { category, changes: { Visibility: { from: previousHidden.includes(category) ? 'Hidden' : 'Visible', to: state.hiddenCategories.includes(category) ? 'Hidden' : 'Visible' } } });
             triggerToast(state.hiddenCategories.includes(category) ? `“${category}” is hidden.` : `“${category}” is visible.`);
         } catch (error) {
             state.hiddenCategories = previousHidden;
@@ -4259,6 +4296,7 @@
         }
 
         const editId = document.getElementById('menu-item-edit-id').value;
+        const existingItem = editId ? menuData.find(item => String(item.id) === String(editId)) : null;
         const category = document.getElementById('menu-item-category').value;
         const isMeal = category === 'Combos' || category === 'Family Meals';
         const mealMode = isMeal ? (document.querySelector('input[name="meal-build-mode"]:checked')?.value || 'standalone') : null;
@@ -4295,7 +4333,8 @@
         try {
             if (editId) {
                 await setDoc(doc(db, "items", editId), itemData, { merge: true });
-                await writeAuditLog('item.update', { itemId: editId, itemName: itemData.name, category: itemData.category });
+                const changes = buildItemChangeSet(existingItem, itemData);
+                await writeAuditLog('item.update', { itemId: editId, itemName: itemData.name, changes });
                 triggerToast("Menu item updated successfully!");
             } else {
                 const newItemRef = doc(collection(db, "items"));
