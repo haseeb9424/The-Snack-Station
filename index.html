@@ -1846,7 +1846,7 @@
                 <button class="user-role-tab" data-role="customer" onclick="setUserRoleFilter('customer')">Customers <span id="count-role-customer">0</span></button>
                 <button class="user-role-tab" data-role="order_updater" onclick="setUserRoleFilter('order_updater')">Order Updaters <span id="count-role-order_updater">0</span></button>
                 <button class="user-role-tab" data-role="admin" onclick="setUserRoleFilter('admin')">Admins <span id="count-role-admin">0</span></button>
-                <button class="user-role-tab" data-role="super_admin" onclick="setUserRoleFilter('super_admin')">Super Admins <span id="count-role-super_admin">0</span></button>
+                <button class="user-role-tab" id="super-admin-role-tab" data-role="super_admin" onclick="setUserRoleFilter('super_admin')" style="display:none;">Super Admins <span id="count-role-super_admin">0</span></button>
             </div>
 
             <div class="table-container">
@@ -2496,6 +2496,12 @@
         return Boolean(user && user.role === 'super_admin');
     }
 
+    function canManageUserProfile(user) {
+        if (!user || !hasAdminAccess()) return false;
+        if (hasSuperAdminAccess()) return true;
+        return !['admin', 'super_admin'].includes(user.role);
+    }
+
     function renderNavigation() {
         const role = state.currentUser ? state.currentUser.role : 'customer';
         const adminAccess = hasAdminAccess();
@@ -2503,6 +2509,8 @@
         document.getElementById('btn-orders').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
         document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
         document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
+        const superAdminRoleTab = document.getElementById('super-admin-role-tab');
+        if (superAdminRoleTab) superAdminRoleTab.style.display = hasSuperAdminAccess() ? '' : 'none';
 
         const cartWrapper = document.getElementById('cart-dropdown-wrapper');
         const displayRole = state.currentUser?.role || (isAuthLoading ? cachedAuthUser?.role : null) || 'customer';
@@ -3575,6 +3583,7 @@
             const snapshot = await getDocs(collection(db, "users"));
             state.users = snapshot.docs
                 .map(userDoc => ({ id: userDoc.id, uid: userDoc.id, ...userDoc.data() }))
+                .filter(user => hasSuperAdminAccess() || user.role !== 'super_admin')
                 .sort((a, b) => String(b.createdAt || b.joined || '').localeCompare(String(a.createdAt || a.joined || '')));
             renderUsersTable();
         } catch (error) {
@@ -3589,7 +3598,10 @@
         if (!tableBody) return;
         const searchInput = document.getElementById('user-search-input');
         const searchTerm = (searchInput?.value || '').trim().toLowerCase();
-        const filteredUsers = state.users.filter(user => {
+        const usersVisibleToCurrentRole = hasSuperAdminAccess()
+            ? state.users
+            : state.users.filter(user => user.role !== 'super_admin');
+        const filteredUsers = usersVisibleToCurrentRole.filter(user => {
             const matchesRole = state.userRoleFilter === 'all' || (user.role || 'customer') === state.userRoleFilter;
             const matchesSearch = String(user.name || '').toLowerCase().includes(searchTerm) ||
                 String(user.email || '').toLowerCase().includes(searchTerm);
@@ -3597,11 +3609,11 @@
         });
 
         const roleCounts = {
-            all: state.users.length,
-            customer: state.users.filter(user => (user.role || 'customer') === 'customer').length,
-            order_updater: state.users.filter(user => user.role === 'order_updater').length,
-            admin: state.users.filter(user => user.role === 'admin').length,
-            super_admin: state.users.filter(user => user.role === 'super_admin').length
+            all: usersVisibleToCurrentRole.length,
+            customer: usersVisibleToCurrentRole.filter(user => (user.role || 'customer') === 'customer').length,
+            order_updater: usersVisibleToCurrentRole.filter(user => user.role === 'order_updater').length,
+            admin: usersVisibleToCurrentRole.filter(user => user.role === 'admin').length,
+            super_admin: hasSuperAdminAccess() ? state.users.filter(user => user.role === 'super_admin').length : 0
         };
         Object.entries(roleCounts).forEach(([role, count]) => {
             const countElement = document.getElementById(`count-role-${role}`);
@@ -3636,9 +3648,11 @@
                     <td>${Number(user.orderCount || 0)}</td>
                     <td><span class="badge-status ${user.role === 'super_admin' ? 'pending' : user.role === 'admin' ? 'delivery' : user.role === 'order_updater' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
                     <td style="text-align:center;">
-                        <button class="btn-action-edit" style="margin:0 auto;" onclick='openAdminUserEditor(${JSON.stringify(user.id)})'>
-                            <i data-lucide="user-cog" style="width:14px;"></i> Manage
-                        </button>
+                        ${canManageUserProfile(user) ? `
+                            <button class="btn-action-edit" style="margin:0 auto;" onclick='openAdminUserEditor(${JSON.stringify(user.id)})'>
+                                <i data-lucide="user-cog" style="width:14px;"></i> Manage
+                            </button>
+                        ` : `<span style="font-size:.72rem; color:var(--text-muted);"><i data-lucide="lock" style="width:13px; vertical-align:middle;"></i> Protected</span>`}
                     </td>
                 </tr>
             `;
@@ -3654,6 +3668,10 @@
     function openAdminUserEditor(userId) {
         const user = state.users.find(profile => profile.id === userId);
         if (!user) return;
+        if (!canManageUserProfile(user)) {
+            triggerToast("Only the super-admin can edit administrator accounts.", "danger");
+            return;
+        }
         document.getElementById('edit-profile-user-id').value = user.id;
         document.getElementById('edit-profile-name').value = user.name || '';
         document.getElementById('edit-profile-email').value = user.email || '';
@@ -3676,6 +3694,11 @@
         const userId = document.getElementById('edit-profile-user-id').value;
         const existingUser = state.users.find(profile => profile.id === userId);
         if (!existingUser) return;
+        if (!canManageUserProfile(existingUser)) {
+            triggerToast("Only the super-admin can edit administrator accounts.", "danger");
+            toggleAdminUserModal(false);
+            return;
+        }
         const previousRole = existingUser.role || 'customer';
         const requestedRole = document.getElementById('edit-profile-role').value;
         const nextRole = hasSuperAdminAccess() ? requestedRole : previousRole;
@@ -3717,7 +3740,13 @@
 
     async function sendManagedUserPasswordReset() {
         if (!hasAdminAccess()) return;
-        const email = document.getElementById('edit-profile-email').value.trim();
+        const userId = document.getElementById('edit-profile-user-id').value;
+        const managedUser = state.users.find(profile => profile.id === userId);
+        if (!canManageUserProfile(managedUser)) {
+            triggerToast("Only the super-admin can manage administrator accounts.", "danger");
+            return;
+        }
+        const email = String(managedUser.email || '').trim();
         if (!email) {
             triggerToast("This user does not have an email address.", "danger");
             return;
