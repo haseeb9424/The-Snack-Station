@@ -253,6 +253,39 @@
             box-shadow: 0 4px 12px var(--accent-glow);
         }
 
+        .nav-more-wrapper { position: relative; }
+        .nav-more-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 9px);
+            right: 0;
+            z-index: 500;
+            width: 210px;
+            padding: 7px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: 0 16px 38px rgba(0,0,0,.3);
+        }
+        .nav-more-menu.open { display: grid; gap: 4px; }
+        .nav-more-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: var(--text-muted);
+            font: inherit;
+            font-size: .82rem;
+            font-weight: 650;
+            text-align: left;
+            cursor: pointer;
+        }
+        .nav-more-item:hover, .nav-more-item.active { background: var(--bg-input); color: var(--text-main); }
+
         .panel {
             display: none;
             animation: fadeIn 0.4s ease;
@@ -1613,9 +1646,6 @@
             </a>
 
             <nav class="top-nav-links">
-                <button class="top-nav-btn" id="btn-portal" onclick="switchPanel('portal')" style="display: none;">
-                    <i data-lucide="utensils-crossed"></i> <span>Customer Portal</span>
-                </button>
                 <button class="top-nav-btn" id="btn-orders" onclick="switchPanel('orders')" style="display: none;">
                     <i data-lucide="receipt"></i> <span>Active Orders</span>
                 </button>
@@ -1625,9 +1655,15 @@
                 <button class="top-nav-btn" id="btn-admin" onclick="switchPanel('admin')" style="display: none;">
                     <i data-lucide="sliders-horizontal"></i> <span>Admin Desk</span>
                 </button>
-                <button class="top-nav-btn" id="btn-audit" onclick="switchPanel('audit')" style="display: none;">
-                    <i data-lucide="history"></i> <span>Audit Logs</span>
-                </button>
+                <div class="nav-more-wrapper" id="super-admin-more-wrapper" style="display:none;">
+                    <button class="top-nav-btn" id="btn-more" type="button" onclick="toggleNavMore(event)">
+                        <i data-lucide="ellipsis"></i> <span>More</span> <i data-lucide="chevron-down" style="width:14px;"></i>
+                    </button>
+                    <div class="nav-more-menu" id="nav-more-menu">
+                        <button class="nav-more-item" id="btn-more-users" type="button" onclick="switchPanel('users')"><i data-lucide="users" style="width:16px;"></i> User Management</button>
+                        <button class="nav-more-item" id="btn-more-audit" type="button" onclick="switchPanel('audit')"><i data-lucide="history" style="width:16px;"></i> Audit Logs</button>
+                    </div>
+                </div>
             </nav>
 
             <div class="top-header-actions">
@@ -2428,11 +2464,18 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                document.getElementById('nav-more-menu')?.classList.remove('open');
                 toggleAuthModal(false);
                 toggleSettingsModal(false);
                 toggleAdminUserModal(false);
                 toggleGuestCheckoutModal(false);
                 toggleItemCustomizationModal(false);
+            }
+        });
+
+        document.addEventListener('click', event => {
+            if (!event.target.closest('#super-admin-more-wrapper')) {
+                document.getElementById('nav-more-menu')?.classList.remove('open');
             }
         });
     });
@@ -2517,11 +2560,10 @@
     function renderNavigation() {
         const role = state.currentUser ? state.currentUser.role : 'customer';
         const adminAccess = hasAdminAccess();
-        document.getElementById('btn-portal').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
         document.getElementById('btn-orders').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
-        document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
+        document.getElementById('btn-users').style.display = adminAccess && !hasSuperAdminAccess() ? 'flex' : 'none';
         document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
-        document.getElementById('btn-audit').style.display = hasSuperAdminAccess() ? 'flex' : 'none';
+        document.getElementById('super-admin-more-wrapper').style.display = hasSuperAdminAccess() ? 'block' : 'none';
         const superAdminRoleTab = document.getElementById('super-admin-role-tab');
         if (superAdminRoleTab) superAdminRoleTab.style.display = hasSuperAdminAccess() ? '' : 'none';
 
@@ -2544,9 +2586,21 @@
 
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-more-item').forEach(b => b.classList.remove('active'));
         document.getElementById(`${panelId}-panel`).classList.add('active');
         const currentBtn = document.getElementById(`btn-${panelId}`);
         if (currentBtn && currentBtn.style.display !== 'none') currentBtn.classList.add('active');
+        if (hasSuperAdminAccess() && (panelId === 'users' || panelId === 'audit')) {
+            document.getElementById('btn-more').classList.add('active');
+            document.getElementById(`btn-more-${panelId}`).classList.add('active');
+        }
+        document.getElementById('nav-more-menu')?.classList.remove('open');
+    }
+
+    function toggleNavMore(event) {
+        event?.stopPropagation();
+        if (!hasSuperAdminAccess()) return;
+        document.getElementById('nav-more-menu')?.classList.toggle('open');
     }
 
     function triggerToast(message, type = "success") {
@@ -4692,6 +4746,7 @@
     window.alterQty = alterQty;
     window.toggleTheme = toggleTheme;
     window.switchPanel = switchPanel;
+    window.toggleNavMore = toggleNavMore;
     window.toggleCartVisibility = toggleCartVisibility;
     window.placeOrder = placeOrder;
     window.logOut = logOut;
