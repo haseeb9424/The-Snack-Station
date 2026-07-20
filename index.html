@@ -2175,9 +2175,9 @@
                         <option value="customer">Customer (Level 1)</option>
                         <option value="order_updater">Order Updater (Level 2)</option>
                         <option value="admin">Admin Desk (Level 3)</option>
-                        <option value="super_admin">Super Admin (Level 4)</option>
+                        <option value="super_admin" id="super-admin-role-option">Super Admin (Level 4 · fixed)</option>
                     </select>
-                    <small style="display:block; margin-top:7px; color:var(--text-muted);">Only a super-admin can change account roles.</small>
+                    <small style="display:block; margin-top:7px; color:var(--text-muted);">Only one super-admin is allowed. This role cannot be assigned through the Admin Desk.</small>
                 </div>
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:1.5rem;">
                     Commit Database Changes
@@ -3662,7 +3662,10 @@
         const savedCity = supportedCities.find(city => city.toLowerCase() === String(user.city || '').toLowerCase());
         document.getElementById('edit-profile-city').value = savedCity || 'Lahore';
         document.getElementById('edit-profile-street').value = user.street || '';
-        document.getElementById('edit-profile-role').value = user.role || 'customer';
+        const roleSelect = document.getElementById('edit-profile-role');
+        const superAdminOption = document.getElementById('super-admin-role-option');
+        if (superAdminOption) superAdminOption.disabled = user.role !== 'super_admin';
+        roleSelect.value = user.role || 'customer';
         document.getElementById('edit-profile-role-group').style.display = hasSuperAdminAccess() ? 'block' : 'none';
         toggleAdminUserModal(true);
     }
@@ -3676,6 +3679,11 @@
         const previousRole = existingUser.role || 'customer';
         const requestedRole = document.getElementById('edit-profile-role').value;
         const nextRole = hasSuperAdminAccess() ? requestedRole : previousRole;
+
+        if (nextRole === 'super_admin' && previousRole !== 'super_admin') {
+            triggerToast("Only one super-admin is allowed. Assign the Admin role instead.", "danger");
+            return;
+        }
 
         if (userId === state.currentUser.uid && previousRole === 'super_admin' && nextRole !== 'super_admin') {
             triggerToast("You cannot remove your own super-admin access.", "danger");
