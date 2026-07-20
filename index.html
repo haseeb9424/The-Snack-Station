@@ -1625,6 +1625,9 @@
                 <button class="top-nav-btn" id="btn-admin" onclick="switchPanel('admin')" style="display: none;">
                     <i data-lucide="sliders-horizontal"></i> <span>Admin Desk</span>
                 </button>
+                <button class="top-nav-btn" id="btn-audit" onclick="switchPanel('audit')" style="display: none;">
+                    <i data-lucide="history"></i> <span>Audit Logs</span>
+                </button>
             </nav>
 
             <div class="top-header-actions">
@@ -2015,10 +2018,19 @@
                     </div>
                 </div>
             </div>
-            <div class="card" style="margin-top:18px;">
+        </section>
+
+        <section id="audit-panel" class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Audit Logs</h2>
+                    <p>Review administrative, user-management and kitchen changes across the system.</p>
+                </div>
+                <button type="button" class="btn-secondary" onclick="loadAuditLogs()"><i data-lucide="refresh-cw" style="width:14px;"></i> Refresh Logs</button>
+            </div>
+            <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
-                    <div><h3 style="display:flex; align-items:center; gap:8px;"><i data-lucide="history" style="color:var(--accent);"></i> Admin Audit Log</h3><p style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">Latest administrative and kitchen actions.</p></div>
-                    <button type="button" class="btn-secondary" style="padding:8px 11px;" onclick="loadAuditLogs()"><i data-lucide="refresh-cw" style="width:14px;"></i> Refresh</button>
+                    <div><h3 style="display:flex; align-items:center; gap:8px;"><i data-lucide="shield-check" style="color:var(--accent);"></i> Protected Activity History</h3><p style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">Visible only to the super-admin. Actions are recorded regardless of who made the change.</p></div>
                 </div>
                 <div class="table-container"><table><thead><tr><th>Date & Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="audit-log-table-body"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No audit records loaded.</td></tr></tbody></table></div>
             </div>
@@ -2509,6 +2521,7 @@
         document.getElementById('btn-orders').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
         document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
         document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
+        document.getElementById('btn-audit').style.display = hasSuperAdminAccess() ? 'flex' : 'none';
         const superAdminRoleTab = document.getElementById('super-admin-role-tab');
         if (superAdminRoleTab) superAdminRoleTab.style.display = hasSuperAdminAccess() ? '' : 'none';
 
@@ -2523,10 +2536,11 @@
         const role = state.currentUser ? state.currentUser.role : 'customer';
         if (panelId === 'orders' && role === 'customer') return;
         if ((panelId === 'users' || panelId === 'admin') && !hasAdminAccess()) return;
+        if (panelId === 'audit' && !hasSuperAdminAccess()) return;
 
         if (panelId === 'orders') loadOrders();
         if (panelId === 'users') loadUsers();
-        if (panelId === 'admin') loadAuditLogs();
+        if (panelId === 'audit') loadAuditLogs();
 
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
@@ -2564,7 +2578,7 @@
     }
 
     async function loadAuditLogs() {
-        if (!hasAdminAccess()) return;
+        if (!hasSuperAdminAccess()) return;
         const body = document.getElementById('audit-log-table-body');
         if (body) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading audit records...</td></tr>';
         try {
@@ -2623,7 +2637,8 @@
             'category.create':'Category created', 'category.rename':'Category renamed', 'category.delete':'Category deleted',
             'category.reorder':'Categories reordered', 'category.visibility_change':'Category visibility changed',
             'store.status_change':'Store status changed', 'order.status_change':'Order status changed',
-            'user.role_change':'User role changed'
+            'user.role_change':'User role changed', 'user.profile_update':'User profile updated',
+            'user.password_reset_request':'Password reset requested'
         };
         body.innerHTML = state.auditLogs.length ? state.auditLogs.map(log => {
             const date = log.createdAt ? new Date(log.createdAt).toLocaleString() : '—';
@@ -3721,8 +3736,22 @@
             role: nextRole,
             updatedAt: new Date().toISOString()
         };
+        const profileChanges = {};
+        const profileFields = { name: 'Name', phone: 'Phone', city: 'City', street: 'Address' };
+        Object.entries(profileFields).forEach(([field, label]) => {
+            if (!valuesEqual(existingUser[field] || '', updates[field] || '')) {
+                profileChanges[label] = { from: existingUser[field] || '', to: updates[field] || '' };
+            }
+        });
         try {
             await setDoc(doc(db, "users", userId), updates, { merge: true });
+            if (Object.keys(profileChanges).length) {
+                await writeAuditLog('user.profile_update', {
+                    userId,
+                    userName: existingUser.name || existingUser.email || userId,
+                    changes: profileChanges
+                });
+            }
             if (previousRole !== nextRole) {
                 await writeAuditLog('user.role_change', {
                     userId,
@@ -3755,6 +3784,11 @@
 
         try {
             await sendPasswordResetEmail(auth, email);
+            await writeAuditLog('user.password_reset_request', {
+                userId,
+                userName: managedUser.name || email,
+                email
+            });
             triggerToast(`Password reset email sent to ${email}.`);
         } catch (error) {
             const friendlyErrors = {
