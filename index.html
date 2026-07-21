@@ -1602,7 +1602,7 @@
 
     <div class="header-wrapper">
         <header class="global-top-header">
-            <a href="#" class="logo-area" onclick="switchPanel('portal')">
+            <a href="#" class="logo-area" onclick="handleLogoNavigation(event)">
                 <div class="logo-icon">
                     <i data-lucide="chef-hat"></i>
                 </div>
@@ -1796,8 +1796,31 @@
                 </div>
             </div>
 
-            <div class="layout-grid cols-3" style="margin-bottom: 2.5rem;">
-                <div class="card" style="display: flex; align-items: center; gap: 1rem;">
+            <div id="order-manager-dashboard" style="display:none; margin-bottom:2.5rem;">
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+                    <div><h3 style="font-size:1.15rem;">Today's Overview</h3><p style="font-size:.8rem; color:var(--text-muted); margin-top:4px;">Live operational totals for today only.</p></div>
+                    <span id="manager-dashboard-date" style="font-size:.75rem; color:var(--text-muted);"></span>
+                </div>
+                <div class="layout-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); margin-bottom:1.5rem;">
+                    <div class="card"><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">New Orders</p><h3 id="manager-today-new" style="font-size:1.6rem; margin-top:6px;">0</h3></div>
+                    <div class="card"><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Preparing</p><h3 id="manager-today-preparing" style="font-size:1.6rem; margin-top:6px;">0</h3></div>
+                    <div class="card"><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Ready</p><h3 id="manager-today-ready" style="font-size:1.6rem; margin-top:6px;">0</h3></div>
+                    <div class="card"><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Completed</p><h3 id="manager-today-completed" style="font-size:1.6rem; margin-top:6px; color:var(--success);">0</h3></div>
+                    <div class="card"><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Rejected</p><h3 id="manager-today-rejected" style="font-size:1.6rem; margin-top:6px; color:var(--danger);">0</h3></div>
+                </div>
+                <div class="card">
+                    <div style="margin-bottom:1rem;"><h3 style="font-size:1.05rem;">My Overall Performance</h3><p style="font-size:.78rem; color:var(--text-muted); margin-top:4px;">Your recorded activity across all orders.</p></div>
+                    <div class="layout-grid" style="grid-template-columns:repeat(auto-fit,minmax(145px,1fr));">
+                        <div><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Accepted</p><h3 id="manager-total-accepted" style="font-size:1.5rem; margin-top:5px;">0</h3></div>
+                        <div><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Rejected</p><h3 id="manager-total-rejected" style="font-size:1.5rem; margin-top:5px;">0</h3></div>
+                        <div><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Completed</p><h3 id="manager-total-completed" style="font-size:1.5rem; margin-top:5px;">0</h3></div>
+                        <div><p style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase;">Acceptance Rate</p><h3 id="manager-acceptance-rate" style="font-size:1.5rem; margin-top:5px;">0%</h3></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layout-grid cols-3" id="order-stats-grid" style="margin-bottom: 2.5rem;">
+                <div class="card" id="revenue-stat-card" style="display: flex; align-items: center; gap: 1rem;">
                     <div class="user-avatar" style="background-color: var(--bg-input);"><i data-lucide="wallet"></i></div>
                     <div class="stat-info">
                         <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Revenue</p>
@@ -1821,8 +1844,8 @@
             </div>
 
             <div class="kitchen-board" id="kitchen-board"></div>
-            <div class="card" style="margin-top:18px;">
-                <h3 style="margin-bottom:12px;">Recent Completed and Rejected Orders</h3>
+            <div class="card" id="order-history-card" style="margin-top:18px;">
+                <h3 id="order-history-title" style="margin-bottom:12px;">Recent Completed and Rejected Orders</h3>
                 <div id="order-history-list" class="table-container"></div>
             </div>
         </section>
@@ -1844,7 +1867,7 @@
             <div class="user-role-tabs" id="user-role-tabs">
                 <button class="user-role-tab active" data-role="all" onclick="setUserRoleFilter('all')">All Users <span id="count-role-all">0</span></button>
                 <button class="user-role-tab" data-role="customer" onclick="setUserRoleFilter('customer')">Customers <span id="count-role-customer">0</span></button>
-                <button class="user-role-tab" data-role="order_updater" onclick="setUserRoleFilter('order_updater')">Order Updaters <span id="count-role-order_updater">0</span></button>
+                <button class="user-role-tab" data-role="order_manager" onclick="setUserRoleFilter('order_manager')">Order Managers <span id="count-role-order_manager">0</span></button>
                 <button class="user-role-tab" data-role="admin" onclick="setUserRoleFilter('admin')">Admins <span id="count-role-admin">0</span></button>
                 <button class="user-role-tab" id="super-admin-role-tab" data-role="super_admin" onclick="setUserRoleFilter('super_admin')" style="display:none;">Super Admins <span id="count-role-super_admin">0</span></button>
             </div>
@@ -2182,7 +2205,7 @@
                     <label for="edit-profile-role">Account Level Role</label>
                     <select id="edit-profile-role" required>
                         <option value="customer">Customer (Level 1)</option>
-                        <option value="order_updater">Order Updater (Level 2)</option>
+                        <option value="order_manager">Order Manager (Level 2)</option>
                         <option value="admin">Admin Desk (Level 3)</option>
                         <option value="super_admin" id="super-admin-role-option">Super Admin (Level 4 · fixed)</option>
                     </select>
@@ -2468,9 +2491,11 @@
         renderAuthBar();
         renderNavigation();
         renderMenu();
-        if (state.currentUser && (hasAdminAccess() || state.currentUser.role === 'order_updater')) {
+        if (state.currentUser && (hasAdminAccess() || hasOrderManagerAccess())) {
             loadOrders();
             if (hasAdminAccess()) loadUsers();
+            if (hasOrderManagerAccess()) switchPanel('orders');
+            else if (state.currentUser.role === 'admin') switchPanel('admin');
         } else {
             state.orders = [];
             renderOrdersTable();
@@ -2506,6 +2531,27 @@
         return Boolean(user && user.role === 'super_admin');
     }
 
+    function hasOrderManagerAccess(user = state.currentUser) {
+        return Boolean(user && user.role === 'order_manager');
+    }
+
+    function getOrderDate(order) {
+        const value = order?.createdAt;
+        if (!value) return null;
+        if (typeof value?.toDate === 'function') return value.toDate();
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function isOrderFromToday(order) {
+        const orderDate = getOrderDate(order);
+        if (!orderDate) return false;
+        const today = new Date();
+        return orderDate.getFullYear() === today.getFullYear()
+            && orderDate.getMonth() === today.getMonth()
+            && orderDate.getDate() === today.getDate();
+    }
+
     function canManageUserProfile(user) {
         if (!user || !hasAdminAccess()) return false;
         if (hasSuperAdminAccess()) return true;
@@ -2515,7 +2561,7 @@
     function renderNavigation() {
         const role = state.currentUser ? state.currentUser.role : 'customer';
         const adminAccess = hasAdminAccess();
-        document.getElementById('btn-orders').style.display = (role === 'order_updater' || adminAccess) ? 'flex' : 'none';
+        document.getElementById('btn-orders').style.display = (hasOrderManagerAccess() || adminAccess) ? 'flex' : 'none';
         document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
         document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
         document.getElementById('btn-audit').style.display = hasSuperAdminAccess() ? 'flex' : 'none';
@@ -2529,8 +2575,18 @@
         if (!canUseCart) document.getElementById('cart-pane-element')?.classList.add('hidden');
     }
 
+    function handleLogoNavigation(event) {
+        if (event) event.preventDefault();
+        if (hasOrderManagerAccess()) return switchPanel('orders');
+        if (state.currentUser?.role === 'admin') return switchPanel('admin');
+        switchPanel('portal');
+    }
+
     function switchPanel(panelId) {
         const role = state.currentUser ? state.currentUser.role : 'customer';
+        if (panelId === 'portal' && (role === 'admin' || role === 'order_manager')) {
+            return switchPanel(role === 'order_manager' ? 'orders' : 'admin');
+        }
         if (panelId === 'orders' && role === 'customer') return;
         if ((panelId === 'users' || panelId === 'admin') && !hasAdminAccess()) return;
         if (panelId === 'audit' && !hasSuperAdminAccess()) return;
@@ -2554,7 +2610,7 @@
     }
 
     async function writeAuditLog(action, details = {}) {
-        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) return;
+        if (!state.currentUser || (!hasAdminAccess() && !hasOrderManagerAccess())) return;
         try {
             const auditRef = doc(collection(db, 'auditLogs'));
             const auditRecord = {
@@ -3566,14 +3622,14 @@
     }
 
     async function loadOrders() {
-        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) return;
+        if (!state.currentUser || (!hasAdminAccess() && !hasOrderManagerAccess())) return;
         if (stopKitchenOrdersListener) {
             renderOrdersTable();
             return;
         }
         stopKitchenOrdersListener = onSnapshot(collection(db, "orders"), snapshot => {
             const previousIds = new Set(state.orders.map(order => order.id));
-            const incomingOrders = snapshot.docs
+            let incomingOrders = snapshot.docs
                 .map(orderDoc => ({ id: orderDoc.id, ...orderDoc.data() }))
                 .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
             const hasNewOrder = kitchenListenerInitialized && incomingOrders.some(order => !previousIds.has(order.id) && ['pending', 'new'].includes(order.status || 'pending'));
@@ -3614,7 +3670,8 @@
             ? state.users
             : state.users.filter(user => user.role !== 'super_admin');
         const filteredUsers = usersVisibleToCurrentRole.filter(user => {
-            const matchesRole = state.userRoleFilter === 'all' || (user.role || 'customer') === state.userRoleFilter;
+            const userRole = user.role || 'customer';
+            const matchesRole = state.userRoleFilter === 'all' || userRole === state.userRoleFilter;
             const matchesSearch = String(user.name || '').toLowerCase().includes(searchTerm) ||
                 String(user.email || '').toLowerCase().includes(searchTerm);
             return matchesRole && matchesSearch;
@@ -3623,7 +3680,7 @@
         const roleCounts = {
             all: usersVisibleToCurrentRole.length,
             customer: usersVisibleToCurrentRole.filter(user => (user.role || 'customer') === 'customer').length,
-            order_updater: usersVisibleToCurrentRole.filter(user => user.role === 'order_updater').length,
+            order_manager: usersVisibleToCurrentRole.filter(user => user.role === 'order_manager').length,
             admin: usersVisibleToCurrentRole.filter(user => user.role === 'admin').length,
             super_admin: hasSuperAdminAccess() ? state.users.filter(user => user.role === 'super_admin').length : 0
         };
@@ -3638,7 +3695,7 @@
         tableBody.innerHTML = filteredUsers.length ? filteredUsers.map(user => {
             const roleLabels = {
                 customer: 'Customer',
-                order_updater: 'Order Updater',
+                order_manager: 'Order Manager',
                 admin: 'Admin',
                 super_admin: 'Super Admin'
             };
@@ -3658,7 +3715,7 @@
                     <td>${user.email || '—'}</td>
                     <td>${joinedDate}</td>
                     <td>${Number(user.orderCount || 0)}</td>
-                    <td><span class="badge-status ${user.role === 'super_admin' ? 'pending' : user.role === 'admin' ? 'delivery' : user.role === 'order_updater' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
+                    <td><span class="badge-status ${user.role === 'super_admin' ? 'pending' : user.role === 'admin' ? 'delivery' : user.role === 'order_manager' ? 'preparing' : 'completed'}">${roleLabels[user.role] || 'Customer'}</span></td>
                     <td style="text-align:center;">
                         ${canManageUserProfile(user) ? `
                             <button class="btn-action-edit" style="margin:0 auto;" onclick='openAdminUserEditor(${JSON.stringify(user.id)})'>
@@ -3800,13 +3857,54 @@
     function renderOrdersTable() {
         const board = document.getElementById('kitchen-board');
         if (!board) return;
+        const orderManagerView = hasOrderManagerAccess();
+        const visibleOrders = orderManagerView ? state.orders.filter(isOrderFromToday) : state.orders;
+        const managerDashboard = document.getElementById('order-manager-dashboard');
+        if (managerDashboard) managerDashboard.style.display = orderManagerView ? 'block' : 'none';
+        const revenueCard = document.getElementById('revenue-stat-card');
+        const statsGrid = document.getElementById('order-stats-grid');
+        if (statsGrid) statsGrid.style.display = orderManagerView ? 'none' : 'grid';
+        if (revenueCard) revenueCard.style.display = orderManagerView ? 'none' : 'flex';
+        if (statsGrid) {
+            statsGrid.classList.toggle('cols-2', orderManagerView);
+            statsGrid.classList.toggle('cols-3', !orderManagerView);
+        }
+        const historyTitle = document.getElementById('order-history-title');
+        if (historyTitle) historyTitle.textContent = orderManagerView
+            ? "Today's Completed and Rejected Orders"
+            : 'Recent Completed and Rejected Orders';
+        if (orderManagerView) {
+            const uid = state.currentUser?.uid;
+            const countStatus = statuses => visibleOrders.filter(order => statuses.includes(order.status || 'pending')).length;
+            const acceptedByMe = state.orders.filter(order => order.acceptedById === uid).length;
+            const rejectedByMe = state.orders.filter(order => order.rejectedById === uid).length;
+            const completedByMe = state.orders.filter(order => order.completedById === uid).length;
+            const decisions = acceptedByMe + rejectedByMe;
+            const managerStats = {
+                'manager-today-new': countStatus(['pending', 'new']),
+                'manager-today-preparing': countStatus(['preparing']),
+                'manager-today-ready': countStatus(['ready', 'delivery']),
+                'manager-today-completed': countStatus(['completed']),
+                'manager-today-rejected': countStatus(['rejected']),
+                'manager-total-accepted': acceptedByMe,
+                'manager-total-rejected': rejectedByMe,
+                'manager-total-completed': completedByMe,
+                'manager-acceptance-rate': decisions ? `${Math.round((acceptedByMe / decisions) * 100)}%` : '0%'
+            };
+            Object.entries(managerStats).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            });
+            const dateLabel = document.getElementById('manager-dashboard-date');
+            if (dateLabel) dateLabel.textContent = new Date().toLocaleDateString([], { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        }
         const columns = [
             { key: 'new', title: 'New Orders', icon: 'bell-ring', statuses: ['pending', 'new'] },
             { key: 'preparing', title: 'Preparing', icon: 'cooking-pot', statuses: ['preparing'] },
             { key: 'ready', title: 'Ready', icon: 'package-check', statuses: ['ready', 'delivery'] }
         ];
         board.innerHTML = columns.map(column => {
-            const orders = state.orders.filter(order => column.statuses.includes(order.status || 'pending'));
+            const orders = visibleOrders.filter(order => column.statuses.includes(order.status || 'pending'));
             return `
                 <section class="kitchen-column">
                     <div class="kitchen-column-header">
@@ -3819,18 +3917,19 @@
         }).join('');
 
         const historyList = document.getElementById('order-history-list');
-        const historyOrders = state.orders.filter(order => ['completed', 'rejected'].includes(order.status)).slice(0, 20);
+        const historyOrders = visibleOrders.filter(order => ['completed', 'rejected'].includes(order.status)).slice(0, 20);
         if (historyList) {
             historyList.innerHTML = historyOrders.length ? `<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Details</th></tr></thead><tbody>${historyOrders.map(order => `
                 <tr><td><strong>${order.orderNumber || order.id}</strong></td><td>${order.customerName || 'Guest'}</td><td>Rs. ${Number(order.total || 0).toLocaleString()}</td><td><span class="badge-status ${order.status}">${order.status}</span></td><td>${order.status === 'rejected' ? (order.rejectionReason || 'No reason provided') : 'Completed'}</td></tr>
             `).join('')}</tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--text-muted);">No completed or rejected orders yet.</div>';
         }
 
-        const completedOrders = state.orders.filter(order => order.status === 'completed');
+        const completedOrders = visibleOrders.filter(order => order.status === 'completed');
         const revenue = completedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-        document.getElementById('stat-revenue').textContent = `Rs. ${revenue.toLocaleString()}`;
+        const revenueStat = document.getElementById('stat-revenue');
+        if (revenueStat) revenueStat.textContent = `Rs. ${revenue.toLocaleString()}`;
         document.getElementById('stat-completed-count').textContent = completedOrders.length;
-        document.getElementById('stat-active-count').textContent = state.orders.filter(order => !['completed', 'rejected'].includes(order.status)).length;
+        document.getElementById('stat-active-count').textContent = visibleOrders.filter(order => !['completed', 'rejected'].includes(order.status)).length;
         lucide.createIcons();
     }
 
@@ -3868,7 +3967,7 @@
     }
 
     async function updateOrderStatus(orderId, newStatus, extraUpdates = {}) {
-        if (!state.currentUser || (!hasAdminAccess() && state.currentUser.role !== 'order_updater')) {
+        if (!state.currentUser || (!hasAdminAccess() && !hasOrderManagerAccess())) {
             triggerToast("Order management access is required.", "danger");
             return;
         }
@@ -4010,6 +4109,8 @@
         updateOrderStatus(orderId, 'preparing', {
             preparationMinutes,
             acceptedAt: new Date().toISOString(),
+            acceptedById: state.currentUser?.uid || null,
+            acceptedByName: state.currentUser?.name || state.currentUser?.email || 'Unknown',
             estimatedReadyAt: new Date(Date.now() + preparationMinutes * 60000).toISOString()
         });
     }
@@ -4017,7 +4118,12 @@
     function rejectOrder(orderId) {
         const reason = prompt('Reason for rejecting this order:', 'Item unavailable');
         if (reason === null) return;
-        updateOrderStatus(orderId, 'rejected', { rejectionReason: reason.trim() || 'Unable to fulfil the order', rejectedAt: new Date().toISOString() });
+        updateOrderStatus(orderId, 'rejected', {
+            rejectionReason: reason.trim() || 'Unable to fulfil the order',
+            rejectedAt: new Date().toISOString(),
+            rejectedById: state.currentUser?.uid || null,
+            rejectedByName: state.currentUser?.name || state.currentUser?.email || 'Unknown'
+        });
     }
 
     function markOrderReady(orderId) {
@@ -4025,7 +4131,11 @@
     }
 
     function completeKitchenOrder(orderId) {
-        updateOrderStatus(orderId, 'completed', { completedAt: new Date().toISOString() });
+        updateOrderStatus(orderId, 'completed', {
+            completedAt: new Date().toISOString(),
+            completedById: state.currentUser?.uid || null,
+            completedByName: state.currentUser?.name || state.currentUser?.email || 'Unknown'
+        });
     }
 
     function playNewOrderSound() {
