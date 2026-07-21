@@ -1014,6 +1014,27 @@
             border-color: var(--accent);
         }
 
+        /* Keep native select popups readable in both application themes. */
+        select {
+            color-scheme: dark;
+        }
+
+        select option,
+        select optgroup {
+            background-color: #171a23;
+            color: #f3f4f6;
+        }
+
+        [data-theme="light"] select {
+            color-scheme: light;
+        }
+
+        [data-theme="light"] select option,
+        [data-theme="light"] select optgroup {
+            background-color: #ffffff;
+            color: #1e2229;
+        }
+
         .search-bar {
             display: flex;
             align-items: center;
@@ -1656,6 +1677,7 @@
         }
         /* 2026 workspace redesign: shared, calm interface system */
         :root {
+            color-scheme: dark;
             --workspace-sidebar-width: 232px;
             --workspace-sidebar-collapsed-width: 76px;
             --workspace-topbar-height: 68px;
@@ -1678,6 +1700,7 @@
         }
 
         [data-theme="light"] {
+            color-scheme: light;
             --surface-1: #ffffff;
             --surface-2: #f4f6f9;
             --surface-3: #e9edf3;
@@ -1708,9 +1731,81 @@
         #portal-panel .panel-header h2 { font-size: clamp(1.7rem, 3vw, 2.45rem); letter-spacing:-.04em; }
         #portal-panel .panel-header p { margin-top:7px; font-size:.95rem; }
         #portal-panel .sorting-actions-wrapper {
-            background: var(--surface-2); border:1px solid var(--line-soft); border-radius:12px; padding:7px 9px 7px 13px;
+            position: relative;
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr) 18px;
+            align-items: center;
+            column-gap: 10px;
+            min-width: 248px;
+            padding: 9px 12px 9px 10px;
+            background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+            border: 1px solid var(--line-soft);
+            border-radius: 14px;
+            box-shadow: 0 1px 0 rgba(255,255,255,.025), 0 8px 22px rgba(0,0,0,.08);
+            transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .2s ease;
         }
-        #portal-panel .action-select { border:0; background:transparent; min-width:180px; }
+        #portal-panel .sorting-actions-wrapper:hover {
+            border-color: color-mix(in srgb, var(--accent) 42%, var(--line-soft));
+            background: var(--surface-2);
+        }
+        #portal-panel .sorting-actions-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 10px 26px rgba(0,0,0,.10);
+            transform: translateY(-1px);
+        }
+        #portal-panel .sort-control-icon {
+            grid-row: 1 / 3;
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+        #portal-panel .sort-control-icon svg { width:16px; height:16px; }
+        #portal-panel .sort-control-label {
+            grid-column: 2;
+            align-self: end;
+            color: var(--text-muted);
+            font-size: .65rem;
+            font-weight: 750;
+            line-height: 1;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        #portal-panel .action-select {
+            grid-column: 2 / 4;
+            align-self: start;
+            width: 100%;
+            min-width: 0;
+            padding: 3px 22px 0 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: var(--text-main);
+            font-size: .84rem;
+            font-weight: 650;
+            line-height: 1.2;
+            appearance: none;
+            box-shadow: none;
+        }
+        #portal-panel .action-select:focus { border:0; box-shadow:none; }
+        #portal-panel .sort-control-chevron {
+            position: absolute;
+            right: 12px;
+            bottom: 13px;
+            width: 15px;
+            height: 15px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: transform .2s ease, color .2s ease;
+        }
+        #portal-panel .sorting-actions-wrapper:focus-within .sort-control-chevron {
+            color: var(--accent);
+            transform: translateY(1px);
+        }
         .menu-category-heading { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
         .menu-category-heading h4 { letter-spacing:-.02em; }
         .grid-autofit { grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:18px; }
@@ -1901,8 +1996,7 @@
             #settings-modal .modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); margin:0; padding:22px 20px; }
             main { padding:18px 14px 38px; }
             #portal-panel .panel-header { border-radius:14px; }
-            #portal-panel .sorting-actions-wrapper { width:100%; }
-            #portal-panel .action-select { min-width:0; flex:1; }
+            #portal-panel .sorting-actions-wrapper { width:100%; min-width:0; }
             .grid-autofit { grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
             .menu-info { padding:12px; }
             .menu-desc { display:none; }
@@ -2064,9 +2158,8 @@
                     <p>Craving satisfied in a tap.</p>
                 </div>
                 <div class="sorting-actions-wrapper">
-                    <label for="menu-sort-select" style="font-size: 0.85rem; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap: 4px;">
-                        <i data-lucide="arrow-up-down" style="width:14px; height:14px;"></i> Order By:
-                    </label>
+                    <span class="sort-control-icon" aria-hidden="true"><i data-lucide="arrow-up-down"></i></span>
+                    <label class="sort-control-label" for="menu-sort-select">Sort menu</label>
                     <select id="menu-sort-select" class="action-select" onchange="changeMenuSorting(this.value)">
                         <option value="default">Default Chef order</option>
                         <option value="price-asc">Price: Low to High</option>
@@ -2074,6 +2167,7 @@
                         <option value="alpha-asc">Alphabetical: A to Z</option>
                         <option value="alpha-desc">Alphabetical: Z to A</option>
                     </select>
+                    <i class="sort-control-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
                 </div>
             </div>
 
