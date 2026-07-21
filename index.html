@@ -82,6 +82,57 @@
             transition: background-color var(--transition), color var(--transition);
         }
 
+        /* Keep role-specific UI hidden until Firebase has resolved the session. */
+        body.auth-pending > :not(.app-auth-loader):not(script) {
+            visibility: hidden !important;
+        }
+
+        .app-auth-loader {
+            display: none;
+        }
+
+        body.auth-pending .app-auth-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: grid;
+            place-items: center;
+            background: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        .app-auth-loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            color: var(--text-muted);
+            font-size: .78rem;
+            font-weight: 600;
+            letter-spacing: .04em;
+        }
+
+        .app-auth-loader-mark {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 12px 30px var(--accent-glow);
+        }
+
+        .app-auth-loader-mark svg {
+            width: 24px;
+            height: 24px;
+            animation: auth-loader-pulse 1.1s ease-in-out infinite alternate;
+        }
+
+        @keyframes auth-loader-pulse {
+            to { transform: scale(.88); opacity: .72; }
+        }
+
         /* ==========================================
            3. MODULAR LAYOUT SYSTEM (Layout Engines)
            ========================================== */
@@ -771,7 +822,7 @@
             height: 100vh;
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
-            z-index: 1000;
+            z-index: 2000;
             display: none;
             align-items: center;
             justify-content: center;
@@ -791,7 +842,7 @@
             max-width: 420px;
             padding: 2.5rem;
             position: relative;
-            cursor: pointer;
+            cursor: default;
             max-height: calc(100vh - 32px);
             overflow-y: auto;
             overscroll-behavior: contain;
@@ -1596,9 +1647,303 @@
             .tracking-step-icon { margin: 0; flex-shrink: 0; }
             .tracking-step::after { display: none; }
         }
+        /* 2026 workspace redesign: shared, calm interface system */
+        :root {
+            --workspace-sidebar-width: 232px;
+            --workspace-sidebar-collapsed-width: 76px;
+            --workspace-topbar-height: 68px;
+            --workspace-content-width: 1280px;
+            --workspace-gutter: 32px;
+            --surface-1: #101218;
+            --surface-2: #171a22;
+            --surface-3: #1d212b;
+            --line-soft: rgba(255,255,255,.075);
+            --shadow-soft: 0 16px 40px rgba(0,0,0,.18);
+            --workspace-bg: #0b0d12;
+            --workspace-sidebar: #0f1117;
+            --workspace-header: rgba(11,13,18,.9);
+            --workspace-table-head: #13161d;
+            --workspace-nav-text: #9299a8;
+            --workspace-nav-hover: #fff;
+            --workspace-nav-hover-bg: rgba(255,255,255,.045);
+            --workspace-nav-active: #fff;
+            --workspace-date-text: #aeb4c0;
+        }
+
+        [data-theme="light"] {
+            --surface-1: #ffffff;
+            --surface-2: #f4f6f9;
+            --surface-3: #e9edf3;
+            --line-soft: rgba(15,23,42,.11);
+            --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+            --workspace-bg: #f5f6fa;
+            --workspace-sidebar: #ffffff;
+            --workspace-header: rgba(255,255,255,.92);
+            --workspace-table-head: #f4f6f9;
+            --workspace-nav-text: #586274;
+            --workspace-nav-hover: #172033;
+            --workspace-nav-hover-bg: rgba(15,23,42,.055);
+            --workspace-nav-active: #172033;
+            --workspace-date-text: #526075;
+        }
+
+        .workspace-sidebar { display:none; }
+        .mobile-workspace-toggle { display:none; }
+
+        /* Customer storefront */
+        #portal-panel .panel-header {
+            padding: 28px 30px;
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(255,94,58,.10), transparent 52%), var(--surface-1);
+            margin-bottom: 28px;
+        }
+        #portal-panel .panel-header h2 { font-size: clamp(1.7rem, 3vw, 2.45rem); letter-spacing:-.04em; }
+        #portal-panel .panel-header p { margin-top:7px; font-size:.95rem; }
+        #portal-panel .sorting-actions-wrapper {
+            background: var(--surface-2); border:1px solid var(--line-soft); border-radius:12px; padding:7px 9px 7px 13px;
+        }
+        #portal-panel .action-select { border:0; background:transparent; min-width:180px; }
+        .menu-category-heading { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+        .menu-category-heading h4 { letter-spacing:-.02em; }
+        .grid-autofit { grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:18px; }
+        .menu-card { border:1px solid var(--line-soft); border-radius:14px; box-shadow:none; background:var(--surface-1); }
+        .menu-card:hover { transform:translateY(-3px); border-color:rgba(255,94,58,.4); box-shadow:var(--shadow-soft); }
+        .menu-img { aspect-ratio: 4 / 3; height:auto; object-fit:cover; }
+        .menu-info { padding:17px; }
+        .menu-title { font-size:1rem; letter-spacing:-.015em; }
+        .menu-desc { line-height:1.55; min-height:2.9em; }
+        .btn-add-cart { width:38px; height:38px; box-shadow:none; }
+
+        /* Staff workspace */
+        body.staff-workspace { display:block; background:var(--workspace-bg); }
+        body.staff-workspace.sidebar-collapsed { --workspace-sidebar-width:var(--workspace-sidebar-collapsed-width); }
+        body.staff-workspace .header-wrapper {
+            position:fixed; top:0; right:0; left:var(--workspace-sidebar-width); width:auto; max-width:none; height:var(--workspace-topbar-height); z-index:1100;
+            margin:0; padding:0 var(--workspace-gutter); background:var(--workspace-header); border-bottom:1px solid var(--line-soft);
+            backdrop-filter:blur(14px);
+        }
+        @media (min-width:901px) {
+            body.staff-workspace .header-wrapper { display:none; }
+        }
+        body.staff-workspace .global-top-header {
+            max-width:var(--workspace-content-width); height:var(--workspace-topbar-height); margin:0 auto; padding:0; background:transparent; border:0; border-radius:0; box-shadow:none;
+        }
+        body.staff-workspace .logo-area, body.staff-workspace .top-nav-links { display:none; }
+        body.staff-workspace .top-header-actions { margin-left:auto; gap:8px; }
+        body.staff-workspace .top-header-actions > .btn-theme-toggle,
+        body.staff-workspace .top-header-actions > .auth-bar { display:none; }
+        body.staff-workspace .btn-theme-toggle, body.staff-workspace .btn-cart-toggle-compact { width:38px; height:38px; border-radius:10px; }
+        body.staff-workspace .auth-bar { height:42px; min-width:0; padding:4px 10px 4px 5px; gap:8px; border-radius:11px; background:var(--surface-1); }
+        body.staff-workspace .auth-bar .user-avatar { width:31px !important; height:31px !important; font-size:.78rem !important; }
+        body.staff-workspace .auth-bar .user-welcome-text p { font-size:.58rem !important; letter-spacing:.06em; }
+        body.staff-workspace .auth-bar .user-welcome-text h4 { font-size:.78rem !important; }
+        body.staff-workspace main { max-width:none; width:calc(100% - var(--workspace-sidebar-width)); margin:0 0 0 var(--workspace-sidebar-width); padding:28px var(--workspace-gutter) 52px; transition:width .2s ease, margin-left .2s ease; }
+        body.staff-workspace main > .panel { width:100%; max-width:var(--workspace-content-width); margin-left:auto; margin-right:auto; }
+        body.staff-workspace .workspace-sidebar {
+            display:flex; position:fixed; inset:0 auto 0 0; width:var(--workspace-sidebar-width); z-index:1200; flex-direction:column;
+            padding:0 14px 14px; background:var(--workspace-sidebar); border-right:1px solid var(--line-soft); transition:width .2s ease, transform .2s ease;
+        }
+        .workspace-brand { display:flex; align-items:center; flex:0 0 var(--workspace-topbar-height); gap:11px; padding:0 4px 0 8px; border-bottom:1px solid var(--line-soft); }
+        .workspace-brand-copy { min-width:0; flex:1; overflow:hidden; white-space:nowrap; }
+        .workspace-collapse-btn { flex:0 0 30px; width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--line-soft); border-radius:8px; background:transparent; color:var(--text-muted); cursor:pointer; }
+        .workspace-collapse-btn:hover { color:var(--text-main); background:var(--workspace-nav-hover-bg); }
+        .workspace-collapse-btn svg { width:15px; transition:transform .2s ease; }
+        .workspace-mobile-close { display:none; flex:0 0 36px; width:36px; height:36px; place-items:center; border:1px solid var(--line-soft); border-radius:9px; background:var(--surface-2); color:var(--text-main); cursor:pointer; }
+        .workspace-mobile-close:hover { color:var(--accent); background:var(--workspace-nav-hover-bg); }
+        .workspace-mobile-close svg { width:18px; }
+        .workspace-mobile-backdrop { display:none; }
+        .workspace-brand .logo-icon { width:36px; height:36px; padding:8px; }
+        .workspace-brand strong { display:block; font-size:.92rem; }
+        .workspace-brand small { color:var(--text-muted); font-size:.68rem; }
+        .workspace-nav-label { padding:20px 10px 8px; color:#6f7685; font-size:.6rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+        .workspace-nav { display:grid; gap:5px; }
+        .workspace-nav-btn {
+            width:100%; border:0; background:transparent; color:var(--workspace-nav-text); min-height:42px; padding:0 11px; border-radius:9px;
+            display:none; align-items:center; gap:10px; font-size:.78rem; font-weight:650; cursor:pointer; text-align:left;
+        }
+        .workspace-nav-btn:hover { color:var(--workspace-nav-hover); background:var(--workspace-nav-hover-bg); }
+        .workspace-nav-btn.active { color:var(--workspace-nav-active); background:rgba(255,94,58,.13); }
+        .workspace-nav-btn.active svg { color:var(--accent); }
+        .workspace-nav-btn svg { width:18px; }
+        .workspace-sidebar-foot { margin-top:auto; display:grid; gap:7px; padding:12px 0 0; border-top:1px solid var(--line-soft); }
+        .sidebar-theme-control { width:100%; min-height:40px; display:flex; align-items:center; gap:10px; padding:0 11px; border:0; border-radius:9px; background:transparent; color:var(--workspace-nav-text); cursor:pointer; font:inherit; font-size:.75rem; font-weight:650; }
+        .sidebar-theme-control:hover { color:var(--workspace-nav-hover); background:var(--workspace-nav-hover-bg); }
+        .sidebar-theme-control svg { width:18px; flex:0 0 18px; }
+        .sidebar-account { position:relative; min-width:0; min-height:54px; display:flex; align-items:center; padding:7px 9px; border:1px solid var(--line-soft); border-radius:12px; background:color-mix(in srgb,var(--surface-1) 72%,transparent); overflow:hidden; transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease; }
+        .sidebar-account.interactive { cursor:pointer; }
+        .sidebar-account.interactive:not(.profile-clicked):hover { border-color:color-mix(in srgb,var(--workspace-nav-text) 30%,var(--line-soft)); background:var(--workspace-nav-hover-bg); transform:translateY(-1px); }
+        .sidebar-account.interactive:active { transform:translateY(0) scale(.985); background:color-mix(in srgb,var(--workspace-nav-hover-bg) 82%,var(--accent) 18%); }
+        .sidebar-account.interactive::after { content:'›'; margin-left:auto; padding:0 2px 1px 8px; color:var(--text-muted); font-size:1.25rem; line-height:1; transition:color .18s ease,transform .18s ease; }
+        .sidebar-account.interactive:not(.profile-clicked):hover::after { color:var(--accent); transform:translateX(2px); }
+        .sidebar-account .auth-bar { width:100%; height:auto; padding:0; border:0; background:transparent; box-shadow:none; }
+        .sidebar-account .user-welcome-info { width:100%; min-width:0; }
+        .sidebar-account .user-welcome-text { min-width:0; overflow:hidden; white-space:nowrap; }
+        .sidebar-account .user-welcome-text h4 { overflow:hidden; text-overflow:ellipsis; }
+        body.staff-workspace.sidebar-collapsed .workspace-brand { justify-content:center; padding:0; }
+        body.staff-workspace.sidebar-collapsed .workspace-brand > .logo-icon,
+        body.staff-workspace.sidebar-collapsed .workspace-brand-copy,
+        body.staff-workspace.sidebar-collapsed .workspace-nav-label,
+        body.staff-workspace.sidebar-collapsed .workspace-nav-btn span,
+        body.staff-workspace.sidebar-collapsed .sidebar-theme-control span,
+        body.staff-workspace.sidebar-collapsed .sidebar-account .user-welcome-text { display:none; }
+        body.staff-workspace.sidebar-collapsed .workspace-collapse-btn svg { transform:rotate(180deg); }
+        body.staff-workspace.sidebar-collapsed .workspace-nav-btn,
+        body.staff-workspace.sidebar-collapsed .sidebar-theme-control { justify-content:center; padding:0; }
+        body.staff-workspace.sidebar-collapsed .workspace-nav { padding-top:18px; }
+        body.staff-workspace.sidebar-collapsed .sidebar-account { justify-content:center; padding:5px; }
+        body.staff-workspace.sidebar-collapsed .sidebar-account .auth-bar,
+        body.staff-workspace.sidebar-collapsed .sidebar-account .user-welcome-info { justify-content:center; width:auto; }
+        body.staff-workspace.sidebar-collapsed .sidebar-account::after { display:none; }
+
+        /* Account settings stays inside the viewport and scrolls as one contained sheet. */
+        #settings-modal { inset:0; width:100%; height:100dvh; padding:20px; z-index:3000; overflow:hidden; }
+        #settings-modal .modal-card { width:min(480px,calc(100vw - 40px)); max-width:480px; max-height:calc(100dvh - 40px); margin:0; padding:28px 32px; overflow-x:hidden; overflow-y:auto; }
+        #settings-modal .modal-title { margin-bottom:22px; padding-right:34px; }
+
+        .overview-hero { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:4px 0 20px; margin-bottom:18px; }
+        .overview-hero h2 { font-size:clamp(1.65rem,2.3vw,2.05rem); line-height:1.08; letter-spacing:-.04em; }
+        .overview-hero p { color:var(--text-muted); margin-top:6px; font-size:.8rem; }
+        .overview-date { color:var(--workspace-date-text); font-size:.69rem; white-space:nowrap; padding:7px 10px; background:var(--surface-1); border:1px solid var(--line-soft); border-radius:8px; }
+        .overview-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+        .overview-metric { position:relative; min-height:132px; padding:17px 18px; overflow:hidden; }
+        .overview-metric::after { content:""; position:absolute; inset:auto 0 0; height:2px; background:linear-gradient(90deg,var(--accent),transparent 70%); opacity:.7; }
+        .overview-metric-top { display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:.7rem; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
+        .overview-metric-top svg { width:28px; height:28px; padding:6px; color:var(--accent); background:rgba(255,94,58,.1); border-radius:8px; }
+        .overview-metric strong { display:block; margin-top:12px; font-size:1.65rem; line-height:1; letter-spacing:-.04em; }
+        .overview-metric small { display:block; color:var(--text-muted); margin-top:5px; font-size:.7rem; }
+        .overview-grid { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(260px,.65fr); gap:12px; }
+        .overview-section { padding:0; overflow:hidden; }
+        .overview-section-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:15px 18px; border-bottom:1px solid var(--line-soft); }
+        .overview-section-head h3 { font-size:.95rem; }
+        .overview-section-head button { color:var(--accent); background:none; border:0; font-size:.74rem; font-weight:700; cursor:pointer; }
+        .overview-order-list { min-height:218px; }
+        .overview-order-row { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:18px; padding:15px 20px; border-bottom:1px solid var(--line-soft); }
+        .overview-order-row:last-child { border-bottom:0; }
+        .overview-order-row strong { font-size:.8rem; }
+        .overview-order-row small { display:block; color:var(--text-muted); font-size:.68rem; margin-top:3px; }
+        .overview-status { padding:5px 8px; border-radius:99px; background:var(--surface-2); font-size:.65rem; text-transform:capitalize; }
+        .overview-empty { display:grid; place-items:center; min-height:218px; color:var(--text-muted); font-size:.8rem; }
+        .quick-actions { display:grid; gap:8px; padding:12px; }
+        .quick-action { display:flex; align-items:center; gap:11px; width:100%; padding:11px; border:1px solid transparent; border-radius:9px; background:var(--surface-2); color:var(--text-main); text-align:left; cursor:pointer; }
+        .quick-action:hover { border-color:rgba(255,94,58,.35); }
+        .quick-action svg { width:17px; color:var(--accent); }
+        .quick-action strong { display:block; font-size:.78rem; }
+        .quick-action small { display:block; color:var(--text-muted); font-size:.66rem; margin-top:2px; }
+
+        body.staff-workspace .panel-header { align-items:flex-end; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line-soft); }
+        body.staff-workspace .panel-header h2 { font-size:1.75rem; letter-spacing:-.04em; }
+        body.staff-workspace .panel-header p { margin-top:6px; font-size:.84rem; }
+        body.staff-workspace .card { background:var(--surface-1); border:1px solid var(--line-soft); border-radius:13px; box-shadow:none; }
+        body.staff-workspace .layout-grid { gap:14px; }
+        body.staff-workspace table { font-size:.78rem; }
+        body.staff-workspace th { color:var(--text-muted); font-size:.64rem; letter-spacing:.06em; text-transform:uppercase; background:var(--workspace-table-head); }
+        body.staff-workspace td { border-color:var(--line-soft); }
+        body.staff-workspace .table-container { border:1px solid var(--line-soft); border-radius:12px; overflow:auto; }
+        body.staff-workspace .btn-primary, body.staff-workspace .btn-secondary { border-radius:9px; min-height:40px; padding:9px 15px; }
+        body.staff-workspace input, body.staff-workspace select, body.staff-workspace textarea { border-radius:9px; }
+
+        /* Order manager: operational hierarchy */
+        #order-manager-dashboard { margin-bottom:28px !important; }
+        #order-manager-dashboard > div:first-child { margin-bottom:14px !important; }
+        #order-manager-dashboard > .layout-grid .card { position:relative; padding:18px; overflow:visible; }
+        #order-manager-dashboard > .layout-grid .card::before { content:""; position:absolute; left:18px; top:0; width:28px; height:2px; background:var(--accent); }
+        #order-manager-dashboard > .card { padding:21px 22px; }
+        body.role-order_manager #order-stats-grid { display:none !important; }
+        .kitchen-board { gap:14px; }
+        .order-column { background:transparent; border:1px solid var(--line-soft); border-radius:13px; }
+
+        /* Admin: list-first, modal editing */
+        .admin-workspace-grid { grid-template-columns:1fr !important; }
+        #menu-item-workspace-card { display:none; }
+        .admin-menu-list-card { padding:0 !important; background:transparent !important; border:0 !important; }
+        .admin-menu-list-card > h3 { margin-bottom:14px !important; font-size:1rem; }
+        .admin-control-bar { padding:12px; border:1px solid var(--line-soft); border-radius:12px; background:var(--surface-1); margin-bottom:12px; }
+        .admin-menu-list-card .table-container { background:var(--surface-1); }
+
+        @media (max-width:900px) {
+            body.staff-workspace .header-wrapper { display:block; left:0; width:100%; padding:0 16px; }
+            body.staff-workspace .global-top-header { padding:0; }
+            body.staff-workspace main { max-width:none; margin:var(--workspace-topbar-height) 0 0; width:100%; padding:24px 16px 42px; }
+            body.staff-workspace .workspace-sidebar { transform:translateX(-100%); transition:transform .2s ease; box-shadow:20px 0 50px rgba(0,0,0,.35); }
+            body.staff-workspace.sidebar-collapsed { --workspace-sidebar-width:232px; }
+            body.staff-workspace.sidebar-collapsed .workspace-brand { justify-content:flex-start; padding:0 4px 0 8px; }
+            body.staff-workspace.sidebar-collapsed .workspace-brand > .logo-icon,
+            body.staff-workspace.sidebar-collapsed .workspace-brand-copy,
+            body.staff-workspace.sidebar-collapsed .workspace-nav-label,
+            body.staff-workspace.sidebar-collapsed .workspace-nav-btn span,
+            body.staff-workspace.sidebar-collapsed .sidebar-theme-control span,
+            body.staff-workspace.sidebar-collapsed .sidebar-account .user-welcome-text { display:block; }
+            body.staff-workspace.sidebar-collapsed .workspace-collapse-btn { display:none; }
+            body.staff-workspace.sidebar-collapsed .workspace-nav-btn,
+            body.staff-workspace.sidebar-collapsed .sidebar-theme-control { justify-content:flex-start; padding:0 11px; }
+            body.staff-workspace.sidebar-collapsed .workspace-nav { padding-top:0; }
+            body.staff-workspace.workspace-menu-open .workspace-sidebar { transform:translateX(0); }
+            body.staff-workspace.workspace-menu-open { overflow:hidden; }
+            body.staff-workspace .workspace-mobile-close { display:grid; margin-left:auto; }
+            body.staff-workspace .workspace-mobile-backdrop { display:block; position:fixed; inset:0; z-index:1150; border:0; padding:0; background:rgba(3,6,12,.58); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease,visibility .2s ease; }
+            body.staff-workspace.workspace-menu-open .workspace-mobile-backdrop { opacity:1; visibility:visible; pointer-events:auto; }
+            body.staff-workspace .mobile-workspace-toggle { display:flex; width:40px; height:40px; border:1px solid var(--line-soft); border-radius:10px; background:var(--surface-2); color:var(--text-main); align-items:center; justify-content:center; }
+            body.staff-workspace .top-header-actions { width:100%; justify-content:space-between; }
+            #portal-panel .panel-header { padding:22px; align-items:flex-start; }
+            .overview-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .overview-grid { grid-template-columns:1fr; }
+        }
+        @media (max-width:620px) {
+            #settings-modal { padding:10px; align-items:center; }
+            #settings-modal .modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); margin:0; padding:22px 20px; }
+            main { padding:18px 14px 38px; }
+            #portal-panel .panel-header { border-radius:14px; }
+            #portal-panel .sorting-actions-wrapper { width:100%; }
+            #portal-panel .action-select { min-width:0; flex:1; }
+            .grid-autofit { grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+            .menu-info { padding:12px; }
+            .menu-desc { display:none; }
+            .menu-title { font-size:.84rem; }
+            .menu-price { font-size:.86rem; }
+            .menu-badge, .menu-label { font-size:.55rem; }
+            body.staff-workspace .panel-header { align-items:flex-start; }
+            .admin-header-actions { width:100%; }
+            .admin-header-actions button { flex:1; }
+            .overview-hero { align-items:flex-start; flex-direction:column; }
+            .overview-metrics { grid-template-columns:1fr 1fr; gap:10px; }
+            .overview-metric { padding:15px; }
+            .overview-order-row { grid-template-columns:1fr auto; }
+            .overview-order-row > :last-child { display:none; }
+        }
+
     </style>
 </head>
-<body>
+<body class="auth-pending">
+
+    <div class="app-auth-loader" role="status" aria-live="polite" aria-label="Loading your workspace">
+        <div class="app-auth-loader-content">
+            <div class="app-auth-loader-mark"><i data-lucide="chef-hat"></i></div>
+            <span>Loading your workspace</span>
+        </div>
+    </div>
+
+    <aside class="workspace-sidebar" id="workspace-sidebar" aria-label="Staff workspace navigation">
+        <div class="workspace-brand">
+            <div class="logo-icon"><i data-lucide="chef-hat"></i></div>
+            <div class="workspace-brand-copy"><strong>Snack Station</strong><small>Staff workspace</small></div>
+            <button class="workspace-collapse-btn" type="button" onclick="toggleWorkspaceSidebar()" aria-label="Collapse sidebar" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
+            <button class="workspace-mobile-close" type="button" onclick="toggleWorkspaceMenu(false)" aria-label="Close workspace menu" title="Close menu"><i data-lucide="x"></i></button>
+        </div>
+        <div class="workspace-nav-label">Workspace</div>
+        <nav class="workspace-nav">
+            <button class="workspace-nav-btn" id="side-btn-overview" onclick="switchPanel('overview')"><i data-lucide="house"></i><span>Overview</span></button>
+            <button class="workspace-nav-btn" id="side-btn-orders" onclick="switchPanel('orders')"><i data-lucide="layout-dashboard"></i><span>Orders overview</span></button>
+            <button class="workspace-nav-btn" id="side-btn-admin" onclick="switchPanel('admin')"><i data-lucide="utensils"></i><span>Menu management</span></button>
+            <button class="workspace-nav-btn" id="side-btn-users" onclick="switchPanel('users')"><i data-lucide="users"></i><span>User management</span></button>
+            <button class="workspace-nav-btn" id="side-btn-audit" onclick="switchPanel('audit')"><i data-lucide="shield-check"></i><span>Audit logs</span></button>
+        </nav>
+        <div class="workspace-sidebar-foot">
+            <button class="sidebar-theme-control" id="sidebar-theme-toggle-btn" type="button" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="sun"></i><span>Light mode</span></button>
+            <div class="sidebar-account" id="sidebar-auth-container"></div>
+        </div>
+    </aside>
+    <button class="workspace-mobile-backdrop" type="button" onclick="toggleWorkspaceMenu(false)" aria-label="Close workspace menu"></button>
 
     <div class="header-wrapper">
         <header class="global-top-header">
@@ -1628,6 +1973,7 @@
             </nav>
 
             <div class="top-header-actions">
+                <button class="mobile-workspace-toggle" type="button" onclick="toggleWorkspaceMenu()" aria-label="Open workspace menu"><i data-lucide="menu"></i></button>
                 <button class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                     <i data-lucide="sun"></i>
                 </button>
@@ -1672,6 +2018,33 @@
     </div>
 
     <main>
+        <section id="overview-panel" class="panel">
+            <div class="overview-hero">
+                <div><h2 id="overview-greeting">Good day</h2><p>Here is what is happening across Snack Station today.</p></div>
+                <span class="overview-date" id="overview-date"></span>
+            </div>
+            <div class="overview-metrics">
+                <div class="card overview-metric"><div class="overview-metric-top"><span>Orders today</span><i data-lucide="receipt-text"></i></div><strong id="overview-orders-today">0</strong><small id="overview-orders-note">No orders yet today</small></div>
+                <div class="card overview-metric"><div class="overview-metric-top"><span>In progress</span><i data-lucide="chef-hat"></i></div><strong id="overview-active-orders">0</strong><small>New, preparing and ready</small></div>
+                <div class="card overview-metric"><div class="overview-metric-top"><span>Menu items</span><i data-lucide="utensils"></i></div><strong id="overview-menu-items">0</strong><small id="overview-menu-note">Available on the menu</small></div>
+                <div class="card overview-metric"><div class="overview-metric-top"><span>Team accounts</span><i data-lucide="users"></i></div><strong id="overview-team-count">0</strong><small>Admins and order managers</small></div>
+            </div>
+            <div class="overview-grid">
+                <div class="card overview-section">
+                    <div class="overview-section-head"><h3>Latest orders</h3><button type="button" onclick="switchPanel('orders')">View all orders</button></div>
+                    <div class="overview-order-list" id="overview-order-list"><div class="overview-empty">No orders to show yet.</div></div>
+                </div>
+                <div class="card overview-section">
+                    <div class="overview-section-head"><h3>Quick actions</h3></div>
+                    <div class="quick-actions">
+                        <button class="quick-action" type="button" onclick="switchPanel('admin')"><i data-lucide="plus-circle"></i><span><strong>Add a menu item</strong><small>Create a new product</small></span></button>
+                        <button class="quick-action" type="button" onclick="switchPanel('users')"><i data-lucide="user-cog"></i><span><strong>Manage users</strong><small>Profiles and permissions</small></span></button>
+                        <button class="quick-action" type="button" onclick="switchPanel('audit')"><i data-lucide="shield-check"></i><span><strong>Review audit logs</strong><small>See recent staff activity</small></span></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="portal-panel" class="panel active">
             <div class="panel-header">
                 <div>
@@ -2496,22 +2869,27 @@
             if (hasAdminAccess()) loadUsers();
             if (hasOrderManagerAccess()) switchPanel('orders');
             else if (state.currentUser.role === 'admin') switchPanel('admin');
+            else if (state.currentUser.role === 'super_admin') switchPanel('overview');
         } else {
             state.orders = [];
             renderOrdersTable();
         }
+        document.body.classList.remove('auth-pending');
     });
 
     function initTheme() {
-        const theme = 'dark';
+        const savedTheme = localStorage.getItem('snack-station-theme');
+        const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
         updateThemeToggleButton(theme);
+        initWorkspaceSidebar();
     }
 
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('snack-station-theme', newTheme);
         updateThemeToggleButton(newTheme);
     }
 
@@ -2519,8 +2897,31 @@
         const toggleBtn = document.getElementById('theme-toggle-btn');
         if (toggleBtn) {
             toggleBtn.innerHTML = theme === 'light' ? `<i data-lucide="moon"></i>` : `<i data-lucide="sun"></i>`;
-            lucide.createIcons();
         }
+        const sidebarToggle = document.getElementById('sidebar-theme-toggle-btn');
+        if (sidebarToggle) sidebarToggle.innerHTML = theme === 'light'
+            ? `<i data-lucide="moon"></i><span>Dark mode</span>`
+            : `<i data-lucide="sun"></i><span>Light mode</span>`;
+        lucide.createIcons();
+    }
+
+    function initWorkspaceSidebar() {
+        const collapsed = localStorage.getItem('snack-station-sidebar') === 'collapsed';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        updateWorkspaceCollapseButton(collapsed);
+    }
+
+    function toggleWorkspaceSidebar() {
+        const collapsed = document.body.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('snack-station-sidebar', collapsed ? 'collapsed' : 'expanded');
+        updateWorkspaceCollapseButton(collapsed);
+    }
+
+    function updateWorkspaceCollapseButton(collapsed) {
+        const button = document.querySelector('.workspace-collapse-btn');
+        if (!button) return;
+        button.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        button.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
     }
 
     function hasAdminAccess(user = state.currentUser) {
@@ -2561,6 +2962,11 @@
     function renderNavigation() {
         const role = state.currentUser ? state.currentUser.role : 'customer';
         const adminAccess = hasAdminAccess();
+        const isStaff = adminAccess || hasOrderManagerAccess();
+        document.body.classList.toggle('staff-workspace', isStaff);
+        document.body.classList.toggle('role-order_manager', role === 'order_manager');
+        document.body.classList.toggle('role-admin', role === 'admin');
+        document.body.classList.toggle('role-super_admin', role === 'super_admin');
         document.getElementById('btn-orders').style.display = (hasOrderManagerAccess() || adminAccess) ? 'flex' : 'none';
         document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
         document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
@@ -2573,20 +2979,46 @@
         const canUseCart = displayRole === 'customer';
         if (cartWrapper) cartWrapper.style.display = canUseCart ? 'block' : 'none';
         if (!canUseCart) document.getElementById('cart-pane-element')?.classList.add('hidden');
+
+        const sideVisibility = {
+            overview: hasSuperAdminAccess(),
+            orders: hasOrderManagerAccess() || adminAccess,
+            admin: adminAccess,
+            users: adminAccess,
+            audit: hasSuperAdminAccess()
+        };
+        Object.entries(sideVisibility).forEach(([panel, visible]) => {
+            const button = document.getElementById(`side-btn-${panel}`);
+            if (button) button.style.display = visible ? 'flex' : 'none';
+        });
+    }
+
+    function toggleWorkspaceMenu(forceOpen) {
+        const shouldOpen = typeof forceOpen === 'boolean'
+            ? forceOpen
+            : !document.body.classList.contains('workspace-menu-open');
+        document.body.classList.toggle('workspace-menu-open', shouldOpen);
+        const opener = document.querySelector('.mobile-workspace-toggle');
+        if (opener) {
+            opener.setAttribute('aria-expanded', String(shouldOpen));
+            opener.setAttribute('aria-label', shouldOpen ? 'Close workspace menu' : 'Open workspace menu');
+        }
     }
 
     function handleLogoNavigation(event) {
         if (event) event.preventDefault();
         if (hasOrderManagerAccess()) return switchPanel('orders');
         if (state.currentUser?.role === 'admin') return switchPanel('admin');
+        if (hasSuperAdminAccess()) return switchPanel('overview');
         switchPanel('portal');
     }
 
     function switchPanel(panelId) {
         const role = state.currentUser ? state.currentUser.role : 'customer';
-        if (panelId === 'portal' && (role === 'admin' || role === 'order_manager')) {
-            return switchPanel(role === 'order_manager' ? 'orders' : 'admin');
+        if (panelId === 'portal' && ['admin', 'order_manager', 'super_admin'].includes(role)) {
+            return switchPanel(role === 'order_manager' ? 'orders' : role === 'super_admin' ? 'overview' : 'admin');
         }
+        if (panelId === 'overview' && !hasSuperAdminAccess()) return;
         if (panelId === 'orders' && role === 'customer') return;
         if ((panelId === 'users' || panelId === 'admin') && !hasAdminAccess()) return;
         if (panelId === 'audit' && !hasSuperAdminAccess()) return;
@@ -2594,12 +3026,53 @@
         if (panelId === 'orders') loadOrders();
         if (panelId === 'users') loadUsers();
         if (panelId === 'audit') loadAuditLogs();
+        if (panelId === 'overview') updateStaffOverview();
 
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.workspace-nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`${panelId}-panel`).classList.add('active');
         const currentBtn = document.getElementById(`btn-${panelId}`);
         if (currentBtn && currentBtn.style.display !== 'none') currentBtn.classList.add('active');
+        const sideBtn = document.getElementById(`side-btn-${panelId}`);
+        if (sideBtn && sideBtn.style.display !== 'none') sideBtn.classList.add('active');
+        document.body.classList.remove('workspace-menu-open');
+    }
+
+    function updateStaffOverview() {
+        if (!hasSuperAdminAccess()) return;
+        const now = new Date();
+        const hour = now.getHours();
+        const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+        const firstName = (state.currentUser?.name || 'Super Admin').trim().split(/\s+/)[0];
+        const orders = Array.isArray(state.orders) ? state.orders : [];
+        const todayOrders = orders.filter(isOrderFromToday);
+        const active = todayOrders.filter(order => ['new','pending','accepted','preparing','ready'].includes(String(order.status || '').toLowerCase()));
+        const availableItems = menuData.filter(item => item.available !== false && item.hidden !== true).length;
+        const team = state.users.filter(user => ['admin','order_manager'].includes(user.role)).length;
+        document.getElementById('overview-greeting').textContent = `${greeting}, ${firstName}`;
+        document.getElementById('overview-date').textContent = now.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        document.getElementById('overview-orders-today').textContent = todayOrders.length;
+        document.getElementById('overview-orders-note').textContent = todayOrders.length ? `${todayOrders.filter(order => String(order.status).toLowerCase() === 'completed').length} completed today` : 'No orders yet today';
+        document.getElementById('overview-active-orders').textContent = active.length;
+        document.getElementById('overview-menu-items').textContent = menuData.length;
+        document.getElementById('overview-menu-note').textContent = `${availableItems} currently available`;
+        document.getElementById('overview-team-count').textContent = team;
+        const recent = [...orders].sort((a,b) => (getOrderDate(b)?.getTime() || 0) - (getOrderDate(a)?.getTime() || 0)).slice(0,5);
+        const list = document.getElementById('overview-order-list');
+        list.innerHTML = recent.length ? recent.map(order => {
+            const date = getOrderDate(order);
+            const customer = order.customerName || order.customer?.name || order.name || 'Customer';
+            const amount = Number(order.total || order.totalAmount || 0);
+            return `<div class="overview-order-row"><div><strong>${escapeHtml(customer)}</strong><small>#${escapeHtml(String(order.orderNumber || order.id || '').slice(-8))} · ${date ? date.toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : 'Date unavailable'}</small></div><span class="overview-status">${escapeHtml(order.status || 'new')}</span><strong>Rs. ${amount.toLocaleString()}</strong></div>`;
+        }).join('') : '<div class="overview-empty">No orders to show yet.</div>';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        })[character]);
     }
 
     function triggerToast(message, type = "success") {
@@ -2717,6 +3190,12 @@
             document.getElementById('settings-city').value = state.currentUser.city || 'Peshawar';
             document.getElementById('settings-password').value = '';
         }
+    }
+    function openSidebarSettings(event) {
+        const sidebarAccount = document.getElementById('sidebar-auth-container');
+        if (event?.detail > 0) sidebarAccount?.classList.add('profile-clicked');
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        toggleSettingsModal(true);
     }
     function toggleAdminUserModal(show) { document.getElementById('admin-user-edit-modal').classList.toggle('active', show); }
     function toggleGuestCheckoutModal(show) {
@@ -2914,6 +3393,7 @@
 
     function renderAuthBar() {
         const container = document.getElementById('auth-bar-container');
+        const sidebarContainer = document.getElementById('sidebar-auth-container');
         const displayUser = state.currentUser || (isAuthLoading ? cachedAuthUser : null);
         if (displayUser) {
             container.className = state.currentUser ? "auth-bar interactive" : "auth-bar";
@@ -2928,6 +3408,19 @@
                     </div>
                 </div>
             `;
+            if (sidebarContainer) {
+                sidebarContainer.innerHTML = container.innerHTML;
+                sidebarContainer.classList.toggle('interactive', Boolean(state.currentUser));
+                sidebarContainer.classList.remove('profile-clicked');
+                sidebarContainer.onmouseleave = () => sidebarContainer.classList.remove('profile-clicked');
+                const sidebarProfile = sidebarContainer.querySelector('.user-welcome-info');
+                if (sidebarProfile && state.currentUser) {
+                    sidebarProfile.setAttribute('onclick', 'openSidebarSettings(event)');
+                    sidebarProfile.setAttribute('role', 'button');
+                    sidebarProfile.setAttribute('tabindex', '0');
+                    sidebarProfile.setAttribute('onkeydown', "if(event.key==='Enter'||event.key===' '){event.preventDefault();openSidebarSettings(event)}");
+                }
+            }
         } else if (isAuthLoading) {
             container.className = "auth-bar";
             container.innerHTML = `
@@ -2937,13 +3430,22 @@
                     <div style="height:11px; width:100%; background:var(--border-color); border-radius:6px;"></div>
                 </div>
             `;
+            if (sidebarContainer) {
+                sidebarContainer.innerHTML = container.innerHTML;
+                sidebarContainer.classList.remove('interactive');
+            }
         } else {
             container.className = "auth-bar";
             container.innerHTML = `
                 <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAuthModal(true); toggleAuthMode(true);">Sign In</button>
                 <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="openSignupPage()">Create Account</button>
             `;
+            if (sidebarContainer) {
+                sidebarContainer.innerHTML = '';
+                sidebarContainer.classList.remove('interactive');
+            }
         }
+        if (sidebarContainer && displayUser) sidebarContainer.querySelector('.user-welcome-info')?.setAttribute('title', 'Account settings');
     }
 
     function isBasicItemAvailable(item) {
@@ -3691,6 +4193,7 @@
         document.querySelectorAll('.user-role-tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.role === state.userRoleFilter);
         });
+        updateStaffOverview();
 
         tableBody.innerHTML = filteredUsers.length ? filteredUsers.map(user => {
             const roleLabels = {
@@ -3930,6 +4433,7 @@
         if (revenueStat) revenueStat.textContent = `Rs. ${revenue.toLocaleString()}`;
         document.getElementById('stat-completed-count').textContent = completedOrders.length;
         document.getElementById('stat-active-count').textContent = visibleOrders.filter(order => !['completed', 'rejected'].includes(order.status)).length;
+        updateStaffOverview();
         lucide.createIcons();
     }
 
@@ -4798,6 +5302,8 @@
     window.addToCart = addToCart;
     window.alterQty = alterQty;
     window.toggleTheme = toggleTheme;
+    window.toggleWorkspaceSidebar = toggleWorkspaceSidebar;
+    window.toggleWorkspaceMenu = toggleWorkspaceMenu;
     window.switchPanel = switchPanel;
     window.toggleCartVisibility = toggleCartVisibility;
     window.placeOrder = placeOrder;
@@ -4808,6 +5314,7 @@
     window.openSignInModal = openSignInModal;
     window.handleRegistrationSubmit = handleRegistrationSubmit;
     window.toggleSettingsModal = toggleSettingsModal;
+    window.openSidebarSettings = openSidebarSettings;
     window.handleSettingsUpdate = handleSettingsUpdate;
     window.toggleAdminUserModal = toggleAdminUserModal;
     window.openAdminUserEditor = openAdminUserEditor;
