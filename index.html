@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Snack Station | Cloud Kitchen</title>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <!-- Google Fonts & Lucide Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* ==========================================
            1. THEME CONTROL PANEL (Customizable Variables)
@@ -2683,7 +2690,9 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
     import { 
-        getFirestore,
+        initializeFirestore,
+        persistentLocalCache,
+        persistentMultipleTabManager,
         collection,
         doc,
         getDoc,
@@ -2715,7 +2724,11 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -2773,6 +2786,7 @@
     let cachedAuthUser = readCachedAuthUser();
     let isAuthLoading = true;
     let isMenuBootstrapComplete = false;
+    let hasCommittedInitialRender = false;
     let stopOrderTrackingListener = null;
     let stopKitchenOrdersListener = null;
     let kitchenListenerInitialized = false;
@@ -2796,9 +2810,66 @@
     };
 
     function revealAppWhenReady() {
-        if (!isAuthLoading && isMenuBootstrapComplete) {
-            document.body.classList.remove('auth-pending');
+        if (isAuthLoading || !isMenuBootstrapComplete || hasCommittedInitialRender) return;
+
+        /* Commit the first visible interface only once. Keeping all expensive DOM
+           and SVG work out of the hidden loading phase makes readiness noticeably
+           faster on phones and slower laptops. */
+        hasCommittedInitialRender = true;
+        renderStoreStatus(false);
+        renderCart();
+        renderAuthBar();
+        renderNavigation();
+        renderMenu(false);
+        renderAdminMenuTable(false);
+        renderCategoryManager(undefined, false);
+        if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => document.body.classList.remove('auth-pending'));
+    }
+
+    async function bootstrapMenu() {
+        /* These documents are independent. Fetch them together, then commit and
+           render one complete storefront instead of repainting after each read. */
+        const [itemsResult, categoriesResult, storeResult] = await Promise.allSettled([
+            getDocs(collection(db, "items")),
+            getDoc(doc(db, "settings", "menuCategories")),
+            getDoc(doc(db, "settings", "store"))
+        ]);
+
+        if (itemsResult.status === 'fulfilled') {
+            const snapshot = itemsResult.value;
+            menuData = snapshot.docs.map(itemDoc => ({ id: itemDoc.id, ...itemDoc.data() }));
+            if (menuData.length) writeCachedMenu(menuData);
+            else localStorage.removeItem(MENU_CACHE_KEY);
+        } else {
+            console.warn("Could not load Firestore items:", itemsResult.reason);
         }
+
+        const itemCategories = menuData.map(item => item.category).filter(Boolean);
+        if (categoriesResult.status === 'fulfilled') {
+            const snapshot = categoriesResult.value;
+            const savedCategories = snapshot.exists() && Array.isArray(snapshot.data().categories)
+                ? snapshot.data().categories
+                : DEFAULT_CATEGORIES;
+            state.categories = [...new Set([...savedCategories, ...itemCategories])];
+            state.hiddenCategories = snapshot.exists() && Array.isArray(snapshot.data().hiddenCategories)
+                ? snapshot.data().hiddenCategories.filter(category => state.categories.includes(category))
+                : [];
+        } else {
+            state.categories = [...new Set([...DEFAULT_CATEGORIES, ...itemCategories])];
+            console.warn("Could not load menu categories:", categoriesResult.reason);
+        }
+
+        state.storeOpen = storeResult.status !== 'fulfilled'
+            || !storeResult.value.exists()
+            || storeResult.value.data().isOpen !== false;
+        if (storeResult.status === 'rejected') {
+            console.warn("Could not load store settings:", storeResult.reason);
+        }
+
+        isMenuLoading = false;
+        isMenuBootstrapComplete = true;
+        revealAppWhenReady();
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -2806,22 +2877,7 @@
         const itemModalBody = document.getElementById('item-editor-modal-body');
         if (itemWorkspace && itemModalBody) itemModalBody.appendChild(itemWorkspace);
         initTheme();
-        renderMenu();
-        renderCart();
-        if (typeof renderOrdersTable === 'function') renderOrdersTable();
-        if (typeof renderUsersTable === 'function') renderUsersTable();
-        renderAdminMenuTable();
-        renderCategoryManager();
-        renderNavigation();
-        renderAuthBar();
-        lucide.createIcons();
-        /* Fetch the menu in dependency order so customers never see cached,
-           partial, or incorrectly categorized items. */
-        await loadMenuItems();
-        await Promise.all([loadMenuCategories(), loadStoreSettings()]);
-        isMenuBootstrapComplete = true;
-        renderMenu();
-        revealAppWhenReady();
+        bootstrapMenu();
 
         const modals = ['auth-modal', 'settings-modal', 'admin-user-edit-modal', 'guest-checkout-modal', 'item-customization-modal', 'item-editor-modal', 'category-manager-modal'];
         modals.forEach(id => {
@@ -2877,9 +2933,6 @@
             switchPanel('portal');
         }
         isAuthLoading = false;
-        renderAuthBar();
-        renderNavigation();
-        renderMenu();
         if (state.currentUser && (hasAdminAccess() || hasOrderManagerAccess())) {
             loadOrders();
             if (hasAdminAccess()) loadUsers();
@@ -3530,7 +3583,7 @@
         });
     }
 
-    function renderMenu() {
+    function renderMenu(refreshIcons = true) {
         const container = document.getElementById('menu-container');
         const displayRole = state.currentUser?.role || (isAuthLoading ? cachedAuthUser?.role : null) || 'customer';
         const canAddToCart = displayRole === 'customer';
@@ -3581,7 +3634,7 @@
                         </div>
                         <div class="grid-autofit">${renderCustomerMenuCards(visibleMenuItems)}</div>
                     </section>`;
-                lucide.createIcons();
+                if (refreshIcons) lucide.createIcons();
                 return;
             }
 
@@ -3619,7 +3672,7 @@
                 <p>No menu items are currently available.</p>
             </div>`;
         }
-        lucide.createIcons();
+        if (refreshIcons) lucide.createIcons();
     }
 
     function openItemCustomization(itemId) {
@@ -4509,7 +4562,7 @@
         }
     }
 
-    function renderAdminMenuTable() {
+    function renderAdminMenuTable(refreshIcons = true) {
         const tableBody = document.getElementById('admin-menu-table-body');
         if (!tableBody) return;
         const query = state.adminMenuSearch.toLowerCase();
@@ -4566,7 +4619,7 @@
                 </td>
             </tr>
         `).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No menu items match the selected filters.</td></tr>`;
-        lucide.createIcons();
+        if (refreshIcons) lucide.createIcons();
     }
 
     function setAdminMenuSearch(value) {
@@ -4692,7 +4745,7 @@
         renderMenu();
     }
 
-    function renderStoreStatus() {
+    function renderStoreStatus(refreshIcons = true) {
         const toggle = document.getElementById('store-open-toggle');
         const label = document.getElementById('store-open-label');
         const banner = document.getElementById('store-status-banner');
@@ -4704,7 +4757,7 @@
             checkoutButton.disabled = !state.storeOpen;
             checkoutButton.innerHTML = state.storeOpen ? 'Place Order <i data-lucide="arrow-right" style="width:16px;"></i>' : 'Store Closed';
         }
-        lucide.createIcons();
+        if (refreshIcons) lucide.createIcons();
     }
 
     async function setStoreOpen(isOpen) {
@@ -4775,7 +4828,7 @@
         renderMenu();
     }
 
-    function renderCategoryManager(selectedCategory) {
+    function renderCategoryManager(selectedCategory, refreshIcons = true) {
         const select = document.getElementById('menu-item-category');
         if (!select) return;
         const previousValue = selectedCategory || select.value;
@@ -4799,7 +4852,7 @@
             `).join('');
         }
         handleMenuCategoryChange();
-        lucide.createIcons();
+        if (refreshIcons) lucide.createIcons();
     }
 
     async function saveMenuCategories() {
