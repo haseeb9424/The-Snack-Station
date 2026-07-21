@@ -82,7 +82,7 @@
             transition: background-color var(--transition), color var(--transition);
         }
 
-        /* Keep role-specific UI hidden until Firebase has resolved the session. */
+        /* Keep the application hidden until Firebase and the complete menu are ready. */
         body.auth-pending > :not(.app-auth-loader):not(script) {
             visibility: hidden !important;
         }
@@ -1914,12 +1914,17 @@
 
     </style>
 </head>
-<body class="auth-pending">
+<body>
 
-    <div class="app-auth-loader" role="status" aria-live="polite" aria-label="Loading your workspace">
+    <script>
+        /* Show one stable first frame for every role while the database loads. */
+        document.body.classList.add('auth-pending');
+    </script>
+
+    <div class="app-auth-loader" role="status" aria-live="polite" aria-label="Loading">
         <div class="app-auth-loader-content">
             <div class="app-auth-loader-mark"><i data-lucide="chef-hat"></i></div>
-            <span>Loading your workspace</span>
+            <span>Loading</span>
         </div>
     </div>
 
@@ -2767,6 +2772,7 @@
     let isMenuLoading = menuData.length === 0;
     let cachedAuthUser = readCachedAuthUser();
     let isAuthLoading = true;
+    let isMenuBootstrapComplete = false;
     let stopOrderTrackingListener = null;
     let stopKitchenOrdersListener = null;
     let kitchenListenerInitialized = false;
@@ -2789,7 +2795,13 @@
         storeOpen: true
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
+    function revealAppWhenReady() {
+        if (!isAuthLoading && isMenuBootstrapComplete) {
+            document.body.classList.remove('auth-pending');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
         const itemWorkspace = document.getElementById('menu-item-workspace-card');
         const itemModalBody = document.getElementById('item-editor-modal-body');
         if (itemWorkspace && itemModalBody) itemModalBody.appendChild(itemWorkspace);
@@ -2803,9 +2815,13 @@
         renderNavigation();
         renderAuthBar();
         lucide.createIcons();
-        loadMenuItems();
-        loadMenuCategories();
-        loadStoreSettings();
+        /* Fetch the menu in dependency order so customers never see cached,
+           partial, or incorrectly categorized items. */
+        await loadMenuItems();
+        await Promise.all([loadMenuCategories(), loadStoreSettings()]);
+        isMenuBootstrapComplete = true;
+        renderMenu();
+        revealAppWhenReady();
 
         const modals = ['auth-modal', 'settings-modal', 'admin-user-edit-modal', 'guest-checkout-modal', 'item-customization-modal', 'item-editor-modal', 'category-manager-modal'];
         modals.forEach(id => {
@@ -2874,7 +2890,7 @@
             state.orders = [];
             renderOrdersTable();
         }
-        document.body.classList.remove('auth-pending');
+        revealAppWhenReady();
     });
 
     function initTheme() {
