@@ -1599,6 +1599,26 @@
             max-width: 850px;
             margin: 0 auto;
         }
+        .track-order-header-btn {
+            display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:0 13px;
+            border:1px solid var(--border-color); border-radius:10px; background:var(--bg-card);
+            color:var(--text-main); font:inherit; font-size:.82rem; font-weight:700; cursor:pointer;
+            transition:border-color .2s ease, background .2s ease, transform .2s ease;
+        }
+        .track-order-header-btn:hover { border-color:var(--accent); background:var(--bg-input); transform:translateY(-1px); }
+        .track-order-header-btn svg { width:16px; height:16px; color:var(--accent); }
+        .tracking-lookup { max-width:850px; margin:0 auto 1rem; padding:1.25rem; }
+        .tracking-lookup-row { display:flex; gap:10px; align-items:flex-end; }
+        .tracking-lookup-row .form-group { flex:1; margin:0; }
+        .tracking-recent-list { display:grid; gap:10px; margin-top:1rem; }
+        .tracking-recent-order {
+            width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px;
+            padding:13px 14px; border:1px solid var(--border-color); border-radius:12px;
+            background:var(--bg-input); color:var(--text-main); text-align:left; cursor:pointer;
+        }
+        .tracking-recent-order:hover { border-color:var(--accent); }
+        .tracking-recent-order small { display:block; margin-top:3px; color:var(--text-muted); }
+        .tracking-status-pill { flex-shrink:0; padding:5px 9px; border-radius:999px; background:rgba(245,158,11,.12); color:var(--warning); font-size:.7rem; font-weight:800; text-transform:capitalize; }
 
         .tracking-animation {
             width: 92px;
@@ -1670,6 +1690,9 @@
         .tracking-step.active .tracking-step-icon { animation: trackingPulse 1.8s infinite; }
 
         @media (max-width: 600px) {
+            .track-order-header-btn span { display:none; }
+            .track-order-header-btn { width:38px; padding:0; justify-content:center; }
+            .tracking-lookup-row { align-items:stretch; flex-direction:column; }
             .tracking-steps { grid-template-columns: 1fr; gap: 1rem; }
             .tracking-step { display: flex; align-items: center; gap: 12px; text-align: left; }
             .tracking-step-icon { margin: 0; flex-shrink: 0; }
@@ -2013,6 +2036,13 @@
             .overview-order-row > :last-child { display:none; }
         }
 
+        /* Production polish and reporting additions */
+        .menu-discovery,.report-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px}.menu-discovery .search-bar{flex:1;min-width:220px}.menu-discovery select,.report-toolbar select,.report-toolbar input{width:auto;min-width:145px}
+        .customer-orders{margin-top:28px}.customer-order-grid{display:grid;gap:12px}.customer-order-card{padding:16px;border:1px solid var(--border-color);border-radius:var(--radius-md);background:var(--bg-card)}.customer-order-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.customer-order-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+        .kitchen-card.overdue{border-color:rgba(239,68,68,.65);box-shadow:0 0 0 2px rgba(239,68,68,.1)}.wait-chip{display:inline-flex;padding:4px 8px;border-radius:999px;background:var(--bg-input);font-size:.67rem;font-weight:800;margin-top:5px}.wait-chip.overdue{background:rgba(239,68,68,.14);color:var(--danger)}
+        .analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0 22px}.mini-chart{padding:16px}.bar-row{display:grid;grid-template-columns:minmax(70px,1fr) 3fr 36px;gap:9px;align-items:center;margin:9px 0;font-size:.72rem}.bar-track{height:8px;border-radius:99px;background:var(--bg-input);overflow:hidden}.bar-fill{height:100%;background:var(--accent);border-radius:inherit}
+        .connection-banner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1200;padding:10px 15px;border-radius:999px;background:#111827;color:white;font-size:.76rem;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}.drag-handle{cursor:grab;color:var(--text-muted)}.scheduled-note{font-size:.66rem;color:var(--info);margin-top:3px}
+        @media(max-width:800px){.analytics-grid{grid-template-columns:1fr}.menu-discovery>*{width:100%!important}.customer-order-head{display:block}}
     </style>
 </head>
 <body>
@@ -2053,7 +2083,7 @@
 
     <div class="header-wrapper">
         <header class="global-top-header">
-            <a href="#" class="logo-area" onclick="handleLogoNavigation(event)">
+            <a href="#portal-panel" class="logo-area" onclick="handleLogoNavigation(event)" aria-label="Go to home">
                 <div class="logo-icon">
                     <i data-lucide="chef-hat"></i>
                 </div>
@@ -2080,6 +2110,9 @@
 
             <div class="top-header-actions">
                 <button class="mobile-workspace-toggle" type="button" onclick="toggleWorkspaceMenu()" aria-label="Open workspace menu"><i data-lucide="menu"></i></button>
+                <button class="track-order-header-btn" id="track-order-header-btn" type="button" onclick="openOrderTracking()" aria-label="Track an order">
+                    <i data-lucide="map-pinned"></i><span>Track Order</span>
+                </button>
                 <button class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                     <i data-lucide="sun"></i>
                 </button>
@@ -2098,13 +2131,14 @@
                         <div class="cart-items" id="cart-container">
                         </div>
                         <div class="cart-summary">
+                            <div class="form-group" style="margin-bottom:12px"><label for="fulfilment-type">Receive your order</label><select id="fulfilment-type" onchange="renderCart()"><option value="delivery">Delivery</option><option value="pickup">Pickup</option></select></div>
                             <div class="summary-row">
                                 <span>Subtotal</span>
                                 <span id="subtotal-val">Rs. 0</span>
                             </div>
                             <div class="summary-row">
-                                <span>Delivery Fee</span>
-                                <span>Rs. 150</span>
+                                <span id="fee-label">Delivery Fee</span>
+                                <span id="fee-val">Rs. 150</span>
                             </div>
                             <div class="summary-row total">
                                 <span>Total Amount</span>
@@ -2175,11 +2209,21 @@
                 <i data-lucide="store" style="width:18px; vertical-align:middle; margin-right:6px;"></i>
                 The kitchen is currently closed. You may browse the menu, but ordering is unavailable.
             </div>
+            <div class="menu-discovery" aria-label="Menu search and filters">
+                <div class="search-bar"><i data-lucide="search" style="width:17px;color:var(--text-muted)"></i><input id="customer-menu-search" type="search" placeholder="Search dishes or ingredients…" oninput="setCustomerMenuFilter('search',this.value)"></div>
+                <select id="customer-category-filter" aria-label="Filter by category" onchange="setCustomerMenuFilter('category',this.value)"><option value="all">All categories</option></select>
+                <select id="customer-availability-filter" aria-label="Filter by availability" onchange="setCustomerMenuFilter('availability',this.value)"><option value="available">Available now</option><option value="all">All items</option></select>
+                <select id="customer-price-filter" aria-label="Filter by price" onchange="setCustomerMenuFilter('price',this.value)"><option value="all">Any price</option><option value="500">Up to Rs. 500</option><option value="1000">Up to Rs. 1,000</option><option value="2000">Up to Rs. 2,000</option></select>
+            </div>
             <div class="layout-grid cols-1">
                 <div>
                     <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 700;">Curated Snack Menu</h3>
                     <div class="menu-categories" id="menu-container">
                     </div>
+                    <section class="customer-orders" id="customer-order-history" style="display:none">
+                        <div style="margin-bottom:14px"><h3>Your Orders</h3><p style="color:var(--text-muted);margin-top:4px">Live and past orders from your account.</p></div>
+                        <div id="customer-order-history-list" class="customer-order-grid"></div>
+                    </section>
                 </div>
             </div>
         </section>
@@ -2260,6 +2304,20 @@
                 </button>
             </div>
 
+            <div class="card tracking-lookup" id="tracking-lookup">
+                <div class="tracking-lookup-row">
+                    <div class="form-group">
+                        <label for="tracking-reference">Order reference</label>
+                        <input id="tracking-reference" type="text" placeholder="For example, ORD-12345678" autocomplete="off">
+                    </div>
+                    <button class="btn-primary" type="button" onclick="trackSavedOrderReference()">
+                        <i data-lucide="search"></i> Check Status
+                    </button>
+                </div>
+                <p style="font-size:.75rem; color:var(--text-muted); margin-top:9px;">Orders placed on this device appear below and can be tracked securely.</p>
+                <div class="tracking-recent-list" id="tracking-recent-list"></div>
+            </div>
+
             <div class="card tracking-card" id="tracking-content">
                 <div style="text-align:center; padding:3rem; color:var(--text-muted);">
                     Select an order to begin tracking.
@@ -2275,6 +2333,14 @@
                 </div>
             </div>
 
+            <div class="report-toolbar">
+                <input id="report-date-from" type="date" aria-label="Report start date" onchange="renderOrdersTable()">
+                <input id="report-date-to" type="date" aria-label="Report end date" onchange="renderOrdersTable()">
+                <select id="report-status-filter" onchange="renderOrdersTable()"><option value="all">All statuses</option><option value="pending">Pending</option><option value="preparing">Preparing</option><option value="ready">Ready</option><option value="completed">Completed</option><option value="rejected">Rejected</option></select>
+                <button class="btn-secondary" type="button" onclick="exportOrdersCsv()"><i data-lucide="download"></i> Export CSV</button>
+                <button class="btn-secondary" type="button" onclick="requestOrderNotifications()"><i data-lucide="bell"></i> Notifications</button>
+            </div>
+            <div class="analytics-grid" id="order-analytics-grid"></div>
             <div id="order-manager-dashboard" style="display:none; margin-bottom:2.5rem;">
                 <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
                     <div><h3 style="font-size:1.15rem;">Today's Overview</h3><p style="font-size:.8rem; color:var(--text-muted); margin-top:4px;">Live operational totals for today only.</p></div>
@@ -2382,6 +2448,9 @@
                     <button type="button" class="btn-secondary" onclick="toggleCategoryManagerModal(true)">
                         <i data-lucide="tags" style="width:17px;"></i> Manage Categories
                     </button>
+                    <button type="button" class="btn-secondary" onclick="saveMenuOrder()">
+                        <i data-lucide="grip-vertical" style="width:17px;"></i> Save Item Order
+                    </button>
                 </div>
             </div>
 
@@ -2429,6 +2498,10 @@
                         <div class="form-group">
                             <label for="menu-item-img">Image Link URL</label>
                             <input type="url" id="menu-item-img" placeholder="https://example.com/item-image.jpg" required>
+                        </div>
+                        <div class="layout-grid cols-2">
+                            <div class="form-group"><label for="menu-available-from">Available From</label><input type="datetime-local" id="menu-available-from"><small style="color:var(--text-muted)">Optional start time</small></div>
+                            <div class="form-group"><label for="menu-available-until">Available Until</label><input type="datetime-local" id="menu-available-until"><small style="color:var(--text-muted)">Optional end time</small></div>
                         </div>
                         <div class="form-group">
                             <label for="menu-item-desc">Brief Description</label>
@@ -2780,6 +2853,7 @@
         <i data-lucide="check-circle" id="toast-icon" style="color: var(--accent)"></i>
         <span id="toast-message">Success message text!</span>
     </div>
+    <div class="connection-banner" id="connection-banner" role="status" aria-live="polite"></div>
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -2793,7 +2867,9 @@
         getDocs,
         setDoc,
         deleteDoc,
-        onSnapshot
+        onSnapshot,
+        query,
+        where
     } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
     import { 
         getAuth, 
@@ -2883,6 +2959,7 @@
     let hasCommittedInitialRender = false;
     let stopOrderTrackingListener = null;
     let stopKitchenOrdersListener = null;
+    let stopCustomerOrdersListener = null;
     let kitchenListenerInitialized = false;
     let draggedCategoryName = null;
     
@@ -2900,7 +2977,12 @@
         adminMenuCategoryFilter: 'all',
         adminMenuStatusFilter: 'all',
         auditLogs: [],
-        storeOpen: true
+        storeOpen: true,
+        customerMenuSearch: '',
+        customerMenuCategory: 'all',
+        customerMenuAvailability: 'available',
+        customerMenuPrice: 'all',
+        customerOrders: []
     };
 
     function revealAppWhenReady() {
@@ -3036,6 +3118,7 @@
         } else {
             state.orders = [];
             renderOrdersTable();
+            loadCustomerOrderHistory();
         }
         revealAppWhenReady();
     });
@@ -3142,6 +3225,8 @@
         const canUseCart = displayRole === 'customer';
         if (cartWrapper) cartWrapper.style.display = canUseCart ? 'block' : 'none';
         if (!canUseCart) document.getElementById('cart-pane-element')?.classList.add('hidden');
+        const trackingButton = document.getElementById('track-order-header-btn');
+        if (trackingButton) trackingButton.style.display = isStaff ? 'none' : 'inline-flex';
 
         const sideVisibility = {
             overview: hasSuperAdminAccess(),
@@ -3678,6 +3763,7 @@
     }
 
     function renderMenu(refreshIcons = true) {
+        syncCustomerCategoryFilter();
         const container = document.getElementById('menu-container');
         const displayRole = state.currentUser?.role || (isAuthLoading ? cachedAuthUser?.role : null) || 'customer';
         const canAddToCart = displayRole === 'customer';
@@ -3695,7 +3781,20 @@
             return;
         }
 
-        const visibleMenuItems = menuData.filter(item => item.isVisible !== false && !state.hiddenCategories.includes(item.category));
+        const now = Date.now();
+        const visibleMenuItems = menuData.filter(item => {
+            const starts = item.availableFrom ? new Date(item.availableFrom).getTime() : 0;
+            const ends = item.availableUntil ? new Date(item.availableUntil).getTime() : Infinity;
+            const scheduledNow = (!starts || starts <= now) && (!ends || ends >= now);
+            const searchable = `${item.name || ''} ${item.desc || ''} ${item.category || ''}`.toLowerCase();
+            return item.isVisible !== false
+                && !state.hiddenCategories.includes(item.category)
+                && scheduledNow
+                && (!state.customerMenuSearch || searchable.includes(state.customerMenuSearch.toLowerCase()))
+                && (state.customerMenuCategory === 'all' || item.category === state.customerMenuCategory)
+                && (state.customerMenuAvailability === 'all' || isMenuItemAvailable(item))
+                && (state.customerMenuPrice === 'all' || Number(item.price) <= Number(state.customerMenuPrice));
+        });
         if (state.currentSort === 'price-asc') visibleMenuItems.sort((a, b) => Number(a.price) - Number(b.price));
         if (state.currentSort === 'price-desc') visibleMenuItems.sort((a, b) => Number(b.price) - Number(a.price));
         if (state.currentSort === 'alpha-asc') visibleMenuItems.sort((a, b) => a.name.localeCompare(b.name));
@@ -4027,7 +4126,11 @@
         `).join('');
         const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         document.getElementById('subtotal-val').innerText = `Rs. ${subtotal.toLocaleString()}`;
-        document.getElementById('total-val').innerText = `Rs. ${(subtotal + 150).toLocaleString()}`;
+        const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
+        const fee = fulfilmentType === 'pickup' ? 0 : 150;
+        document.getElementById('fee-label').innerText = fulfilmentType === 'pickup' ? 'Pickup Fee' : 'Delivery Fee';
+        document.getElementById('fee-val').innerText = `Rs. ${fee.toLocaleString()}`;
+        document.getElementById('total-val').innerText = `Rs. ${(subtotal + fee).toLocaleString()}`;
     }
 
     function alterQty(cartKey, delta) {
@@ -4054,7 +4157,8 @@
             return;
         }
 
-        if (!state.currentUser.phone || !state.currentUser.street || !state.currentUser.city) {
+        const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
+        if (!state.currentUser.phone || (fulfilmentType === 'delivery' && (!state.currentUser.street || !state.currentUser.city))) {
             toggleCartVisibility();
             toggleSettingsModal(true);
             triggerToast("Please add your mobile number and delivery address first.", "danger");
@@ -4136,11 +4240,13 @@
         try { validatedItems = buildValidatedOrderItems(); }
         catch (error) { triggerToast(error.message, 'danger'); return false; }
         const subtotal = validatedItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
-        const deliveryFee = 150;
+        const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
+        const deliveryFee = fulfilmentType === 'pickup' ? 0 : 150;
         const orderRef = doc(collection(db, "orders"));
         const orderData = {
             orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
             ...customerDetails,
+            fulfilmentType,
             items: validatedItems.map(item => ({ ...item, mealItems: item.selectedMealItems })),
             subtotal,
             deliveryFee,
@@ -4152,6 +4258,7 @@
 
         try {
             await setDoc(orderRef, orderData);
+            rememberTrackableOrder(orderRef.id, orderData);
             state.cart = [];
             renderCart();
             if (closeCart) document.getElementById('cart-pane-element').classList.add('hidden');
@@ -4176,6 +4283,82 @@
         });
     }
 
+    const TRACKABLE_ORDERS_KEY = 'snack-station-trackable-orders-v1';
+
+    function getTrackableOrders() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(TRACKABLE_ORDERS_KEY) || '[]');
+            return Array.isArray(saved) ? saved.filter(order => order?.id && order?.orderNumber).slice(0, 10) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function rememberTrackableOrder(orderId, order) {
+        const saved = getTrackableOrders().filter(item => item.id !== orderId);
+        saved.unshift({
+            id: orderId,
+            orderNumber: order.orderNumber,
+            status: order.status || 'pending',
+            createdAt: order.createdAt || new Date().toISOString()
+        });
+        localStorage.setItem(TRACKABLE_ORDERS_KEY, JSON.stringify(saved.slice(0, 10)));
+    }
+
+    function openOrderTracking() {
+        if (stopOrderTrackingListener) {
+            stopOrderTrackingListener();
+            stopOrderTrackingListener = null;
+        }
+        switchPanel('tracking');
+        renderTrackingLookup();
+        document.getElementById('tracking-content').innerHTML = `
+            <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+                Choose a recent order or enter its order reference to see whether it has been accepted or rejected.
+            </div>`;
+        lucide.createIcons();
+    }
+
+    function renderTrackingLookup() {
+        const list = document.getElementById('tracking-recent-list');
+        if (!list) return;
+        const orders = getTrackableOrders();
+        list.innerHTML = orders.length ? orders.map(order => {
+            const date = new Date(order.createdAt);
+            const dateLabel = Number.isNaN(date.getTime()) ? '' : date.toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+            const statusLabel = order.status === 'preparing' ? 'accepted' : (order.status || 'pending');
+            return `<button class="tracking-recent-order" type="button" onclick='trackSavedOrder(${JSON.stringify(order.id)})'>
+                <span><strong>${escapeHtml(order.orderNumber)}</strong><small>${escapeHtml(dateLabel || 'Recent order')}</small></span>
+                <span class="tracking-status-pill">${escapeHtml(statusLabel)}</span>
+            </button>`;
+        }).join('') : '<p style="padding:8px 0; color:var(--text-muted); font-size:.8rem;">No orders have been placed on this device yet.</p>';
+        lucide.createIcons();
+    }
+
+    async function trackSavedOrder(orderId) {
+        const savedOrder = getTrackableOrders().find(order => order.id === orderId);
+        if (!savedOrder) return triggerToast('This order is not saved on this device.', 'danger');
+        document.getElementById('tracking-reference').value = savedOrder.orderNumber;
+        try {
+            const snapshot = await getDoc(doc(db, 'orders', orderId));
+            if (!snapshot.exists()) return triggerToast('Order not found.', 'danger');
+            const order = { id: snapshot.id, ...snapshot.data() };
+            rememberTrackableOrder(orderId, order);
+            renderTrackingLookup();
+            showOrderTracking(orderId, order);
+        } catch (error) {
+            triggerToast(error.message || 'Could not retrieve this order.', 'danger');
+        }
+    }
+
+    function trackSavedOrderReference() {
+        const reference = document.getElementById('tracking-reference').value.trim().toUpperCase();
+        if (!reference) return triggerToast('Enter your order reference.', 'danger');
+        const savedOrder = getTrackableOrders().find(order => String(order.orderNumber).toUpperCase() === reference);
+        if (!savedOrder) return triggerToast('No matching order was found on this device.', 'danger');
+        trackSavedOrder(savedOrder.id);
+    }
+
     function renderTrackingOrder(order) {
         const container = document.getElementById('tracking-content');
         if (!container) return;
@@ -4189,7 +4372,12 @@
         const normalizedStatus = order.status === 'new' ? 'pending' : order.status === 'delivery' ? 'ready' : order.status;
         const isRejected = normalizedStatus === 'rejected';
         const currentIndex = Math.max(0, stages.findIndex(stage => stage.key === normalizedStatus));
-        const currentStage = isRejected ? { label: 'Order Rejected', icon: 'circle-x' } : stages[currentIndex];
+        const isAccepted = ['preparing', 'ready', 'completed'].includes(normalizedStatus);
+        const currentStage = isRejected
+            ? { label: 'Order Rejected', icon: 'circle-x' }
+            : isAccepted && normalizedStatus === 'preparing'
+                ? { ...stages[currentIndex], label: 'Order Accepted' }
+                : stages[currentIndex];
         const itemRows = Array.isArray(order.items) ? order.items.map(item => `
             <div class="summary-row">
                 <span>${item.quantity} × ${item.name}${item.selectedVariant?.name ? ` (${item.selectedVariant.name})` : ''}${item.selectedAddons?.length ? ` + ${item.selectedAddons.map(addon => addon.name).join(', ')}` : ''}${item.instructions ? `<small style="display:block; color:var(--warning);">Note: ${item.instructions}</small>` : ''}</span>
@@ -4230,6 +4418,8 @@
                 </div>
             </div>
         `;
+        rememberTrackableOrder(order.id, order);
+        renderTrackingLookup();
         lucide.createIcons();
     }
 
@@ -4303,6 +4493,9 @@
             if (hasNewOrder) {
                 playNewOrderSound();
                 triggerToast("New kitchen order received!");
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('New Snack Station order', { body:'A pending order is waiting for review.', tag:'snack-station-new-order' });
+                }
             }
             kitchenListenerInitialized = true;
         }, error => {
@@ -4524,7 +4717,16 @@
         const board = document.getElementById('kitchen-board');
         if (!board) return;
         const orderManagerView = hasOrderManagerAccess();
-        const visibleOrders = orderManagerView ? state.orders.filter(isOrderFromToday) : state.orders;
+        const fromValue = document.getElementById('report-date-from')?.value;
+        const toValue = document.getElementById('report-date-to')?.value;
+        const statusValue = document.getElementById('report-status-filter')?.value || 'all';
+        const filteredForReport = state.orders.filter(order => {
+            const date = getOrderDate(order);
+            return (!fromValue || (date && date >= new Date(`${fromValue}T00:00:00`)))
+                && (!toValue || (date && date <= new Date(`${toValue}T23:59:59`)))
+                && (statusValue === 'all' || String(order.status || 'pending') === statusValue);
+        });
+        const visibleOrders = orderManagerView ? filteredForReport.filter(isOrderFromToday) : filteredForReport;
         const managerDashboard = document.getElementById('order-manager-dashboard');
         if (managerDashboard) managerDashboard.style.display = orderManagerView ? 'block' : 'none';
         const revenueCard = document.getElementById('revenue-stat-card');
@@ -4597,12 +4799,15 @@
         document.getElementById('stat-completed-count').textContent = completedOrders.length;
         document.getElementById('stat-active-count').textContent = visibleOrders.filter(order => !['completed', 'rejected'].includes(order.status)).length;
         updateStaffOverview();
+        renderOrderAnalytics(visibleOrders);
         lucide.createIcons();
     }
 
     function renderKitchenOrderCard(order, columnKey) {
         const orderNumber = order.orderNumber || order.id;
         const createdTime = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const waitMinutes = Math.max(0, Math.floor((Date.now() - (getOrderDate(order)?.getTime() || Date.now())) / 60000));
+        const overdue = columnKey === 'new' && waitMinutes >= 10;
         const items = Array.isArray(order.items) ? order.items.map(item => `
             <div>
                 <strong>${Number(item.quantity || 1)} × ${item.name}</strong>
@@ -4624,8 +4829,8 @@
             <div class="kitchen-card-actions"><button class="btn-primary" onclick='completeKitchenOrder(${JSON.stringify(order.id)})'><i data-lucide="badge-check" style="width:14px;"></i> Complete Order</button></div>
         `;
         return `
-            <article class="kitchen-card">
-                <div class="kitchen-card-head"><div><strong>${orderNumber}</strong><p style="font-size:.7rem; color:var(--text-muted); margin-top:3px;">${order.customerName || 'Guest'} · ${createdTime}</p></div><strong>Rs. ${Number(order.total || 0).toLocaleString()}</strong></div>
+            <article class="kitchen-card ${overdue ? 'overdue' : ''}">
+                <div class="kitchen-card-head"><div><strong>${orderNumber}</strong><p style="font-size:.7rem; color:var(--text-muted); margin-top:3px;">${order.customerName || 'Guest'} · ${createdTime}</p><span class="wait-chip ${overdue ? 'overdue' : ''}">${overdue ? 'Needs attention · ' : ''}${waitMinutes} min waiting</span></div><strong>Rs. ${Number(order.total || 0).toLocaleString()}</strong></div>
                 <div class="kitchen-card-items">${items}</div>
                 <p style="font-size:.72rem; color:var(--text-muted);">${order.customerPhone || ''}${order.deliveryAddress ? ` · ${order.deliveryAddress}` : ''}</p>
                 ${actions}
@@ -4677,12 +4882,12 @@
         }
 
         tableBody.innerHTML = filteredItems.length ? filteredItems.map(item => `
-            <tr>
+            <tr draggable="true" data-item-id="${item.id}" ondragstart="startItemDrag(event)" ondragover="event.preventDefault()" ondrop="dropItemBefore(event)">
                 <td>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <img src="${item.img}" alt="${item.name}" style="width:48px; height:48px; object-fit:cover; border-radius:10px;">
                         <div>
-                            <strong>${item.name}</strong>
+                            <strong><span class="drag-handle" aria-hidden="true">⋮⋮</span> ${item.name}</strong>
                             <p style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">${item.desc}</p>
                         </div>
                     </div>
@@ -4706,6 +4911,7 @@
                         <button class="btn-action-edit" onclick='editMenuItem(${JSON.stringify(String(item.id))})'>
                             <i data-lucide="pencil" style="width:14px;"></i> Edit
                         </button>
+                        <button class="btn-secondary" onclick='duplicateMenuItem(${JSON.stringify(String(item.id))})' title="Duplicate item"><i data-lucide="copy" style="width:14px;"></i></button>
                         <button class="btn-danger" onclick='removeMenuItem(${JSON.stringify(String(item.id))})'>
                             <i data-lucide="trash-2" style="width:14px;"></i> Remove
                         </button>
@@ -5339,6 +5545,8 @@
             price: Number(document.getElementById('menu-item-price').value),
             category,
             img: document.getElementById('menu-item-img').value.trim(),
+            availableFrom: document.getElementById('menu-available-from').value ? new Date(document.getElementById('menu-available-from').value).toISOString() : null,
+            availableUntil: document.getElementById('menu-available-until').value ? new Date(document.getElementById('menu-available-until').value).toISOString() : null,
             desc: document.getElementById('menu-item-desc').value.trim(),
             labels: [...document.querySelectorAll('input[name="menu-label"]:checked')].map(input => input.value),
             variants: collectAdminOptions(),
@@ -5399,6 +5607,8 @@
             if (mealMode === 'existing' && !item.mealItems?.length) addMealItemRow();
         }
         document.getElementById('menu-item-img').value = item.img || '';
+        document.getElementById('menu-available-from').value = item.availableFrom ? new Date(item.availableFrom).toISOString().slice(0,16) : '';
+        document.getElementById('menu-available-until').value = item.availableUntil ? new Date(item.availableUntil).toISOString().slice(0,16) : '';
         document.getElementById('menu-item-desc').value = item.desc;
         document.querySelectorAll('input[name="menu-label"]').forEach(input => {
             input.checked = Array.isArray(item.labels) && item.labels.includes(input.value);
@@ -5453,6 +5663,127 @@
         lucide.createIcons();
     }
 
+    function setCustomerMenuFilter(type, value) {
+        if (type === 'search') state.customerMenuSearch = value.trim();
+        if (type === 'category') state.customerMenuCategory = value;
+        if (type === 'availability') state.customerMenuAvailability = value;
+        if (type === 'price') state.customerMenuPrice = value;
+        renderMenu();
+    }
+
+    function syncCustomerCategoryFilter() {
+        const select = document.getElementById('customer-category-filter');
+        if (!select) return;
+        const selected = state.customerMenuCategory;
+        select.innerHTML = '<option value="all">All categories</option>' + state.categories.filter(category => !state.hiddenCategories.includes(category)).map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+        select.value = selected;
+    }
+
+    function loadCustomerOrderHistory() {
+        if (stopCustomerOrdersListener) { stopCustomerOrdersListener(); stopCustomerOrdersListener = null; }
+        state.customerOrders = [];
+        if (!state.currentUser || state.currentUser.role !== 'customer') {
+            renderCustomerOrderHistory();
+            return;
+        }
+        stopCustomerOrdersListener = onSnapshot(query(collection(db, 'orders'), where('userId', '==', state.currentUser.uid)), snapshot => {
+            state.customerOrders = snapshot.docs.map(orderDoc => ({ id: orderDoc.id, ...orderDoc.data() })).sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+            renderCustomerOrderHistory();
+        }, error => triggerToast(error.message || 'Could not load your order history.', 'danger'));
+    }
+
+    function renderCustomerOrderHistory() {
+        const section = document.getElementById('customer-order-history');
+        const list = document.getElementById('customer-order-history-list');
+        const show = state.currentUser?.role === 'customer';
+        if (!section || !list) return;
+        section.style.display = show ? 'block' : 'none';
+        if (!show) return;
+        list.innerHTML = state.customerOrders.length ? state.customerOrders.map(order => {
+            const status = String(order.status || 'pending');
+            const canCancel = ['pending','new'].includes(status);
+            const estimate = order.estimatedReadyAt ? new Date(order.estimatedReadyAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+            return `<article class="customer-order-card"><div class="customer-order-head"><div><strong>${escapeHtml(order.orderNumber || order.id)}</strong><p style="color:var(--text-muted);font-size:.74rem;margin-top:4px">${getOrderDate(order)?.toLocaleString() || ''} · ${Array.isArray(order.items) ? order.items.length : 0} item(s)</p></div><span class="badge-status ${status}">${status === 'preparing' ? 'Accepted · Preparing' : escapeHtml(status)}</span></div>${estimate && status === 'preparing' ? `<p style="margin-top:10px;color:var(--info)">Estimated ready by <strong>${estimate}</strong></p>` : ''}${status === 'rejected' ? `<p style="margin-top:10px;color:var(--danger)">Reason: ${escapeHtml(order.rejectionReason || 'Unable to fulfil the order')}</p>` : ''}<div class="customer-order-actions"><button class="btn-secondary" onclick='trackSavedOrder(${JSON.stringify(order.id)})'>Track</button><button class="btn-secondary" onclick='orderAgain(${JSON.stringify(order.id)})'>Order Again</button>${canCancel ? `<button class="btn-danger" onclick='cancelPendingOrder(${JSON.stringify(order.id)})'>Cancel Order</button>` : ''}</div></article>`;
+        }).join('') : '<div class="card" style="text-align:center;color:var(--text-muted)">No orders yet. Your first order will appear here.</div>';
+        lucide.createIcons();
+    }
+
+    async function cancelPendingOrder(orderId) {
+        const order = state.customerOrders.find(item => item.id === orderId);
+        if (!order || !['pending','new'].includes(String(order.status || 'pending'))) return;
+        if (!confirm(`Cancel ${order.orderNumber || 'this order'}? This cannot be undone.`)) return;
+        try {
+            await setDoc(doc(db, 'orders', orderId), { status:'cancelled', cancelledAt:new Date().toISOString(), cancelledById:state.currentUser.uid, updatedAt:new Date().toISOString() }, { merge:true });
+            triggerToast('Order cancelled.');
+        } catch (error) { triggerToast(error.message || 'Could not cancel the order.', 'danger'); }
+    }
+
+    function orderAgain(orderId) {
+        const order = state.customerOrders.find(item => item.id === orderId);
+        if (!order || !Array.isArray(order.items)) return;
+        const available = order.items.filter(saved => isMenuItemAvailable(menuData.find(item => String(item.id) === String(saved.id || saved.itemId))));
+        if (!available.length) { triggerToast('Those items are not currently available.', 'danger'); return; }
+        state.cart = available.map(item => ({...item, quantity:Number(item.quantity || 1)}));
+        renderCart();
+        document.getElementById('cart-pane-element')?.classList.remove('hidden');
+        triggerToast(`${available.length} item(s) restored to your basket. Review prices before checkout.`);
+    }
+
+    function renderOrderAnalytics(orders) {
+        const host = document.getElementById('order-analytics-grid');
+        if (!host || !state.currentUser || (!hasAdminAccess() && !hasOrderManagerAccess())) return;
+        const itemCounts = {}, hourCounts = {};
+        orders.forEach(order => {
+            (order.items || []).forEach(item => itemCounts[item.name || 'Item'] = (itemCounts[item.name || 'Item'] || 0) + Number(item.quantity || 1));
+            const hour = getOrderDate(order)?.getHours(); if (hour != null) hourCounts[`${String(hour).padStart(2,'0')}:00`] = (hourCounts[`${String(hour).padStart(2,'0')}:00`] || 0) + 1;
+        });
+        const rejected = orders.filter(order => order.status === 'rejected').length;
+        const bars = (values, limit=4) => {
+            const rows = Object.entries(values).sort((a,b)=>b[1]-a[1]).slice(0,limit), max = Math.max(1,...rows.map(row=>row[1]));
+            return rows.length ? rows.map(([label,value])=>`<div class="bar-row"><span>${escapeHtml(label)}</span><span class="bar-track"><span class="bar-fill" style="display:block;width:${Math.round(value/max*100)}%"></span></span><strong>${value}</strong></div>`).join('') : '<p style="color:var(--text-muted);font-size:.75rem">No data in this range.</p>';
+        };
+        host.innerHTML = `<div class="card mini-chart"><h3>Popular Items</h3>${bars(itemCounts)}</div><div class="card mini-chart"><h3>Peak Hours</h3>${bars(hourCounts)}</div><div class="card mini-chart"><h3>Rejection Rate</h3><p style="font-size:2rem;font-weight:850;margin-top:14px">${orders.length ? Math.round(rejected/orders.length*100) : 0}%</p><p style="color:var(--text-muted);font-size:.75rem">${rejected} of ${orders.length} orders</p></div>`;
+    }
+
+    function exportOrdersCsv() {
+        const rows = [['Order','Created','Customer','Type','Status','Total','Items']];
+        state.orders.forEach(order => rows.push([order.orderNumber || order.id, order.createdAt || '', order.customerName || '', order.fulfilmentType || order.deliveryType || 'delivery', order.status || 'pending', Number(order.total || 0), (order.items || []).map(item => `${item.quantity || 1}x ${item.name}`).join('; ')]));
+        const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(',')).join('\r\n');
+        const link = Object.assign(document.createElement('a'), { href:URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})), download:`snack-station-orders-${new Date().toISOString().slice(0,10)}.csv` });
+        link.click(); URL.revokeObjectURL(link.href); triggerToast('Order report exported.');
+    }
+
+    async function requestOrderNotifications() {
+        if (!('Notification' in window)) return triggerToast('Browser notifications are not supported.', 'danger');
+        const permission = await Notification.requestPermission();
+        triggerToast(permission === 'granted' ? 'New-order notifications enabled.' : 'Notification permission was not granted.', permission === 'granted' ? 'success' : 'danger');
+    }
+
+    let draggedItemId = null;
+    function startItemDrag(event) { draggedItemId = event.currentTarget.dataset.itemId; event.dataTransfer.effectAllowed = 'move'; }
+    function dropItemBefore(event) {
+        event.preventDefault();
+        const targetId = event.currentTarget.dataset.itemId;
+        if (!draggedItemId || draggedItemId === targetId) return;
+        const from = menuData.findIndex(item => String(item.id) === String(draggedItemId));
+        const to = menuData.findIndex(item => String(item.id) === String(targetId));
+        const [moved] = menuData.splice(from,1); menuData.splice(to,0,moved); renderAdminMenuTable();
+    }
+    async function saveMenuOrder() {
+        if (!hasAdminAccess()) return;
+        try { await Promise.all(menuData.map((item,index) => setDoc(doc(db,'items',String(item.id)), {sortOrder:index,updatedAt:new Date().toISOString()}, {merge:true}))); triggerToast('Menu order saved.'); }
+        catch (error) { triggerToast(error.message || 'Could not save menu order.', 'danger'); }
+    }
+    async function duplicateMenuItem(itemId) {
+        if (!hasAdminAccess()) return;
+        const source = menuData.find(item => String(item.id) === String(itemId)); if (!source) return;
+        const ref = doc(collection(db,'items')); const copy = {...source,name:`${source.name} Copy`,isVisible:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}; delete copy.id;
+        try { await setDoc(ref,copy); await loadMenuItems(); triggerToast('Item duplicated as a hidden draft.'); } catch(error) { triggerToast(error.message || 'Could not duplicate item.','danger'); }
+    }
+
+    window.addEventListener('online', () => { document.getElementById('connection-banner').style.display='none'; triggerToast('Back online.'); });
+    window.addEventListener('offline', () => { const banner=document.getElementById('connection-banner'); banner.style.display='block'; banner.textContent='You are offline. Changes will sync when connection returns.'; });
+
     function applyMenuSorting() {
         renderMenu();
     }
@@ -5467,6 +5798,7 @@
     window.toggleTheme = toggleTheme;
     window.toggleWorkspaceSidebar = toggleWorkspaceSidebar;
     window.toggleWorkspaceMenu = toggleWorkspaceMenu;
+    window.handleLogoNavigation = handleLogoNavigation;
     window.switchPanel = switchPanel;
     window.toggleCartVisibility = toggleCartVisibility;
     window.placeOrder = placeOrder;
@@ -5491,6 +5823,9 @@
     window.handleGoogleSignIn = handleGoogleSignIn;
     window.submitGuestOrder = submitGuestOrder;
     window.stopTrackingAndReturn = stopTrackingAndReturn;
+    window.openOrderTracking = openOrderTracking;
+    window.trackSavedOrder = trackSavedOrder;
+    window.trackSavedOrderReference = trackSavedOrderReference;
     window.handleFormSubmit = handleFormSubmit;
     window.loadAuditLogs = loadAuditLogs;
     window.openNewItemModal = openNewItemModal;
@@ -5531,6 +5866,15 @@
     window.rejectOrder = rejectOrder;
     window.markOrderReady = markOrderReady;
     window.completeKitchenOrder = completeKitchenOrder;
+    window.setCustomerMenuFilter = setCustomerMenuFilter;
+    window.cancelPendingOrder = cancelPendingOrder;
+    window.orderAgain = orderAgain;
+    window.exportOrdersCsv = exportOrdersCsv;
+    window.requestOrderNotifications = requestOrderNotifications;
+    window.startItemDrag = startItemDrag;
+    window.dropItemBefore = dropItemBefore;
+    window.saveMenuOrder = saveMenuOrder;
+    window.duplicateMenuItem = duplicateMenuItem;
     </script>
 </body>
 </html>
