@@ -1407,6 +1407,20 @@
         .store-switch { display:flex; align-items:center; gap:9px; padding:10px 13px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--bg-input); font-size:.8rem; font-weight:700; }
         .store-switch input { width:18px; height:18px; accent-color:var(--success); }
         .store-status-banner { display:none; margin-bottom:18px; padding:13px 16px; border:1px solid rgba(239,68,68,.3); border-radius:var(--radius-md); background:rgba(239,68,68,.1); color:var(--danger); font-weight:700; }
+        .store-status-banner strong { display:block; margin-bottom:3px; }
+        .store-status-banner span { color:inherit; font-size:.78rem; font-weight:600; opacity:.9; }
+        .store-settings-card { margin-bottom:18px; padding:18px; }
+        .store-settings-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; }
+        .store-settings-head p { color:var(--text-muted); font-size:.78rem; margin-top:4px; }
+        .store-settings-grid { display:grid; grid-template-columns:minmax(210px,1.3fr) repeat(2,minmax(130px,.7fr)); gap:12px; align-items:end; }
+        .store-settings-grid .form-group { margin:0; }
+        .weekday-hours { display:grid; grid-template-columns:repeat(4,minmax(110px,1fr)); gap:8px; margin-top:14px; }
+        .weekday-row { padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--bg-input); }
+        .weekday-row label { display:flex; align-items:center; gap:7px; margin-bottom:8px; font-size:.76rem; font-weight:800; }
+        .weekday-row input[type="checkbox"] { width:16px; height:16px; accent-color:var(--accent); }
+        .weekday-time { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .weekday-time input { min-width:0; padding:8px 7px; font-size:.72rem; }
+        .stock-count { display:block; color:var(--text-muted); font-size:.68rem; margin-top:4px; }
         .menu-card.sold-out { opacity:.72; cursor:not-allowed; }
         .sold-out-badge { position:absolute; top:14px; right:14px; z-index:2; padding:6px 10px; border-radius:999px; background:var(--danger); color:#fff; font-size:.7rem; font-weight:800; text-transform:uppercase; }
         .menu-labels { position:absolute; top:12px; right:12px; z-index:2; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:5px; max-width:58%; }
@@ -1420,7 +1434,100 @@
         .addon-limit-grid label { font-size:.72rem; color:var(--text-muted); }
         .addon-limit-grid input { margin-top:5px; }
         #menu-item-workspace-card { border:0; padding:0; background:transparent; overflow:visible; }
-        #item-editor-modal .modal-card { width:min(720px, calc(100vw - 28px)); max-height:90vh; overflow-y:auto; }
+
+        /* The menu editor is a larger workspace, not a compact alert modal. */
+        #item-editor-modal {
+            padding: 24px;
+            align-items: center;
+        }
+
+        #item-editor-modal .modal-card {
+            width: min(760px, 100%);
+            max-width: 760px;
+            height: auto;
+            max-height: calc(100dvh - 48px);
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 18px;
+            box-shadow: 0 28px 80px rgba(0, 0, 0, .48);
+        }
+
+        #item-editor-modal .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            float: none;
+            margin: 0;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-input);
+            transition: color var(--transition), border-color var(--transition), background-color var(--transition);
+        }
+
+        #item-editor-modal .modal-close:hover {
+            color: var(--text-main);
+            border-color: var(--accent);
+            background: var(--bg-card);
+        }
+
+        #item-editor-modal-body {
+            width: 100%;
+            min-width: 0;
+            padding: 30px 32px 28px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+
+        #item-editor-modal-body::-webkit-scrollbar { width: 8px; }
+        #item-editor-modal-body::-webkit-scrollbar-track { background: transparent; }
+        #item-editor-modal-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 999px;
+        }
+
+        #item-editor-modal #menu-item-workspace-card,
+        #item-editor-modal #add-menu-form,
+        #item-editor-modal .form-group,
+        #item-editor-modal .layout-grid {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #item-editor-modal #form-workspace-title {
+            min-height: 38px;
+            margin: 0 52px 24px 0 !important;
+            font-size: 1.35rem;
+            letter-spacing: -.025em;
+        }
+
+        #item-editor-modal .form-group {
+            margin-bottom: 18px;
+        }
+
+        #item-editor-modal .form-group label {
+            margin-bottom: 8px;
+        }
+
+        #item-editor-modal input,
+        #item-editor-modal select,
+        #item-editor-modal textarea {
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        #item-editor-modal textarea {
+            min-height: 104px;
+            resize: vertical;
+        }
+
         #category-manager-modal .modal-card { width:min(560px, calc(100vw - 28px)); }
 
         .category-manager {
@@ -1589,6 +1696,8 @@
         .item-detail-content .modal-title { margin-bottom: 0.6rem; padding-right: 32px; }
 
         @media (max-width: 768px) {
+            .store-settings-grid, .weekday-hours { grid-template-columns:1fr; }
+            .store-settings-head { flex-direction:column; }
             .modal-card.item-detail-modal { padding: 1rem; }
             .item-detail-grid { grid-template-columns: 1fr; gap: 1.25rem; }
             .item-detail-visual { min-height: 0; position: static; }
@@ -1981,6 +2090,7 @@
         /* Admin: list-first, modal editing */
         .admin-workspace-grid { grid-template-columns:1fr !important; }
         #menu-item-workspace-card { display:none; }
+        #item-editor-modal #menu-item-workspace-card { display:block; }
         .admin-menu-list-card { padding:0 !important; background:transparent !important; border:0 !important; }
         .admin-menu-list-card > h3 { margin-bottom:14px !important; font-size:1rem; }
         .admin-control-bar { padding:12px; border:1px solid var(--line-soft); border-radius:12px; background:var(--surface-1); margin-bottom:12px; }
@@ -2154,6 +2264,40 @@
             .report-toolbar > .app-filter-select,
             .report-toolbar > .btn-secondary{flex-basis:100%;width:100%}
         }
+        @media(max-width:680px){
+            #item-editor-modal{
+                padding:10px;
+                align-items:center;
+            }
+            #item-editor-modal .modal-card{
+                width:100%;
+                max-height:calc(100dvh - 20px);
+                margin:0;
+                border-radius:14px;
+            }
+            #item-editor-modal-body{
+                padding:22px 18px 20px;
+                scrollbar-gutter:auto;
+            }
+            #item-editor-modal .modal-close{
+                top:14px;
+                right:14px;
+                width:36px;
+                height:36px;
+            }
+            #item-editor-modal #form-workspace-title{
+                margin-right:46px !important;
+                margin-bottom:20px !important;
+                font-size:1.18rem;
+            }
+            #item-editor-modal .layout-grid.cols-2{
+                grid-template-columns:1fr;
+                gap:0;
+            }
+            #item-editor-modal .admin-addon-settings{
+                grid-template-columns:1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2318,7 +2462,8 @@
 
             <div class="store-status-banner" id="store-status-banner">
                 <i data-lucide="store" style="width:18px; vertical-align:middle; margin-right:6px;"></i>
-                The kitchen is currently closed. You may browse the menu, but ordering is unavailable.
+                <strong id="store-status-title">The kitchen is currently closed.</strong>
+                <span id="store-status-message">You may browse the menu, but ordering is unavailable.</span>
             </div>
             <div class="menu-discovery" aria-label="Menu search and filters">
                 <div class="search-bar"><i data-lucide="search" style="width:17px;color:var(--text-muted)"></i><input id="customer-menu-search" type="search" placeholder="Search dishes or ingredients…" oninput="setCustomerMenuFilter('search',this.value)"></div>
@@ -2425,7 +2570,7 @@
                         <i data-lucide="search"></i> Check Status
                     </button>
                 </div>
-                <p style="font-size:.75rem; color:var(--text-muted); margin-top:9px;">Orders placed on this device appear below and can be tracked securely.</p>
+                <p id="tracking-lookup-help" style="font-size:.75rem; color:var(--text-muted); margin-top:9px;">Your current guest order can be tracked securely below.</p>
                 <div class="tracking-recent-list" id="tracking-recent-list"></div>
             </div>
 
@@ -2587,6 +2732,18 @@
                             <label for="menu-item-price">Selling Price (Rs.)</label>
                             <input type="number" step="1" id="menu-item-price" placeholder="450" required oninput="updateMealPriceSummary()">
                         </div>
+                        <div class="layout-grid cols-2">
+                            <div class="form-group">
+                                <label for="menu-item-stock">Stock Quantity</label>
+                                <input type="number" min="0" step="1" id="menu-item-stock" placeholder="Leave blank for unlimited">
+                                <small style="color:var(--text-muted)">Zero automatically shows Sold Out.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="menu-item-low-stock">Low-stock Warning</label>
+                                <input type="number" min="0" step="1" id="menu-item-low-stock" value="5">
+                                <small style="color:var(--text-muted)">Visible to staff only.</small>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label for="menu-item-category">Food Category</label>
                             <select id="menu-item-category" onchange="handleMenuCategoryChange()" required></select>
@@ -2668,6 +2825,19 @@
                     </form>
                 </div>
 
+                <div class="card store-settings-card">
+                    <div class="store-settings-head">
+                        <div><h3 style="display:flex;align-items:center;gap:8px;"><i data-lucide="clock-3" style="color:var(--accent)"></i> Ordering Hours</h3><p>Set weekly hours or temporarily close ordering with a message customers can see.</p></div>
+                        <label class="store-switch"><input type="checkbox" id="temporary-closure-toggle"><span>Temporary closure</span></label>
+                    </div>
+                    <div class="store-settings-grid">
+                        <div class="form-group"><label for="closure-message">Customer-facing closure message</label><input id="closure-message" maxlength="160" placeholder="Example: Kitchen maintenance—back at 5:00 PM"></div>
+                        <div class="form-group"><label for="daily-order-capacity">Daily order limit</label><input id="daily-order-capacity" type="number" min="0" step="1" placeholder="Unlimited"></div>
+                        <button class="btn-primary" type="button" onclick="saveStoreSchedule()"><i data-lucide="save"></i> Save Settings</button>
+                    </div>
+                    <div class="weekday-hours" id="weekday-hours"></div>
+                </div>
+
                 <div class="card admin-menu-list-card">
                     <h3 style="font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
                         <i data-lucide="menu" style="color: var(--accent);"></i> Current Kitchen Offerings
@@ -2684,7 +2854,7 @@
                             <option value="soldout">Sold Out</option>
                             <option value="hidden">Hidden</option>
                         </select>
-                        <label class="store-switch" title="Customers can only order while the store is open">
+                        <label class="store-switch" title="Manual master switch for accepting orders">
                             <input type="checkbox" id="store-open-toggle" onchange="setStoreOpen(this.checked)">
                             <span id="store-open-label">Store Open</span>
                         </label>
@@ -2993,6 +3163,7 @@
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
         signOut, 
+        signInAnonymously,
         onAuthStateChanged,
         sendPasswordResetEmail,
         updatePassword,
@@ -3072,6 +3243,7 @@
     let isMenuLoading = menuData.length === 0;
     let cachedAuthUser = readCachedAuthUser();
     let isAuthLoading = true;
+    let hadAuthenticatedSession = Boolean(cachedAuthUser);
     let isMenuBootstrapComplete = false;
     let hasCommittedInitialRender = false;
     let stopOrderTrackingListener = null;
@@ -3095,6 +3267,9 @@
         adminMenuStatusFilter: 'all',
         auditLogs: [],
         storeOpen: true,
+        storeSettings: { isOpen:true, temporaryClosed:false, closureMessage:'', weeklyHours:{}, dailyOrderCapacity:null },
+        storeAcceptingOrders: true,
+        storeStatusReason: '',
         customerMenuSearch: '',
         customerMenuCategory: 'all',
         customerMenuAvailability: 'available',
@@ -3153,15 +3328,18 @@
             console.warn("Could not load menu categories:", categoriesResult.reason);
         }
 
-        state.storeOpen = storeResult.status !== 'fulfilled'
-            || !storeResult.value.exists()
-            || storeResult.value.data().isOpen !== false;
+        if (storeResult.status === 'fulfilled' && storeResult.value.exists()) {
+            state.storeSettings = { ...state.storeSettings, ...storeResult.value.data() };
+        }
+        state.storeOpen = state.storeSettings.isOpen !== false;
         if (storeResult.status === 'rejected') {
             console.warn("Could not load store settings:", storeResult.reason);
         }
 
         isMenuLoading = false;
         isMenuBootstrapComplete = true;
+        evaluateStoreAvailability();
+        renderWeekdayHours();
         revealAppWhenReady();
     }
 
@@ -3197,7 +3375,14 @@
     });
 
     onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
+        if (firebaseUser?.isAnonymous) {
+            // Anonymous Authentication gives guest orders a private owner UID
+            // without turning the guest into a customer account in the UI.
+            state.currentUser = null;
+            cachedAuthUser = null;
+            writeCachedAuthUser(null);
+        } else if (firebaseUser) {
+            hadAuthenticatedSession = true;
             let savedProfile = null;
             try {
                 const profileSnapshot = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -3220,10 +3405,12 @@
             cachedAuthUser = state.currentUser;
             writeCachedAuthUser(state.currentUser);
         } else {
+            const sessionEnded = hadAuthenticatedSession && !isAuthLoading;
             state.currentUser = null;
             cachedAuthUser = null;
             writeCachedAuthUser(null);
             switchPanel('portal');
+            if (sessionEnded) triggerToast('Your session ended. Please sign in again to continue.', 'danger');
         }
         isAuthLoading = false;
         if (state.currentUser && (hasAdminAccess() || hasOrderManagerAccess())) {
@@ -3813,8 +4000,15 @@
         if (sidebarContainer && displayUser) sidebarContainer.querySelector('.user-welcome-info')?.setAttribute('title', 'Account settings');
     }
 
+    function getStockQuantity(item) {
+        if (item?.stockQuantity === null || item?.stockQuantity === undefined || item?.stockQuantity === '') return null;
+        const quantity = Number(item.stockQuantity);
+        return Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : null;
+    }
+
     function isBasicItemAvailable(item) {
-        return Boolean(item) && item.isVisible !== false && !item.isSoldOut && !state.hiddenCategories.includes(item.category);
+        const stock = getStockQuantity(item);
+        return Boolean(item) && item.isVisible !== false && !item.isSoldOut && stock !== 0 && !state.hiddenCategories.includes(item.category);
     }
 
     async function handleGoogleSignIn(buttonId = 'google-auth-btn') {
@@ -4258,9 +4452,16 @@
         renderCart();
     }
 
+    let orderSubmissionInProgress = false;
+
     async function placeOrder() {
-        if (!state.storeOpen) {
-            triggerToast("The kitchen is currently closed and cannot accept orders.", "danger");
+        evaluateStoreAvailability();
+        if (!state.storeAcceptingOrders) {
+            triggerToast(state.storeStatusReason || "The kitchen is currently closed and cannot accept orders.", "danger");
+            return;
+        }
+        if (orderSubmissionInProgress) {
+            triggerToast("Your order is already being submitted. Please wait.", "danger");
             return;
         }
         if (state.cart.length === 0) {
@@ -4305,14 +4506,28 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Placing Order...';
 
-        const placed = await createOrder({
-            userId: null,
-            customerType: 'guest',
-            customerName: document.getElementById('guest-name').value.trim(),
-            customerEmail: document.getElementById('guest-email').value.trim(),
-            customerPhone: document.getElementById('guest-phone').value.trim(),
-            deliveryAddress: document.getElementById('guest-address').value.trim()
-        }, false);
+        let placed = false;
+        try {
+            if (!auth.currentUser) await signInAnonymously(auth);
+            if (!auth.currentUser?.isAnonymous) {
+                throw new Error('Please sign out of the current account before using guest checkout.');
+            }
+            placed = await createOrder({
+                userId: auth.currentUser.uid,
+                customerType: 'guest',
+                customerName: document.getElementById('guest-name').value.trim(),
+                customerEmail: document.getElementById('guest-email').value.trim(),
+                customerPhone: document.getElementById('guest-phone').value.trim(),
+                deliveryAddress: document.getElementById('guest-address').value.trim()
+            }, false);
+        } catch (error) {
+            triggerToast(
+                error?.code === 'auth/operation-not-allowed'
+                    ? 'Guest tracking requires Anonymous sign-in to be enabled in Firebase Authentication.'
+                    : friendlyFirebaseError(error, 'Could not start secure guest checkout.'),
+                'danger'
+            );
+        }
 
         submitButton.disabled = false;
         submitButton.textContent = originalText;
@@ -4348,17 +4563,62 @@
         });
     }
 
+    function buildOrderFingerprint(customerDetails, validatedItems, fulfilmentType) {
+        return JSON.stringify({
+            customer: customerDetails.userId || customerDetails.customerPhone || 'guest',
+            fulfilmentType,
+            items: validatedItems.map(item => ({
+                id: item.itemId,
+                quantity: item.quantity,
+                variant: item.selectedVariant?.name || '',
+                addons: (item.selectedAddons || []).map(addon => addon.name).sort(),
+                note: item.instructions || ''
+            }))
+        });
+    }
+
+    function friendlyFirebaseError(error, fallback = "The operation could not be completed.") {
+        const code = String(error?.code || '');
+        if (code.includes('permission-denied')) return "Firebase blocked this action. Check that you are signed in with the correct role and that the published Firestore rules match this app.";
+        if (code.includes('unauthenticated')) return "Your session has expired. Please sign in again.";
+        if (code.includes('unavailable') || code.includes('network')) return "The connection was interrupted. Check your internet connection and try again.";
+        if (code.includes('resource-exhausted')) return "The service is temporarily busy. Please wait a moment and try again.";
+        return error?.message || fallback;
+    }
+
+    async function retryOperation(operation, attempts = 2) {
+        let lastError;
+        for (let attempt = 1; attempt <= attempts; attempt += 1) {
+            try { return await operation(); }
+            catch (error) {
+                lastError = error;
+                const retryable = /unavailable|network|aborted|deadline-exceeded/i.test(String(error?.code || error?.message || ''));
+                if (!retryable || attempt === attempts) throw error;
+                await new Promise(resolve => setTimeout(resolve, 450 * attempt));
+            }
+        }
+        throw lastError;
+    }
+
     async function createOrder(customerDetails, closeCart = true) {
-        if (!state.storeOpen) {
-            triggerToast("The kitchen is currently closed and cannot accept orders.", "danger");
+        evaluateStoreAvailability();
+        if (!state.storeAcceptingOrders) {
+            triggerToast(state.storeStatusReason || "The kitchen is currently closed and cannot accept orders.", "danger");
             return false;
         }
+        if (orderSubmissionInProgress) return false;
         let validatedItems;
         try { validatedItems = buildValidatedOrderItems(); }
         catch (error) { triggerToast(error.message, 'danger'); return false; }
         const subtotal = validatedItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
         const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
         const deliveryFee = fulfilmentType === 'pickup' ? 0 : 150;
+        const fingerprint = buildOrderFingerprint(customerDetails, validatedItems, fulfilmentType);
+        const previousSubmission = JSON.parse(localStorage.getItem('snack-station-last-order-submission') || 'null');
+        if (previousSubmission?.fingerprint === fingerprint && Date.now() - Number(previousSubmission.createdAt || 0) < 90000) {
+            triggerToast(`This order was already submitted${previousSubmission.orderNumber ? ` as ${previousSubmission.orderNumber}` : ''}.`, "danger");
+            return false;
+        }
         const orderRef = doc(collection(db, "orders"));
         const orderData = {
             orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
@@ -4373,8 +4633,18 @@
             updatedAt: new Date().toISOString()
         };
 
+        orderSubmissionInProgress = true;
+        const checkoutButtons = [document.getElementById('checkout-button'), document.querySelector('#guest-checkout-form button[type="submit"]')].filter(Boolean);
+        checkoutButtons.forEach(button => {
+            button.disabled = true;
+            button.dataset.originalText = button.innerHTML;
+            button.textContent = 'Submitting…';
+        });
         try {
-            await setDoc(orderRef, orderData);
+            await retryOperation(() => setDoc(orderRef, orderData));
+            localStorage.setItem('snack-station-last-order-submission', JSON.stringify({
+                fingerprint, createdAt: Date.now(), orderId: orderRef.id, orderNumber: orderData.orderNumber
+            }));
             rememberTrackableOrder(orderRef.id, orderData);
             state.cart = [];
             renderCart();
@@ -4383,8 +4653,15 @@
             showOrderTracking(orderRef.id, orderData);
             return true;
         } catch (error) {
-            triggerToast(error.message || "Could not place the order.", "danger");
+            triggerToast(friendlyFirebaseError(error, "Could not place the order."), "danger");
             return false;
+        } finally {
+            orderSubmissionInProgress = false;
+            checkoutButtons.forEach(button => {
+                button.disabled = false;
+                if (button.dataset.originalText) button.innerHTML = button.dataset.originalText;
+            });
+            renderStoreStatus();
         }
     }
 
@@ -4402,24 +4679,42 @@
 
     const TRACKABLE_ORDERS_KEY = 'snack-station-trackable-orders-v1';
 
-    function getTrackableOrders() {
+    function readStoredTrackableOrders() {
         try {
             const saved = JSON.parse(localStorage.getItem(TRACKABLE_ORDERS_KEY) || '[]');
-            return Array.isArray(saved) ? saved.filter(order => order?.id && order?.orderNumber).slice(0, 10) : [];
+            return Array.isArray(saved) ? saved.filter(order => order?.id && order?.orderNumber) : [];
         } catch (error) {
+            localStorage.removeItem(TRACKABLE_ORDERS_KEY);
             return [];
         }
     }
 
+    function getTrackableOrders() {
+        const saved = readStoredTrackableOrders();
+        if (state.currentUser?.role === 'customer') {
+            return saved.filter(order => order.customerType !== 'guest').slice(0, 10);
+        }
+
+        const currentGuestOrder = saved
+            .filter(order => order.customerType === 'guest' && (!auth.currentUser?.uid || order.ownerUid === auth.currentUser.uid))
+            .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
+        return currentGuestOrder ? [currentGuestOrder] : [];
+    }
+
     function rememberTrackableOrder(orderId, order) {
-        const saved = getTrackableOrders().filter(item => item.id !== orderId);
-        saved.unshift({
+        const trackableOrder = {
             id: orderId,
             orderNumber: order.orderNumber,
+            ownerUid: order.userId || auth.currentUser?.uid || '',
+            customerType: order.customerType || (auth.currentUser?.isAnonymous ? 'guest' : 'customer'),
             status: order.status || 'pending',
             createdAt: order.createdAt || new Date().toISOString()
-        });
-        localStorage.setItem(TRACKABLE_ORDERS_KEY, JSON.stringify(saved.slice(0, 10)));
+        };
+        const saved = readStoredTrackableOrders().filter(item => item.id !== orderId);
+        const next = trackableOrder.customerType === 'guest'
+            ? [trackableOrder, ...saved.filter(item => item.customerType !== 'guest')]
+            : [trackableOrder, ...saved.filter(item => item.customerType !== 'guest')].slice(0, 10);
+        localStorage.setItem(TRACKABLE_ORDERS_KEY, JSON.stringify(next));
     }
 
     function openOrderTracking() {
@@ -4429,9 +4724,12 @@
         }
         switchPanel('tracking');
         renderTrackingLookup();
+        const isCustomer = state.currentUser?.role === 'customer';
         document.getElementById('tracking-content').innerHTML = `
             <div style="text-align:center; padding:3rem; color:var(--text-muted);">
-                Choose a recent order or enter its order reference to see whether it has been accepted or rejected.
+                ${isCustomer
+                    ? 'Choose an order or enter its order reference to see whether it has been accepted or rejected.'
+                    : 'Select your current order to see whether it has been accepted or rejected.'}
             </div>`;
         lucide.createIcons();
     }
@@ -4439,6 +4737,11 @@
     function renderTrackingLookup() {
         const list = document.getElementById('tracking-recent-list');
         if (!list) return;
+        const isCustomer = state.currentUser?.role === 'customer';
+        const help = document.getElementById('tracking-lookup-help');
+        if (help) help.textContent = isCustomer
+            ? 'Your saved orders appear below. Your complete order history is available in your account.'
+            : 'Guests can track only the current order placed in this browser.';
         const orders = getTrackableOrders();
         list.innerHTML = orders.length ? orders.map(order => {
             const date = new Date(order.createdAt);
@@ -4448,7 +4751,7 @@
                 <span><strong>${escapeHtml(order.orderNumber)}</strong><small>${escapeHtml(dateLabel || 'Recent order')}</small></span>
                 <span class="tracking-status-pill">${escapeHtml(statusLabel)}</span>
             </button>`;
-        }).join('') : '<p style="padding:8px 0; color:var(--text-muted); font-size:.8rem;">No orders have been placed on this device yet.</p>';
+        }).join('') : `<p style="padding:8px 0; color:var(--text-muted); font-size:.8rem;">${isCustomer ? 'No saved orders are available on this device.' : 'No current guest order is available.'}</p>`;
         lucide.createIcons();
     }
 
@@ -4457,6 +4760,17 @@
         if (!savedOrder) return triggerToast('This order is not saved on this device.', 'danger');
         document.getElementById('tracking-reference').value = savedOrder.orderNumber;
         try {
+            await auth.authStateReady();
+            if (!auth.currentUser) {
+                await signInAnonymously(auth);
+                await auth.authStateReady();
+            }
+            if (savedOrder.ownerUid && auth.currentUser?.uid !== savedOrder.ownerUid) {
+                const message = savedOrder.customerType === 'guest'
+                    ? 'This order belongs to an earlier guest session. Place a new test order in this browser, then track it without signing out or clearing browser data.'
+                    : 'Sign in with the same customer account that placed this order.';
+                return triggerToast(message, 'danger');
+            }
             const snapshot = await getDoc(doc(db, 'orders', orderId));
             if (!snapshot.exists()) return triggerToast('Order not found.', 'danger');
             const order = { id: snapshot.id, ...snapshot.data() };
@@ -4464,7 +4778,7 @@
             renderTrackingLookup();
             showOrderTracking(orderId, order);
         } catch (error) {
-            triggerToast(error.message || 'Could not retrieve this order.', 'danger');
+            triggerToast(friendlyFirebaseError(error, 'Could not retrieve this order.'), 'danger');
         }
     }
 
@@ -5012,6 +5326,9 @@
                 <td>${item.category}</td>
                 <td>Rs. ${Number(item.price).toLocaleString()}</td>
                 <td style="text-align:center;">
+                    ${getStockQuantity(item) === null
+                        ? '<span class="stock-count">Unlimited stock</span>'
+                        : `<strong>${getStockQuantity(item)}</strong><span class="stock-count">${getStockQuantity(item) === 0 ? 'Automatically sold out' : getStockQuantity(item) <= Number(item.lowStockThreshold ?? 5) ? 'Low stock' : 'units available'}</span>`}
                     <button type="button" class="${item.isSoldOut ? 'btn-danger' : 'btn-secondary'}" style="padding:7px 10px; min-width:96px; margin:auto; justify-content:center;" onclick='toggleMenuItemSoldOut(${JSON.stringify(String(item.id))})'>
                         <i data-lucide="${item.isSoldOut ? 'circle-x' : 'circle-check'}" style="width:14px;"></i>
                         ${item.isSoldOut ? 'Sold Out' : 'In Stock'}
@@ -5053,6 +5370,7 @@
     function openNewItemModal() {
         resetFormState();
         document.getElementById('item-editor-modal').classList.add('active');
+        document.getElementById('item-editor-modal-body').scrollTop = 0;
         lucide.createIcons();
     }
 
@@ -5150,14 +5468,120 @@
         }
     }
 
+    const WEEKDAYS = [
+        { key:'sunday', label:'Sunday' }, { key:'monday', label:'Monday' },
+        { key:'tuesday', label:'Tuesday' }, { key:'wednesday', label:'Wednesday' },
+        { key:'thursday', label:'Thursday' }, { key:'friday', label:'Friday' },
+        { key:'saturday', label:'Saturday' }
+    ];
+
+    function defaultHoursFor(dayKey) {
+        return { enabled: !['sunday'].includes(dayKey), open:'09:00', close:'22:00' };
+    }
+
+    function renderWeekdayHours() {
+        const container = document.getElementById('weekday-hours');
+        if (!container) return;
+        container.innerHTML = WEEKDAYS.map(day => {
+            const hours = state.storeSettings.weeklyHours?.[day.key] || defaultHoursFor(day.key);
+            return `<div class="weekday-row">
+                <label><input type="checkbox" id="hours-${day.key}-enabled" ${hours.enabled ? 'checked' : ''}> ${day.label}</label>
+                <div class="weekday-time">
+                    <input type="time" id="hours-${day.key}-open" value="${escapeHtml(hours.open || '09:00')}" aria-label="${day.label} opening time">
+                    <input type="time" id="hours-${day.key}-close" value="${escapeHtml(hours.close || '22:00')}" aria-label="${day.label} closing time">
+                </div>
+            </div>`;
+        }).join('');
+        const temporaryToggle = document.getElementById('temporary-closure-toggle');
+        const closureMessage = document.getElementById('closure-message');
+        const capacity = document.getElementById('daily-order-capacity');
+        if (temporaryToggle) temporaryToggle.checked = Boolean(state.storeSettings.temporaryClosed);
+        if (closureMessage) closureMessage.value = state.storeSettings.closureMessage || '';
+        if (capacity) capacity.value = state.storeSettings.dailyOrderCapacity ?? '';
+    }
+
+    function evaluateStoreAvailability(now = new Date()) {
+        const settings = state.storeSettings || {};
+        let accepting = settings.isOpen !== false;
+        let reason = '';
+        if (!accepting) reason = 'Ordering is currently paused by the kitchen.';
+        if (accepting && settings.temporaryClosed) {
+            accepting = false;
+            reason = settings.closureMessage || 'The kitchen is temporarily closed.';
+        }
+        if (accepting) {
+            const day = WEEKDAYS[now.getDay()];
+            const hours = settings.weeklyHours?.[day.key];
+            if (hours) {
+                if (!hours.enabled) {
+                    accepting = false;
+                    reason = `Ordering is closed on ${day.label}.`;
+                } else {
+                    const minutesNow = now.getHours() * 60 + now.getMinutes();
+                    const toMinutes = value => {
+                        const [hour, minute] = String(value || '00:00').split(':').map(Number);
+                        return hour * 60 + minute;
+                    };
+                    const opens = toMinutes(hours.open);
+                    const closes = toMinutes(hours.close);
+                    const withinHours = closes > opens
+                        ? minutesNow >= opens && minutesNow < closes
+                        : minutesNow >= opens || minutesNow < closes;
+                    if (!withinHours) {
+                        accepting = false;
+                        reason = `Ordering hours today are ${hours.open}–${hours.close}.`;
+                    }
+                }
+            }
+        }
+        state.storeOpen = settings.isOpen !== false;
+        state.storeAcceptingOrders = accepting;
+        state.storeStatusReason = reason;
+        return accepting;
+    }
+
+    async function saveStoreSchedule() {
+        if (!hasAdminAccess()) return triggerToast('Admin access is required.', 'danger');
+        const weeklyHours = Object.fromEntries(WEEKDAYS.map(day => [day.key, {
+            enabled: Boolean(document.getElementById(`hours-${day.key}-enabled`)?.checked),
+            open: document.getElementById(`hours-${day.key}-open`)?.value || '09:00',
+            close: document.getElementById(`hours-${day.key}-close`)?.value || '22:00'
+        }]));
+        const updatedSettings = {
+            ...state.storeSettings,
+            isOpen: state.storeOpen,
+            temporaryClosed: Boolean(document.getElementById('temporary-closure-toggle')?.checked),
+            closureMessage: document.getElementById('closure-message')?.value.trim() || '',
+            dailyOrderCapacity: document.getElementById('daily-order-capacity')?.value === ''
+                ? null
+                : Math.max(0, Math.floor(Number(document.getElementById('daily-order-capacity').value))),
+            weeklyHours,
+            updatedAt: new Date().toISOString()
+        };
+        try {
+            await retryOperation(() => setDoc(doc(db, 'settings', 'store'), updatedSettings, { merge:true }));
+            state.storeSettings = updatedSettings;
+            evaluateStoreAvailability();
+            renderStoreStatus();
+            renderMenu();
+            await writeAuditLog('store.schedule_update', { temporaryClosed:updatedSettings.temporaryClosed, dailyOrderCapacity:updatedSettings.dailyOrderCapacity });
+            triggerToast('Store hours and closure settings saved.');
+        } catch (error) {
+            triggerToast(friendlyFirebaseError(error, 'Could not save store settings.'), 'danger');
+        }
+    }
+
     async function loadStoreSettings() {
         try {
             const snapshot = await getDoc(doc(db, "settings", "store"));
-            state.storeOpen = !snapshot.exists() || snapshot.data().isOpen !== false;
+            if (snapshot.exists()) state.storeSettings = { ...state.storeSettings, ...snapshot.data() };
+            state.storeOpen = state.storeSettings.isOpen !== false;
         } catch (error) {
             state.storeOpen = true;
             console.warn("Could not load store settings:", error);
         }
+        evaluateStoreAvailability();
+        renderWeekdayHours();
         renderStoreStatus();
         renderMenu();
     }
@@ -5167,12 +5591,19 @@
         const label = document.getElementById('store-open-label');
         const banner = document.getElementById('store-status-banner');
         const checkoutButton = document.getElementById('checkout-button');
+        evaluateStoreAvailability();
         if (toggle) toggle.checked = state.storeOpen;
-        if (label) label.textContent = state.storeOpen ? 'Store Open' : 'Store Closed';
-        if (banner) banner.style.display = state.storeOpen ? 'none' : 'block';
+        if (label) label.textContent = state.storeAcceptingOrders ? 'Store Open' : 'Store Closed';
+        if (banner) {
+            banner.style.display = state.storeAcceptingOrders ? 'none' : 'block';
+            const title = document.getElementById('store-status-title');
+            const message = document.getElementById('store-status-message');
+            if (title) title.textContent = state.storeSettings.temporaryClosed ? 'The kitchen is temporarily closed.' : 'Ordering is currently unavailable.';
+            if (message) message.textContent = state.storeStatusReason || 'You may browse the menu, but ordering is unavailable.';
+        }
         if (checkoutButton) {
-            checkoutButton.disabled = !state.storeOpen;
-            checkoutButton.innerHTML = state.storeOpen ? 'Place Order <i data-lucide="arrow-right" style="width:16px;"></i>' : 'Store Closed';
+            checkoutButton.disabled = !state.storeAcceptingOrders || orderSubmissionInProgress;
+            checkoutButton.innerHTML = state.storeAcceptingOrders ? 'Place Order <i data-lucide="arrow-right" style="width:16px;"></i>' : 'Store Closed';
         }
         if (refreshIcons) lucide.createIcons();
     }
@@ -5188,6 +5619,7 @@
         renderStoreStatus();
         renderMenu();
         try {
+            state.storeSettings.isOpen = state.storeOpen;
             await setDoc(doc(db, "settings", "store"), { isOpen: state.storeOpen, updatedAt: new Date().toISOString() }, { merge: true });
             await writeAuditLog('store.status_change', { changes: { Store: { from: previousValue ? 'Open' : 'Closed', to: state.storeOpen ? 'Open' : 'Closed' } } });
             triggerToast(state.storeOpen ? "The store is now open." : "The store is now closed.");
@@ -5664,6 +6096,8 @@
             img: document.getElementById('menu-item-img').value.trim(),
             availableFrom: document.getElementById('menu-available-from').value ? new Date(document.getElementById('menu-available-from').value).toISOString() : null,
             availableUntil: document.getElementById('menu-available-until').value ? new Date(document.getElementById('menu-available-until').value).toISOString() : null,
+            stockQuantity: document.getElementById('menu-item-stock').value === '' ? null : Math.max(0, Math.floor(Number(document.getElementById('menu-item-stock').value))),
+            lowStockThreshold: Math.max(0, Math.floor(Number(document.getElementById('menu-item-low-stock').value || 5))),
             desc: document.getElementById('menu-item-desc').value.trim(),
             labels: [...document.querySelectorAll('input[name="menu-label"]:checked')].map(input => input.value),
             variants: collectAdminOptions(),
@@ -5674,9 +6108,9 @@
             isVisible: editId
                 ? menuData.find(item => String(item.id) === String(editId))?.isVisible !== false
                 : true,
-            isSoldOut: editId
-                ? Boolean(menuData.find(item => String(item.id) === String(editId))?.isSoldOut)
-                : false,
+            isSoldOut: document.getElementById('menu-item-stock').value !== '' && Number(document.getElementById('menu-item-stock').value) <= 0
+                ? true
+                : (editId ? Boolean(menuData.find(item => String(item.id) === String(editId))?.isSoldOut) : false),
             updatedAt: new Date().toISOString()
         };
 
@@ -5724,6 +6158,8 @@
             if (mealMode === 'existing' && !item.mealItems?.length) addMealItemRow();
         }
         document.getElementById('menu-item-img').value = item.img || '';
+        document.getElementById('menu-item-stock').value = getStockQuantity(item) ?? '';
+        document.getElementById('menu-item-low-stock').value = Number(item.lowStockThreshold ?? 5);
         document.getElementById('menu-available-from').value = item.availableFrom ? new Date(item.availableFrom).toISOString().slice(0,16) : '';
         document.getElementById('menu-available-until').value = item.availableUntil ? new Date(item.availableUntil).toISOString().slice(0,16) : '';
         document.getElementById('menu-item-desc').value = item.desc;
@@ -5744,7 +6180,7 @@
         document.getElementById('btn-cancel-edit').style.display = 'flex';
         document.getElementById('item-editor-modal').classList.add('active');
         lucide.createIcons();
-        document.querySelector('#item-editor-modal .modal-card').scrollTop = 0;
+        document.getElementById('item-editor-modal-body').scrollTop = 0;
     }
 
     async function removeMenuItem(itemId) {
@@ -5773,6 +6209,8 @@
         document.getElementById('meal-builder-section').style.display = 'none';
         document.getElementById('menu-variants-container').innerHTML = '';
         document.getElementById('menu-addon-groups-container').innerHTML = '';
+        document.getElementById('menu-item-stock').value = '';
+        document.getElementById('menu-item-low-stock').value = '5';
         document.getElementById('form-workspace-title').innerHTML = `<i data-lucide="plus-circle" style="color:var(--accent);"></i> Add New Item`;
         document.getElementById('btn-submit-action').textContent = 'Add to Menu Live';
         document.getElementById('btn-cancel-edit').style.display = 'none';
@@ -5957,6 +6395,7 @@
     window.setAdminMenuSearch = setAdminMenuSearch;
     window.setAdminMenuFilter = setAdminMenuFilter;
     window.setStoreOpen = setStoreOpen;
+    window.saveStoreSchedule = saveStoreSchedule;
     window.toggleMenuItemSoldOut = toggleMenuItemSoldOut;
     window.addAdminOptionRow = addAdminOptionRow;
     window.handleMenuCategoryChange = handleMenuCategoryChange;
