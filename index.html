@@ -2248,6 +2248,19 @@
         .kitchen-card.overdue{border-color:rgba(239,68,68,.65);box-shadow:0 0 0 2px rgba(239,68,68,.1)}.wait-chip{display:inline-flex;padding:4px 8px;border-radius:999px;background:var(--bg-input);font-size:.67rem;font-weight:800;margin-top:5px}.wait-chip.overdue{background:rgba(239,68,68,.14);color:var(--danger)}
         .analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0 22px}.mini-chart{padding:16px}.bar-row{display:grid;grid-template-columns:minmax(70px,1fr) 3fr 36px;gap:9px;align-items:center;margin:9px 0;font-size:.72rem}.bar-track{height:8px;border-radius:99px;background:var(--bg-input);overflow:hidden}.bar-fill{height:100%;background:var(--accent);border-radius:inherit}
         .connection-banner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1200;padding:10px 15px;border-radius:999px;background:#111827;color:white;font-size:.76rem;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}.drag-handle{cursor:grab;color:var(--text-muted)}.scheduled-note{font-size:.66rem;color:var(--info);margin-top:3px}
+        .order-report-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+        .order-report-header h3{margin:0}
+        .order-report-header .app-filter-select{height:42px;min-width:170px;border-radius:10px}
+        .order-date-cell{white-space:nowrap}
+        .order-date-cell strong{display:block;font-size:.78rem}
+        .order-date-cell small{display:block;margin-top:3px;color:var(--text-muted);font-size:.7rem}
+        .report-pagination{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 4px 2px}
+        .report-page-summary{color:var(--text-muted);font-size:.76rem}
+        .report-page-actions{display:flex;align-items:center;gap:8px}
+        .report-page-actions button{min-width:38px;height:36px;padding:0 11px;border:1px solid var(--border-color);border-radius:9px;background:var(--bg-input);color:var(--text-main);cursor:pointer;font-weight:700}
+        .report-page-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+        .report-page-actions button:disabled{opacity:.42;cursor:not-allowed}
+        .report-page-number{min-width:74px;text-align:center;color:var(--text-muted);font-size:.75rem;font-weight:700}
         @media(max-width:800px){
             .analytics-grid{grid-template-columns:1fr}
             .menu-discovery>*{width:100%!important}
@@ -2257,6 +2270,7 @@
             .report-toolbar > .app-filter-select{flex:1 1 100%}
             .report-toolbar > .btn-secondary{flex:1 1 calc(50% - 5px)}
             .customer-order-head{display:block}
+            .order-report-header .app-filter-select{width:100%}
         }
         @media(max-width:480px){
             .report-toolbar{padding:10px}
@@ -2598,7 +2612,7 @@
                     <label for="report-date-to">To</label>
                     <input id="report-date-to" type="date" aria-label="Report end date" onchange="renderOrdersTable()">
                 </div>
-                <select class="app-filter-select" id="report-status-filter" onchange="renderOrdersTable()"><option value="all">All statuses</option><option value="pending">Pending</option><option value="preparing">Preparing</option><option value="ready">Ready</option><option value="completed">Completed</option><option value="rejected">Rejected</option></select>
+                <select class="app-filter-select" id="report-status-filter" onchange="handleOrderReportFilterChange()"><option value="all">All records</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="rejected">Rejected</option></select>
                 <button class="btn-secondary" type="button" onclick="exportOrdersCsv()"><i data-lucide="download"></i> Export CSV</button>
                 <button class="btn-secondary" type="button" onclick="requestOrderNotifications()"><i data-lucide="bell"></i> Notifications</button>
             </div>
@@ -2652,8 +2666,17 @@
 
             <div class="kitchen-board" id="kitchen-board"></div>
             <div class="card" id="order-history-card" style="margin-top:18px;">
-                <h3 id="order-history-title" style="margin-bottom:12px;">Recent Completed and Rejected Orders</h3>
+                <div class="order-report-header">
+                    <h3 id="order-history-title">Order Report</h3>
+                    <select class="app-filter-select" id="history-status-filter" onchange="handleOrderReportFilterChange(this.value)" aria-label="Filter order report">
+                        <option value="all">All records</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
                 <div id="order-history-list" class="table-container"></div>
+                <div id="order-report-pagination" class="report-pagination"></div>
             </div>
         </section>
 
@@ -3178,7 +3201,8 @@
         projectId: "thesnackstation-c6ff9",
         storageBucket: "thesnackstation-c6ff9.firebasestorage.app",
         messagingSenderId: "830977242508",
-        appId: "1:830977242508:web:cac072840fc4c9366c12a9"
+        appId: "1:830977242508:web:cac072840fc4c9366c12a9",
+        measurementId: "G-V404QLEB66"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -3190,6 +3214,47 @@
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+    const GA_MEASUREMENT_ID = firebaseConfig.measurementId;
+    const GA_ENABLED = /^G-[A-Z0-9]+$/i.test(GA_MEASUREMENT_ID) && GA_MEASUREMENT_ID !== 'G-XXXXXXXXXX';
+    let analyticsSearchTimer = null;
+
+    function initializeGoogleAnalytics() {
+        if (!GA_ENABLED) {
+            console.info('Google Analytics is ready but inactive. Add your GA4 Measurement ID to firebaseConfig.measurementId.');
+            return;
+        }
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', GA_MEASUREMENT_ID, {
+            send_page_view: true,
+            anonymize_ip: true
+        });
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
+        document.head.appendChild(script);
+    }
+
+    function trackAnalyticsEvent(eventName, parameters = {}) {
+        if (!GA_ENABLED || typeof window.gtag !== 'function') return;
+        // Analytics parameters must never contain customer contact details,
+        // delivery addresses, free-text instructions, or Firestore document IDs.
+        window.gtag('event', eventName, parameters);
+    }
+
+    function analyticsItem(item, quantity = 1) {
+        return {
+            item_id: String(item.itemId || item.id || ''),
+            item_name: String(item.name || 'Menu item').slice(0, 100),
+            item_category: String(item.category || 'Menu').slice(0, 100),
+            price: Number(item.price || 0),
+            quantity: Number(quantity || item.quantity || item.qty || 1)
+        };
+    }
+
+    initializeGoogleAnalytics();
 
     const MENU_CACHE_KEY = 'snackStationMenuCacheV1';
     const AUTH_UI_CACHE_KEY = 'snackStationAuthUiCacheV1';
@@ -3274,7 +3339,8 @@
         customerMenuCategory: 'all',
         customerMenuAvailability: 'available',
         customerMenuPrice: 'all',
-        customerOrders: []
+        customerOrders: [],
+        orderReportPage: 1
     };
 
     function revealAppWhenReady() {
@@ -3589,6 +3655,10 @@
         const sideBtn = document.getElementById(`side-btn-${panelId}`);
         if (sideBtn && sideBtn.style.display !== 'none') sideBtn.classList.add('active');
         document.body.classList.remove('workspace-menu-open');
+        trackAnalyticsEvent('screen_view', {
+            firebase_screen: panelId,
+            firebase_screen_class: 'SnackStationWeb'
+        });
     }
 
     function updateStaffOverview() {
@@ -4182,6 +4252,11 @@
     function openItemCustomization(itemId) {
         const item = menuData.find(menuItem => String(menuItem.id) === String(itemId));
         if (!item || !isMenuItemAvailable(item)) return;
+        trackAnalyticsEvent('view_item', {
+            currency: 'PKR',
+            value: Number(item.price || 0),
+            items: [analyticsItem(item)]
+        });
         const variants = Array.isArray(item.variants) ? item.variants : [];
         const addonGroups = Array.isArray(item.addonGroups) && item.addonGroups.length
             ? item.addonGroups
@@ -4413,6 +4488,11 @@
             qty: quantity
         });
         renderCart();
+        trackAnalyticsEvent('add_to_cart', {
+            currency: 'PKR',
+            value: Number(finalPrice) * Number(quantity),
+            items: [analyticsItem({ ...foundItem, price: finalPrice }, quantity)]
+        });
         triggerToast(`${foundItem.name} added to basket!`);
     }
 
@@ -4468,6 +4548,13 @@
             triggerToast("Your cart is empty.", "danger");
             return;
         }
+
+        const analyticsSubtotal = state.cart.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0);
+        trackAnalyticsEvent('begin_checkout', {
+            currency: 'PKR',
+            value: analyticsSubtotal,
+            items: state.cart.map(item => analyticsItem(item, item.qty))
+        });
 
         if (!state.currentUser) {
             toggleCartVisibility();
@@ -4646,6 +4733,21 @@
                 fingerprint, createdAt: Date.now(), orderId: orderRef.id, orderNumber: orderData.orderNumber
             }));
             rememberTrackableOrder(orderRef.id, orderData);
+            const analyticsItems = validatedItems.map(item => analyticsItem(item, item.quantity));
+            trackAnalyticsEvent('purchase', {
+                transaction_id: orderData.orderNumber,
+                currency: 'PKR',
+                value: orderData.total,
+                shipping: orderData.deliveryFee,
+                items: analyticsItems
+            });
+            trackAnalyticsEvent('order_placed', {
+                order_type: fulfilmentType,
+                customer_type: orderData.customerType,
+                value: orderData.total,
+                currency: 'PKR',
+                item_count: validatedItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+            });
             state.cart = [];
             renderCart();
             if (closeCart) document.getElementById('cart-pane-element').classList.add('hidden');
@@ -5144,6 +5246,40 @@
         }
     }
 
+    function handleOrderReportFilterChange(value) {
+        const toolbarFilter = document.getElementById('report-status-filter');
+        const historyFilter = document.getElementById('history-status-filter');
+        const selected = value || toolbarFilter?.value || historyFilter?.value || 'all';
+        if (toolbarFilter) toolbarFilter.value = selected;
+        if (historyFilter) historyFilter.value = selected;
+        state.orderReportPage = 1;
+        renderOrdersTable();
+    }
+
+    function changeOrderReportPage(page) {
+        state.orderReportPage = Math.max(1, Number(page) || 1);
+        renderOrdersTable();
+        document.getElementById('order-history-card')?.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    function orderMatchesReportStatus(order, filter) {
+        const status = String(order.status || 'pending').toLowerCase();
+        if (filter === 'all') return true;
+        if (filter === 'in_progress') return ['new', 'pending', 'accepted', 'preparing', 'ready', 'delivery'].includes(status);
+        return status === filter;
+    }
+
+    function getOrderReportDetails(order) {
+        const status = String(order.status || 'pending').toLowerCase();
+        if (status === 'rejected') return order.rejectionReason || 'No reason provided';
+        if (status === 'completed') return 'Completed';
+        if (status === 'ready' || status === 'delivery') return 'Ready for collection or delivery';
+        if (status === 'preparing' || status === 'accepted') return order.preparationMinutes
+            ? `Preparing · ${order.preparationMinutes} min estimate`
+            : 'Preparing';
+        return 'Waiting for acceptance';
+    }
+
     function renderOrdersTable() {
         const board = document.getElementById('kitchen-board');
         if (!board) return;
@@ -5151,11 +5287,13 @@
         const fromValue = document.getElementById('report-date-from')?.value;
         const toValue = document.getElementById('report-date-to')?.value;
         const statusValue = document.getElementById('report-status-filter')?.value || 'all';
+        const historyStatusFilter = document.getElementById('history-status-filter');
+        if (historyStatusFilter && historyStatusFilter.value !== statusValue) historyStatusFilter.value = statusValue;
         const filteredForReport = state.orders.filter(order => {
             const date = getOrderDate(order);
             return (!fromValue || (date && date >= new Date(`${fromValue}T00:00:00`)))
                 && (!toValue || (date && date <= new Date(`${toValue}T23:59:59`)))
-                && (statusValue === 'all' || String(order.status || 'pending') === statusValue);
+                && orderMatchesReportStatus(order, statusValue);
         });
         const visibleOrders = orderManagerView ? filteredForReport.filter(isOrderFromToday) : filteredForReport;
         const managerDashboard = document.getElementById('order-manager-dashboard');
@@ -5169,9 +5307,7 @@
             statsGrid.classList.toggle('cols-3', !orderManagerView);
         }
         const historyTitle = document.getElementById('order-history-title');
-        if (historyTitle) historyTitle.textContent = orderManagerView
-            ? "Today's Completed and Rejected Orders"
-            : 'Recent Completed and Rejected Orders';
+        if (historyTitle) historyTitle.textContent = orderManagerView ? "Today's Order Report" : 'Order Report';
         if (orderManagerView) {
             const uid = state.currentUser?.uid;
             const countStatus = statuses => visibleOrders.filter(order => statuses.includes(order.status || 'pending')).length;
@@ -5216,11 +5352,39 @@
         }).join('');
 
         const historyList = document.getElementById('order-history-list');
-        const historyOrders = visibleOrders.filter(order => ['completed', 'rejected'].includes(order.status)).slice(0, 20);
+        const pagination = document.getElementById('order-report-pagination');
+        const historyOrders = [...visibleOrders].sort((a, b) =>
+            (getOrderDate(b)?.getTime() || 0) - (getOrderDate(a)?.getTime() || 0)
+        );
+        const pageSize = 10;
+        const totalPages = Math.max(1, Math.ceil(historyOrders.length / pageSize));
+        state.orderReportPage = Math.min(Math.max(1, state.orderReportPage || 1), totalPages);
+        const pageStart = (state.orderReportPage - 1) * pageSize;
+        const pageOrders = historyOrders.slice(pageStart, pageStart + pageSize);
         if (historyList) {
-            historyList.innerHTML = historyOrders.length ? `<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Details</th></tr></thead><tbody>${historyOrders.map(order => `
-                <tr><td><strong>${order.orderNumber || order.id}</strong></td><td>${order.customerName || 'Guest'}</td><td>Rs. ${Number(order.total || 0).toLocaleString()}</td><td><span class="badge-status ${order.status}">${order.status}</span></td><td>${order.status === 'rejected' ? (order.rejectionReason || 'No reason provided') : 'Completed'}</td></tr>
-            `).join('')}</tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--text-muted);">No completed or rejected orders yet.</div>';
+            historyList.innerHTML = pageOrders.length ? `<table><thead><tr><th>Order</th><th>Date & Time</th><th>Customer</th><th>Total</th><th>Status</th><th>Details</th></tr></thead><tbody>${pageOrders.map(order => {
+                const date = getOrderDate(order);
+                const status = String(order.status || 'pending').toLowerCase();
+                return `<tr>
+                    <td><strong>${escapeHtml(order.orderNumber || order.id)}</strong></td>
+                    <td class="order-date-cell"><strong>${date ? escapeHtml(date.toLocaleDateString([], { day:'2-digit', month:'short', year:'numeric' })) : 'Date unavailable'}</strong><small>${date ? escapeHtml(date.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })) : '—'}</small></td>
+                    <td>${escapeHtml(order.customerName || 'Guest')}</td>
+                    <td>Rs. ${Number(order.total || 0).toLocaleString()}</td>
+                    <td><span class="badge-status ${escapeHtml(status)}">${escapeHtml(status.replace('_', ' '))}</span></td>
+                    <td>${escapeHtml(getOrderReportDetails(order))}</td>
+                </tr>`;
+            }).join('')}</tbody></table>` : '<div style="padding:24px; text-align:center; color:var(--text-muted);">No orders match the selected filters.</div>';
+        }
+        if (pagination) {
+            const firstRecord = historyOrders.length ? pageStart + 1 : 0;
+            const lastRecord = Math.min(pageStart + pageSize, historyOrders.length);
+            pagination.innerHTML = `
+                <span class="report-page-summary">Showing ${firstRecord}–${lastRecord} of ${historyOrders.length} records</span>
+                <div class="report-page-actions">
+                    <button type="button" onclick="changeOrderReportPage(${state.orderReportPage - 1})" ${state.orderReportPage === 1 ? 'disabled' : ''} aria-label="Previous page"><i data-lucide="chevron-left"></i></button>
+                    <span class="report-page-number">Page ${state.orderReportPage} of ${totalPages}</span>
+                    <button type="button" onclick="changeOrderReportPage(${state.orderReportPage + 1})" ${state.orderReportPage === totalPages ? 'disabled' : ''} aria-label="Next page"><i data-lucide="chevron-right"></i></button>
+                </div>`;
         }
 
         const completedOrders = visibleOrders.filter(order => order.status === 'completed');
@@ -5284,6 +5448,11 @@
             }, { merge: true });
             if (existingOrder) Object.assign(existingOrder, { status: newStatus, ...extraUpdates });
             await writeAuditLog('order.status_change', { orderId, changes: { Status: { from: previousStatus, to: newStatus } }, ...extraUpdates });
+            trackAnalyticsEvent('order_status_changed', {
+                previous_status: previousStatus,
+                new_status: newStatus,
+                staff_role: state.currentUser.role
+            });
             renderOrdersTable();
             triggerToast("Order status updated!");
         } catch (error) {
@@ -6224,6 +6393,21 @@
         if (type === 'availability') state.customerMenuAvailability = value;
         if (type === 'price') state.customerMenuPrice = value;
         renderMenu();
+        if (type === 'search') {
+            clearTimeout(analyticsSearchTimer);
+            analyticsSearchTimer = setTimeout(() => {
+                if (state.customerMenuSearch) {
+                    trackAnalyticsEvent('search', {
+                        search_term: state.customerMenuSearch.slice(0, 100)
+                    });
+                }
+            }, 700);
+        } else {
+            trackAnalyticsEvent('menu_filter_used', {
+                filter_type: type,
+                filter_value: String(value).slice(0, 100)
+            });
+        }
     }
 
     function syncCustomerCategoryFilter() {
@@ -6269,6 +6453,10 @@
         if (!confirm(`Cancel ${order.orderNumber || 'this order'}? This cannot be undone.`)) return;
         try {
             await setDoc(doc(db, 'orders', orderId), { status:'cancelled', cancelledAt:new Date().toISOString(), cancelledById:state.currentUser.uid, updatedAt:new Date().toISOString() }, { merge:true });
+            trackAnalyticsEvent('order_cancelled', {
+                order_status: String(order.status || 'pending'),
+                order_type: String(order.fulfilmentType || 'unknown')
+            });
             triggerToast('Order cancelled.');
         } catch (error) { triggerToast(error.message || 'Could not cancel the order.', 'danger'); }
     }
@@ -6281,6 +6469,9 @@
         state.cart = available.map(item => ({...item, quantity:Number(item.quantity || 1)}));
         renderCart();
         document.getElementById('cart-pane-element')?.classList.remove('hidden');
+        trackAnalyticsEvent('order_again', {
+            item_count: available.reduce((sum, item) => sum + Number(item.quantity || 1), 0)
+        });
         triggerToast(`${available.length} item(s) restored to your basket. Review prices before checkout.`);
     }
 
@@ -6425,6 +6616,9 @@
     window.setCustomerMenuFilter = setCustomerMenuFilter;
     window.cancelPendingOrder = cancelPendingOrder;
     window.orderAgain = orderAgain;
+    window.renderOrdersTable = renderOrdersTable;
+    window.handleOrderReportFilterChange = handleOrderReportFilterChange;
+    window.changeOrderReportPage = changeOrderReportPage;
     window.exportOrdersCsv = exportOrdersCsv;
     window.requestOrderNotifications = requestOrderNotifications;
     window.startItemDrag = startItemDrag;
