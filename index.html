@@ -3194,7 +3194,6 @@
         GoogleAuthProvider,
         signInWithPopup
     } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-
     const firebaseConfig = {
         apiKey: "AIzaSyDbEYx361Xg3KfHoghlHAYTC-b8g6Yy2I8",
         authDomain: "thesnackstation-c6ff9.firebaseapp.com",
@@ -4622,7 +4621,7 @@
     }
 
     function buildValidatedOrderItems() {
-        return state.cart.map(cartItem => {
+        const validatedItems = state.cart.map(cartItem => {
             const currentItem = menuData.find(item => String(item.id) === String(cartItem.id));
             if (!currentItem || !isMenuItemAvailable(currentItem)) throw new Error(`${cartItem.name} is no longer available.`);
             const selectedVariant = cartItem.selectedVariant
@@ -4648,6 +4647,54 @@
                 selectedVariant, selectedAddons, selectedMealItems, instructions: String(cartItem.instructions || '').slice(0, 250)
             };
         });
+
+        const requiredStock = new Map();
+        validatedItems.forEach(item => {
+            requiredStock.set(item.itemId, (requiredStock.get(item.itemId) || 0) + item.quantity);
+            (item.selectedMealItems || []).forEach(component => {
+                const componentQuantity = Number(component.quantity || 1) * item.quantity;
+                requiredStock.set(component.itemId, (requiredStock.get(component.itemId) || 0) + componentQuantity);
+            });
+        });
+        requiredStock.forEach((required, itemId) => {
+            const currentItem = menuData.find(item => String(item.id) === String(itemId));
+            const available = getStockQuantity(currentItem);
+            if (available !== null && required > available) {
+                throw new Error(`Only ${available} ${currentItem?.name || 'item'}${available === 1 ? ' is' : 's are'} currently available.`);
+            }
+        });
+        return validatedItems;
+    }
+
+    function getLocalOrdersPlacedToday() {
+        const today = new Date().toISOString().slice(0, 10);
+        const stored = JSON.parse(localStorage.getItem('snack-station-daily-orders') || 'null');
+        return stored?.date === today ? Math.max(0, Number(stored.count || 0)) : 0;
+    }
+
+    function rememberLocalOrderPlacedToday() {
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem('snack-station-daily-orders', JSON.stringify({
+            date: today,
+            count: getLocalOrdersPlacedToday() + 1
+        }));
+    }
+
+    function checkAdvisoryDailyOrderLimit() {
+        const limit = Number(state.storeSettings.dailyOrderCapacity);
+        if (!Number.isFinite(limit) || limit <= 0) return true;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const visibleOrdersToday = (state.orders || []).filter(order => {
+            const date = getOrderDate(order);
+            return date && date.toISOString().slice(0, 10) === today && order.status !== 'cancelled';
+        }).length;
+        const knownCount = Math.max(visibleOrdersToday, getLocalOrdersPlacedToday());
+        if (knownCount >= limit) {
+            triggerToast('The kitchen has reached today’s order limit. Please try again tomorrow.', 'danger');
+            return false;
+        }
+        return true;
     }
 
     function buildOrderFingerprint(customerDetails, validatedItems, fulfilmentType) {
@@ -4669,6 +4716,7 @@
         if (code.includes('permission-denied')) return "Firebase blocked this action. Check that you are signed in with the correct role and that the published Firestore rules match this app.";
         if (code.includes('unauthenticated')) return "Your session has expired. Please sign in again.";
         if (code.includes('unavailable') || code.includes('network')) return "The connection was interrupted. Check your internet connection and try again.";
+        if (code.includes('resource-exhausted') && error?.message) return error.message;
         if (code.includes('resource-exhausted')) return "The service is temporarily busy. Please wait a moment and try again.";
         return error?.message || fallback;
     }
@@ -4694,6 +4742,7 @@
             return false;
         }
         if (orderSubmissionInProgress) return false;
+        if (!checkAdvisoryDailyOrderLimit()) return false;
         let validatedItems;
         try { validatedItems = buildValidatedOrderItems(); }
         catch (error) { triggerToast(error.message, 'danger'); return false; }
@@ -4729,6 +4778,7 @@
         });
         try {
             await retryOperation(() => setDoc(orderRef, orderData));
+            rememberLocalOrderPlacedToday();
             localStorage.setItem('snack-station-last-order-submission', JSON.stringify({
                 fingerprint, createdAt: Date.now(), orderId: orderRef.id, orderNumber: orderData.orderNumber
             }));
@@ -6464,15 +6514,59 @@
     function orderAgain(orderId) {
         const order = state.customerOrders.find(item => item.id === orderId);
         if (!order || !Array.isArray(order.items)) return;
-        const available = order.items.filter(saved => isMenuItemAvailable(menuData.find(item => String(item.id) === String(saved.id || saved.itemId))));
-        if (!available.length) { triggerToast('Those items are not currently available.', 'danger'); return; }
-        state.cart = available.map(item => ({...item, quantity:Number(item.quantity || 1)}));
+        const restored = order.items.flatMap(saved => {
+            const currentItem = menuData.find(item => String(item.id) === String(saved.id || saved.itemId));
+            if (!isMenuItemAvailable(currentItem)) return [];
+            const quantity = Math.max(1, Math.min(20, Number(saved.quantity || saved.qty || 1)));
+            const selectedVariant = saved.selectedVariant
+                ? (currentItem.variants || []).find(variant => variant.name === saved.selectedVariant.name)
+                : null;
+            if (saved.selectedVariant && !selectedVariant) return [];
+            const selectedAddons = (saved.selectedAddons || []).map(selected => {
+                const group = (currentItem.addonGroups || []).find(candidate => candidate.name === selected.groupName);
+                const option = (group?.options || []).find(candidate => candidate.name === selected.name);
+                return option ? { ...option, groupName:group.name } : null;
+            }).filter(Boolean);
+            if (selectedAddons.length !== (saved.selectedAddons || []).length) return [];
+            const selectedMealItems = (saved.selectedMealItems || saved.mealItems || []).map((selected, index) => {
+                const component = currentItem.mealItems?.[index];
+                const allowedIds = component ? [component.itemId, ...(component.substituteItemIds || [])].map(String) : [];
+                const selectedItem = menuData.find(item => String(item.id) === String(selected.itemId));
+                return component && allowedIds.includes(String(selected.itemId)) && isBasicItemAvailable(selectedItem)
+                    ? { itemId:String(selectedItem.id), name:selectedItem.name, quantity:Number(component.quantity || 1) }
+                    : null;
+            }).filter(Boolean);
+            if (selectedMealItems.length !== (saved.selectedMealItems || saved.mealItems || []).length) return [];
+            const finalPrice = Number(currentItem.price)
+                + Number(selectedVariant?.priceAdjustment || 0)
+                + selectedAddons.reduce((sum, addon) => sum + Number(addon.priceAdjustment || 0), 0);
+            const optionKey = JSON.stringify({
+                variant:selectedVariant?.name || '',
+                addons:selectedAddons.map(addon => `${addon.groupName}:${addon.name}`).sort(),
+                mealItems:selectedMealItems.map(component => component.itemId),
+                instructions:String(saved.instructions || '').slice(0, 250)
+            });
+            return [{
+                id:String(currentItem.id),
+                cartKey:`${currentItem.id}::${optionKey}`,
+                name:currentItem.name,
+                price:finalPrice,
+                selectedVariant,
+                selectedAddons,
+                selectedMealItems,
+                instructions:String(saved.instructions || '').slice(0, 250),
+                qty:quantity
+            }];
+        });
+        if (!restored.length) { triggerToast('Those items are not currently available.', 'danger'); return; }
+        state.cart = restored;
         renderCart();
         document.getElementById('cart-pane-element')?.classList.remove('hidden');
         trackAnalyticsEvent('order_again', {
-            item_count: available.reduce((sum, item) => sum + Number(item.quantity || 1), 0)
+            item_count: restored.reduce((sum, item) => sum + Number(item.qty || 1), 0)
         });
-        triggerToast(`${available.length} item(s) restored to your basket. Review prices before checkout.`);
+        const skipped = order.items.length - restored.length;
+        triggerToast(`${restored.length} item(s) restored to your basket${skipped ? `; ${skipped} unavailable item(s) were skipped` : ''}. Review prices before checkout.`);
     }
 
     function renderOrderAnalytics(orders) {
