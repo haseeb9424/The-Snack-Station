@@ -3175,6 +3175,7 @@
         doc,
         getDoc,
         getDocs,
+        getDocsFromServer,
         setDoc,
         deleteDoc,
         onSnapshot,
@@ -4666,6 +4667,44 @@
         return validatedItems;
     }
 
+    async function buildFreshValidatedOrderItems() {
+        let snapshot;
+        try {
+            snapshot = await getDocsFromServer(collection(db, "items"));
+        } catch (error) {
+            const checkoutError = new Error("Could not verify the latest menu details. Check your internet connection and try again.");
+            checkoutError.code = error?.code || "menu-refresh-failed";
+            throw checkoutError;
+        }
+
+        menuData = snapshot.docs.map(itemDoc => ({ id: itemDoc.id, ...itemDoc.data() }));
+        writeCachedMenu(menuData);
+
+        const validatedItems = buildValidatedOrderItems();
+        const changedPrices = [];
+
+        validatedItems.forEach((validatedItem, index) => {
+            const cartItem = state.cart[index];
+            const previousPrice = Number(cartItem.price || 0);
+            const latestPrice = Number(validatedItem.price || 0);
+            if (Math.abs(previousPrice - latestPrice) > 0.001) {
+                changedPrices.push(`${validatedItem.name}: Rs. ${previousPrice.toLocaleString()} → Rs. ${latestPrice.toLocaleString()}`);
+                cartItem.price = latestPrice;
+            }
+            cartItem.name = validatedItem.name;
+            cartItem.selectedVariant = validatedItem.selectedVariant;
+            cartItem.selectedAddons = validatedItem.selectedAddons;
+            cartItem.selectedMealItems = validatedItem.selectedMealItems;
+        });
+
+        if (changedPrices.length) {
+            renderCart();
+            throw new Error(`The menu price changed (${changedPrices.join("; ")}). Your basket has been updated—please review it and place the order again.`);
+        }
+
+        return validatedItems;
+    }
+
     function getLocalOrdersPlacedToday() {
         const today = new Date().toISOString().slice(0, 10);
         const stored = JSON.parse(localStorage.getItem('snack-station-daily-orders') || 'null');
@@ -4744,8 +4783,8 @@
         if (orderSubmissionInProgress) return false;
         if (!checkAdvisoryDailyOrderLimit()) return false;
         let validatedItems;
-        try { validatedItems = buildValidatedOrderItems(); }
-        catch (error) { triggerToast(error.message, 'danger'); return false; }
+        try { validatedItems = await buildFreshValidatedOrderItems(); }
+        catch (error) { triggerToast(friendlyFirebaseError(error, error.message), 'danger'); return false; }
         const subtotal = validatedItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
         const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
         const deliveryFee = fulfilmentType === 'pickup' ? 0 : 150;
