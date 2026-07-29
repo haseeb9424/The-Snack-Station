@@ -4510,9 +4510,9 @@
                     <p>Rs. ${Number(item.price).toLocaleString()}</p>
                 </div>
                 <div class="cart-qty-controls">
-                    <button type="button" class="cart-qty-btn" onclick="alterQtyByIndex(${index}, -1)" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
+                    <button type="button" class="cart-qty-btn" data-cart-action="decrease" data-cart-index="${index}" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
                     <span>${item.qty}</span>
-                    <button type="button" class="cart-qty-btn" onclick="alterQtyByIndex(${index}, 1)" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
+                    <button type="button" class="cart-qty-btn" data-cart-action="increase" data-cart-index="${index}" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
                 </div>
             </div>
         `).join('');
@@ -4534,6 +4534,14 @@
         else state.cart[index].qty = Math.min(20, nextQty);
         renderCart();
     }
+
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-cart-action][data-cart-index]');
+        if (!button) return;
+        const index = Number(button.dataset.cartIndex);
+        const delta = button.dataset.cartAction === 'increase' ? 1 : -1;
+        alterQtyByIndex(index, delta);
+    });
 
     let orderSubmissionInProgress = false;
 
