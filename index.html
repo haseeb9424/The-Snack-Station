@@ -4510,19 +4510,12 @@
                     <p>Rs. ${Number(item.price).toLocaleString()}</p>
                 </div>
                 <div class="cart-qty-controls">
-                    <button type="button" class="cart-qty-btn" data-cart-index="${index}" data-qty-delta="-1" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
+                    <button type="button" class="cart-qty-btn" onclick="alterQtyByIndex(${index}, -1)" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
                     <span>${item.qty}</span>
-                    <button type="button" class="cart-qty-btn" data-cart-index="${index}" data-qty-delta="1" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
+                    <button type="button" class="cart-qty-btn" onclick="alterQtyByIndex(${index}, 1)" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
                 </div>
             </div>
         `).join('');
-        cartContainer.querySelectorAll('.cart-qty-btn[data-cart-index][data-qty-delta]').forEach(button => {
-            button.addEventListener('click', event => {
-                event.preventDefault();
-                event.stopPropagation();
-                alterQtyByIndex(Number(button.dataset.cartIndex), Number(button.dataset.qtyDelta));
-            });
-        });
         const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         document.getElementById('subtotal-val').innerText = `Rs. ${subtotal.toLocaleString()}`;
         const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
@@ -6750,6 +6743,7 @@
     // shared cart renderer so those controls and module event handlers use the
     // same implementation after every cart rerender.
     window.renderCart = renderCart;
+    window.alterQtyByIndex = alterQtyByIndex;
     window.editMenuItem = editMenuItem;
     window.toggleMenuItemVisibility = toggleMenuItemVisibility;
     window.removeMenuItem = removeMenuItem;
