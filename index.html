@@ -3138,7 +3138,7 @@
                         </div>
                         <div class="form-group" id="customization-quantity-section">
                             <div class="customization-section-header">
-                                <h4><i data-lucide="plus-minus" style="width:17px; color:var(--accent);"></i> Quantity</h4>
+                                <h4><i data-lucide="hash" style="width:17px; color:var(--accent);"></i> Quantity</h4>
                             </div>
                             <div class="cart-qty-controls" style="justify-content:center; width:fit-content; padding:4px; margin:0 auto;">
                                 <button type="button" class="cart-qty-btn" onclick="changeCustomizationQuantity(-1)">−</button>
@@ -4509,9 +4509,9 @@
                     <p>Rs. ${Number(item.price).toLocaleString()}</p>
                 </div>
                 <div class="cart-qty-controls">
-                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(item.cartKey || String(item.id))}, -1)'>-</button>
+                    <button type="button" class="cart-qty-btn" data-cart-key="${encodeURIComponent(item.cartKey || String(item.id))}" data-qty-delta="-1" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
                     <span>${item.qty}</span>
-                    <button class="cart-qty-btn" onclick='alterQty(${JSON.stringify(item.cartKey || String(item.id))}, 1)'>+</button>
+                    <button type="button" class="cart-qty-btn" data-cart-key="${encodeURIComponent(item.cartKey || String(item.id))}" data-qty-delta="1" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
                 </div>
             </div>
         `).join('');
@@ -4531,6 +4531,15 @@
         if(state.cart[index].qty <= 0) state.cart.splice(index, 1);
         renderCart();
     }
+
+    document.getElementById('cart-container')?.addEventListener('click', event => {
+        const quantityButton = event.target.closest('[data-cart-key][data-qty-delta]');
+        if (!quantityButton) return;
+        alterQty(
+            decodeURIComponent(quantityButton.dataset.cartKey),
+            Number(quantityButton.dataset.qtyDelta)
+        );
+    });
 
     let orderSubmissionInProgress = false;
 
