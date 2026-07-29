@@ -4498,7 +4498,8 @@
 
     function renderCart() {
         document.getElementById('cart-toggle-badge').innerText = state.cart.reduce((sum, item) => sum + item.qty, 0);
-        document.getElementById('cart-container').innerHTML = state.cart.map(item => `
+        const cartContainer = document.getElementById('cart-container');
+        cartContainer.innerHTML = state.cart.map((item, index) => `
             <div class="cart-item">
                 <div class="cart-item-info">
                     <h4>${item.name}</h4>
@@ -4509,12 +4510,19 @@
                     <p>Rs. ${Number(item.price).toLocaleString()}</p>
                 </div>
                 <div class="cart-qty-controls">
-                    <button type="button" class="cart-qty-btn" data-cart-key="${encodeURIComponent(item.cartKey || String(item.id))}" data-qty-delta="-1" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
+                    <button type="button" class="cart-qty-btn" data-cart-index="${index}" data-qty-delta="-1" aria-label="Decrease ${escapeHtml(item.name)} quantity">−</button>
                     <span>${item.qty}</span>
-                    <button type="button" class="cart-qty-btn" data-cart-key="${encodeURIComponent(item.cartKey || String(item.id))}" data-qty-delta="1" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
+                    <button type="button" class="cart-qty-btn" data-cart-index="${index}" data-qty-delta="1" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
                 </div>
             </div>
         `).join('');
+        cartContainer.querySelectorAll('.cart-qty-btn[data-cart-index][data-qty-delta]').forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                alterQtyByIndex(Number(button.dataset.cartIndex), Number(button.dataset.qtyDelta));
+            });
+        });
         const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         document.getElementById('subtotal-val').innerText = `Rs. ${subtotal.toLocaleString()}`;
         const fulfilmentType = document.getElementById('fulfilment-type')?.value || 'delivery';
@@ -4524,31 +4532,15 @@
         document.getElementById('total-val').innerText = `Rs. ${(subtotal + fee).toLocaleString()}`;
     }
 
-    function alterQty(cartKey, delta) {
-        if (!cartKey || !Number.isInteger(delta) || Math.abs(delta) !== 1) return;
-        const index = state.cart.findIndex(c => (c.cartKey || String(c.id)) === cartKey);
-        if (index < 0) return;
+    function alterQtyByIndex(index, delta) {
+        if (!Number.isInteger(index) || index < 0 || index >= state.cart.length) return;
+        if (!Number.isInteger(delta) || Math.abs(delta) !== 1) return;
         const currentQty = Math.max(1, Number(state.cart[index].qty) || 1);
         const nextQty = currentQty + delta;
         if (nextQty <= 0) state.cart.splice(index, 1);
         else state.cart[index].qty = Math.min(20, nextQty);
         renderCart();
     }
-
-    // The cart contents are rerendered after every quantity change. Delegate
-    // clicks to the stable document so newly created buttons keep working.
-    document.addEventListener('click', event => {
-        const quantityButton = event.target.closest('#cart-container .cart-qty-btn[data-cart-key][data-qty-delta]');
-        if (!quantityButton) return;
-        event.preventDefault();
-        let cartKey = quantityButton.dataset.cartKey || '';
-        try {
-            cartKey = decodeURIComponent(cartKey);
-        } catch {
-            return;
-        }
-        alterQty(cartKey, Number(quantityButton.dataset.qtyDelta));
-    });
 
     let orderSubmissionInProgress = false;
 
