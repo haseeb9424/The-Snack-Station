@@ -1,5 +1,8 @@
+/* ==========================================
+   1. THEME CONTROL PANEL (Customizable Variables)
+   ========================================== */
 :root {
-    /* Brand Colors */
+    /* Brand Colors (Default Dark Mode) */
     --bg-dark: #090a0f;
     --bg-card: #12141c;
     --bg-input: #1a1d29;
@@ -19,21 +22,46 @@
     --font-main: 'Plus Jakarta Sans', sans-serif;
     --font-size-base: 16px;
 
-    /* Roundness */
+    /* Structural Roundness */
     --radius-lg: 16px;
     --radius-md: 12px;
     --radius-card: 16px;
     --radius-btn: 12px;
 
-    /* Transitions & Spacing */
+    /* Animation Curves */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Modular Spacing Scale */
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 16px;
     --space-lg: 24px;
     --space-xl: 32px;
+
+    /* 2026 Workspace Redesign Variables */
+    color-scheme: dark;
+    --workspace-sidebar-width: 232px;
+    --workspace-sidebar-collapsed-width: 76px;
+    --workspace-topbar-height: 68px;
+    --workspace-content-width: 1280px;
+    --workspace-gutter: 32px;
+    --surface-1: #101218;
+    --surface-2: #171a22;
+    --surface-3: #1d212b;
+    --line-soft: rgba(255,255,255,.075);
+    --shadow-soft: 0 16px 40px rgba(0,0,0,.18);
+    --workspace-bg: #0b0d12;
+    --workspace-sidebar: #0f1117;
+    --workspace-header: rgba(11,13,18,.9);
+    --workspace-table-head: #13161d;
+    --workspace-nav-text: #9299a8;
+    --workspace-nav-hover: #fff;
+    --workspace-nav-hover-bg: rgba(255,255,255,.045);
+    --workspace-nav-active: #fff;
+    --workspace-date-text: #aeb4c0;
 }
 
+/* Light Theme Color Mapping */
 [data-theme="light"] {
     --bg-dark: #f5f6fa;
     --bg-card: #ffffff;
@@ -42,4 +70,102 @@
     --text-muted: #626d7f;
     --border-color: #e2e8f0;
     --accent-glow: rgba(255, 94, 58, 0.25);
+
+    color-scheme: light;
+    --surface-1: #ffffff;
+    --surface-2: #f4f6f9;
+    --surface-3: #e9edf3;
+    --line-soft: rgba(15,23,42,.11);
+    --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+    --workspace-bg: #f5f6fa;
+    --workspace-sidebar: #ffffff;
+    --workspace-header: rgba(255,255,255,.92);
+    --workspace-table-head: #f4f6f9;
+    --workspace-nav-text: #586274;
+    --workspace-nav-hover: #172033;
+    --workspace-nav-hover-bg: rgba(15,23,42,.055);
+    --workspace-nav-active: #172033;
+    --workspace-date-text: #526075;
+}
+
+/* ==========================================
+   2. BASE STYLING (Reset & Setup)
+   ========================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    font-size: var(--font-size-base);
+    transition: background-color var(--transition), color var(--transition);
+}
+
+button, .menu-card, .card, .quick-action, .tracking-recent-order {
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease,
+        border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+button:not(:disabled):active { transform: translateY(1px) scale(.98); }
+
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; }
+}
+
+/* Auth pending states */
+body.auth-pending > :not(.app-auth-loader):not(script) { visibility: hidden !important; }
+body.admin-login-route > :not(.modal-overlay):not(.toast-box):not(.app-auth-loader):not(script) { visibility: hidden !important; }
+
+.app-auth-loader { display: none; }
+body.auth-pending .app-auth-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    background: var(--bg-dark);
+    color: var(--text-main);
+}
+
+.app-auth-loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-muted);
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+.app-auth-loader-mark {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 12px 30px var(--accent-glow);
+}
+
+.app-auth-loader-mark svg {
+    width: 24px;
+    height: 24px;
+    animation: auth-loader-pulse 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes auth-loader-pulse {
+    to { transform: scale(.88); opacity: .72; }
 }
