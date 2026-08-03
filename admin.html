@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Snack Station | Admin Login</title>
+  <style>
+    :root {
+      --accent: #ff5e3a;
+      --accent-2: #ff8c66;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #142033;
+      --muted: #64748b;
+      --border: #dae3ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #f6f8fc, #edf2f8);
+      color: var(--text);
+    }
+    .panel {
+      width: min(420px, calc(100vw - 24px));
+      background: var(--card);
+      border: 1px solid rgba(20,32,51,0.08);
+      border-radius: 24px;
+      box-shadow: 0 18px 50px rgba(20,32,51,0.12);
+      padding: 28px;
+    }
+    .badge {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,94,58,0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 16px 0 8px; font-size: 2rem; }
+    p { margin: 0 0 22px; color: var(--muted); line-height: 1.6; }
+    label { display: block; font-size: 0.92rem; font-weight: 700; margin-bottom: 8px; }
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      margin-bottom: 16px;
+      font-size: 0.98rem;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255,94,58,0.14);
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-weight: 800;
+      color: white;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+    button:disabled { opacity: 0.7; cursor: progress; }
+    .status {
+      min-height: 1.1rem;
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .status.error { color: #b91c1c; }
+    .status.success { color: #047857; }
+    .link {
+      display: inline-block;
+      margin-top: 14px;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <div class="badge">Staff Access</div>
+    <h1>Admin Login</h1>
+    <p>Use your staff credentials to open the admin workspace.</p>
+
+    <form id="admin-login-form">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="admin@thesnackstation.com" required />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Enter password" required />
+
+      <button id="admin-login-submit" type="submit">Sign In</button>
+      <div id="admin-login-status" class="status" aria-live="polite"></div>
+    </form>
+
+    <a class="link" href="index.html">Back to store</a>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: 'AIzaSyDbEYx361Xg3KfHoghlHAYTC-b8g6Yy2I8',
+      authDomain: 'thesnackstation-c6ff9.firebaseapp.com',
+      projectId: 'thesnackstation-c6ff9',
+      storageBucket: 'thesnackstation-c6ff9.firebasestorage.app',
+      messagingSenderId: '830977242508',
+      appId: '1:830977242508:web:cac072840fc4c9366c12a9',
+      measurementId: 'G-V404QLEB66'
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const form = document.getElementById('admin-login-form');
+    const submitButton = document.getElementById('admin-login-submit');
+    const status = document.getElementById('admin-login-status');
+
+    function setStatus(message, kind = '') {
+      status.textContent = message;
+      status.className = `status ${kind}`.trim();
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!email || !password) {
+        setStatus('Please enter both email and password.', 'error');
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Signing in...';
+      setStatus('Connecting to staff authentication...');
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        setStatus('Authenticated. Opening the admin workspace...', 'success');
+        window.location.replace('index.html');
+      } catch (error) {
+        const friendlyError = {
+          'auth/invalid-email': 'Please enter a valid staff email address.',
+          'auth/user-not-found': 'No staff account was found for that email.',
+          'auth/wrong-password': 'Incorrect password. Please try again.',
+          'auth/too-many-requests': 'Too many attempts. Please try again in a moment.'
+        };
+        setStatus(friendlyError[error.code] || error.message || 'Could not sign in to the admin workspace.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

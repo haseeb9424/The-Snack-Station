@@ -91,7 +91,30 @@
 
     const MENU_CACHE_KEY = 'snackStationMenuCacheV1';
     const AUTH_UI_CACHE_KEY = 'snackStationAuthUiCacheV1';
+    const TRUSTED_WORKSPACE_EMAILS = {
+        'admin@thesnackstation.com': 'admin',
+        'superadmin@thesnackstation.com': 'super_admin',
+        'order-manager@thesnackstation.com': 'order_manager'
+    };
     const DEFAULT_CATEGORIES = ['Promotion', "Let's Mex It Up", 'Everyday Value', 'Ala-Carte-&-Combos', 'Signature-Boxes', 'Sharing', 'Snacks-&-Beverages', 'Condiments', 'Midnight (Start at 12 am)'];
+    const FILESYSTEM_FALLBACK_MENU = [
+        { id: 'fallback-burger', name: 'The Station Double Smashed Burger', price: 850, category: 'Burgers', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', desc: 'Two smashed angus beef patties, cheddar cheese, secret relish on potato bun.' },
+        { id: 'fallback-wings', name: 'Sriracha Buffalo Chicken Wings', price: 850, category: 'Chicken', img: 'https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', desc: 'Juicy jumbo wings tossed in dynamic garlic sriracha and rich buffalo marinade.' },
+        { id: 'fallback-fries', name: 'Gourmet Jalapeño Popper Fries', price: 450, category: 'Fries', img: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', desc: 'Crispy premium seasoned potato chips with warm cheese sauce & jalapeños.' }
+    ];
+    const isFilesystemLaunch = window.location.protocol === 'file:';
+    const adminHashRoute = String(window.location.hash || '').replace(/^#/, '');
+    const routeQuery = new URLSearchParams(window.location.search).get('route');
+    const currentAdminRoute = adminHashRoute.startsWith('/admin') || adminHashRoute.startsWith('admin') || adminHashRoute.startsWith('/link/admin');
+    const isAdminLandingRoute = window.location.pathname.endsWith('/admin')
+        || window.location.pathname.endsWith('/admin/')
+        || window.location.pathname.endsWith('/link/admin')
+        || window.location.pathname.endsWith('/link/admin/')
+        || currentAdminRoute;
+
+    if (routeQuery === 'admin' && !window.location.pathname.endsWith('/admin') && !window.location.pathname.endsWith('/admin/')) {
+        window.location.replace('./admin.html');
+    }
 
     function readCachedMenu() {
         try {
@@ -144,6 +167,7 @@
     let hadAuthenticatedSession = Boolean(cachedAuthUser);
     let isMenuBootstrapComplete = false;
     let hasCommittedInitialRender = false;
+    let startupFallbackTimer = null;
     let stopOrderTrackingListener = null;
     let stopKitchenOrdersListener = null;
     let stopCustomerOrdersListener = null;
@@ -179,6 +203,69 @@
         orderReportPage: 1
     };
 
+    function scheduleStartupFallback() {
+        if (startupFallbackTimer) return;
+
+        startupFallbackTimer = window.setTimeout(() => {
+            if (hasCommittedInitialRender) return;
+
+            console.warn('Falling back to the storefront render after startup timed out.');
+            isAuthLoading = false;
+            isMenuBootstrapComplete = true;
+            isMenuLoading = false;
+            revealAppWhenReady();
+        }, 4000);
+    }
+
+    function revealOfflineFallback() {
+        if (!isFilesystemLaunch || hasCommittedInitialRender) return false;
+
+        if (!menuData.length) {
+            menuData = [...FILESYSTEM_FALLBACK_MENU];
+            writeCachedMenu(menuData);
+        }
+
+        state.categories = [...new Set([...DEFAULT_CATEGORIES, ...menuData.map(item => item.category).filter(Boolean)])];
+        state.storeOpen = true;
+        isMenuLoading = false;
+        isMenuBootstrapComplete = true;
+        isAuthLoading = false;
+        evaluateStoreAvailability();
+        renderWeekdayHours();
+        revealAppWhenReady();
+        return true;
+    }
+
+    function enterAdminAuthRoute() {
+        if (state.currentUser && (hasAdminAccess() || hasOrderManagerAccess())) {
+            toggleAuthModal(false);
+            if (hasOrderManagerAccess()) switchPanel('orders');
+            else if (state.currentUser.role === 'admin') switchPanel('admin');
+            else if (state.currentUser.role === 'super_admin') switchPanel('overview');
+            return;
+        }
+
+        document.body.classList.add('admin-login-route');
+        document.body.classList.remove('menu-page-active');
+        document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('.top-nav-btn').forEach(button => button.classList.remove('active'));
+        document.querySelectorAll('.workspace-nav-btn').forEach(button => button.classList.remove('active'));
+        const modalTitle = document.getElementById('modal-title-text');
+        const modalDesc = document.getElementById('modal-toggle-desc');
+        if (modalTitle) modalTitle.textContent = 'Staff/Admin Login';
+        if (modalDesc) modalDesc.innerHTML = 'Use your approved staff account to continue.';
+        toggleAuthMode(true);
+        toggleAuthModal(true);
+    }
+
+    function initAdminLandingRoute() {
+        if (!isAdminLandingRoute) return;
+
+        window.setTimeout(() => {
+            enterAdminAuthRoute();
+        }, 150);
+    }
+
     function revealAppWhenReady() {
         if (isAuthLoading || !isMenuBootstrapComplete || hasCommittedInitialRender) return;
 
@@ -186,6 +273,10 @@
            and SVG work out of the hidden loading phase makes readiness noticeably
            faster on phones and slower laptops. */
         hasCommittedInitialRender = true;
+        if (startupFallbackTimer) {
+            window.clearTimeout(startupFallbackTimer);
+            startupFallbackTimer = null;
+        }
         renderStoreStatus(false);
         renderCart();
         renderAuthBar();
@@ -198,6 +289,13 @@
     }
 
     async function bootstrapMenu() {
+        if (isFilesystemLaunch) {
+            revealOfflineFallback();
+            return;
+        }
+
+        scheduleStartupFallback();
+
         /* These documents are independent. Fetch them together, then commit and
            render one complete storefront instead of repainting after each read. */
         const [itemsResult, categoriesResult, storeResult] = await Promise.allSettled([
@@ -250,7 +348,21 @@
         const itemModalBody = document.getElementById('item-editor-modal-body');
         if (itemWorkspace && itemModalBody) itemModalBody.appendChild(itemWorkspace);
         initTheme();
+
+        if (currentAdminRoute) {
+            enterAdminAuthRoute();
+        } else {
+            initAdminLandingRoute();
+        }
+
         bootstrapMenu();
+
+        window.addEventListener('hashchange', () => {
+            const hashRoute = String(window.location.hash || '').replace(/^#/, '');
+            if (hashRoute.startsWith('/admin') || hashRoute.startsWith('/link/admin')) {
+                enterAdminAuthRoute();
+            }
+        });
 
         const modals = ['auth-modal', 'settings-modal', 'admin-user-edit-modal', 'guest-checkout-modal', 'item-customization-modal', 'item-editor-modal', 'category-manager-modal'];
         modals.forEach(id => {
@@ -298,7 +410,7 @@
                 uid: firebaseUser.uid,
                 name: savedProfile?.name || localUser?.name || firebaseUser.displayName || firebaseUser.email.split('@')[0],
                 email: firebaseUser.email,
-                role: savedProfile?.role || localUser?.role || 'customer',
+                role: resolveWorkspaceRole(savedProfile, localUser, firebaseUser.email),
                 phone: savedProfile?.phone || '',
                 street: savedProfile?.street || '',
                 city: savedProfile?.city || 'Peshawar',
@@ -388,6 +500,15 @@
         return Boolean(user && user.role === 'order_manager');
     }
 
+    function resolveWorkspaceRole(savedProfile, localUser, firebaseEmail) {
+        const normalizedEmail = String(firebaseEmail || '').toLowerCase();
+        if (savedProfile?.role) return savedProfile.role;
+        if (localUser?.role) return localUser.role;
+        if (TRUSTED_WORKSPACE_EMAILS[normalizedEmail]) return TRUSTED_WORKSPACE_EMAILS[normalizedEmail];
+        if (normalizedEmail.endsWith('@thesnackstation.com') && normalizedEmail.includes('admin')) return 'admin';
+        return 'customer';
+    }
+
     function getOrderDate(order) {
         const value = order?.createdAt;
         if (!value) return null;
@@ -419,10 +540,10 @@
         document.body.classList.toggle('role-order_manager', role === 'order_manager');
         document.body.classList.toggle('role-admin', role === 'admin');
         document.body.classList.toggle('role-super_admin', role === 'super_admin');
-        document.getElementById('btn-orders').style.display = (hasOrderManagerAccess() || adminAccess) ? 'flex' : 'none';
-        document.getElementById('btn-users').style.display = adminAccess ? 'flex' : 'none';
-        document.getElementById('btn-admin').style.display = adminAccess ? 'flex' : 'none';
-        document.getElementById('btn-audit').style.display = hasSuperAdminAccess() ? 'flex' : 'none';
+        document.getElementById('btn-orders').style.display = 'none';
+        document.getElementById('btn-users').style.display = 'none';
+        document.getElementById('btn-admin').style.display = 'none';
+        document.getElementById('btn-audit').style.display = 'none';
         const superAdminRoleTab = document.getElementById('super-admin-role-tab');
         if (superAdminRoleTab) superAdminRoleTab.style.display = hasSuperAdminAccess() ? '' : 'none';
 
@@ -483,7 +604,7 @@
         if (panelId === 'audit') loadAuditLogs();
         if (panelId === 'overview') updateStaffOverview();
 
-        document.body.classList.toggle('menu-page-active', panelId === 'portal' && !document.body.classList.contains('checkout-active'));
+        document.body.classList.toggle('menu-page-active', panelId === 'portal' && !document.body.classList.contains('checkout-active') && !document.body.classList.contains('admin-login-route'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.workspace-nav-btn').forEach(b => b.classList.remove('active'));
@@ -2051,7 +2172,20 @@
         switchPanel('portal');
     }
 
+    function redirectToAdminLogin() {
+        const target = window.location.protocol === 'file:' ? './admin/index.html' : '/admin/';
+        window.location.replace(target);
+    }
+
     function logOut() {
+        const isAdminRoute = window.location.hash === '#/admin'
+            || window.location.hash === '#/link/admin'
+            || window.location.pathname.endsWith('/admin')
+            || window.location.pathname.endsWith('/admin/')
+            || window.location.pathname.endsWith('/link/admin')
+            || window.location.pathname.endsWith('/link/admin/')
+            || new URLSearchParams(window.location.search).get('route') === 'admin';
+
         state.currentUser = null;
         cachedAuthUser = null;
         writeCachedAuthUser(null);
@@ -2070,6 +2204,10 @@
         renderMenu();
         signOut(auth);
         toggleSettingsModal(false);
+
+        if (isAdminRoute) {
+            redirectToAdminLogin();
+        }
     }
 
     async function loadMenuItems() {

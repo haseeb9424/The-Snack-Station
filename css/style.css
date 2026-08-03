@@ -105,6 +105,10 @@
             visibility: hidden !important;
         }
 
+        body.admin-login-route > :not(.modal-overlay):not(.toast-box):not(.app-auth-loader):not(script) {
+            visibility: hidden !important;
+        }
+
         .app-auth-loader {
             display: none;
         }

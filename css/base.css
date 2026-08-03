@@ -1,0 +1,56 @@
+:root {
+  --bg: #090a0f;
+  --bg-soft: #12141c;
+  --surface: #161a24;
+  --surface-2: #1e2430;
+  --text: #f3f4f6;
+  --muted: #8b949e;
+  --accent: #ff5e3a;
+  --accent-strong: #ff7b4d;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --border: rgba(255,255,255,0.08);
+  --shadow: 0 14px 36px rgba(0,0,0,0.18);
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.card,
+.panel-shell {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  box-shadow: var(--shadow);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.admin-content {
+  padding: 28px;
+}

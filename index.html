@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Snackkk Station | Cloud Kitchen</title>
+    <title>The Snack Station | Cloud Kitchen</title>
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
@@ -14,6 +14,9 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
     <script defer src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <style>
         /* ==========================================
            1. THEME CONTROL PANEL (Customizable Variables)
@@ -5619,7 +5622,20 @@
         switchPanel('portal');
     }
 
+    function redirectToAdminLogin() {
+        const target = window.location.protocol === 'file:' ? './admin/' : '/admin/';
+        window.location.replace(target);
+    }
+
     function logOut() {
+        const isAdminRoute = window.location.hash === '#/admin'
+            || window.location.hash === '#/link/admin'
+            || window.location.pathname.endsWith('/admin')
+            || window.location.pathname.endsWith('/admin/')
+            || window.location.pathname.endsWith('/link/admin')
+            || window.location.pathname.endsWith('/link/admin/')
+            || new URLSearchParams(window.location.search).get('route') === 'admin';
+
         state.currentUser = null;
         cachedAuthUser = null;
         writeCachedAuthUser(null);
@@ -5638,6 +5654,10 @@
         renderMenu();
         signOut(auth);
         toggleSettingsModal(false);
+
+        if (isAdminRoute) {
+            redirectToAdminLogin();
+        }
     }
 
     async function loadMenuItems() {
@@ -7439,5 +7459,6 @@
     window.saveMenuOrder = saveMenuOrder;
     window.duplicateMenuItem = duplicateMenuItem;
     </script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
